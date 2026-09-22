@@ -41,7 +41,13 @@ class ReconciliationController extends Controller
             ->latest('statement_date')
             ->withCount('entries')
             ->take(10)
-            ->get(['id', 'statement_date', 'statement_balance', 'reconciled_at']);
+            ->get(['id', 'statement_date', 'statement_balance', 'reconciled_at'])
+            ->map(fn ($reconciliation) => [
+                'id' => $reconciliation->id,
+                'statement_date' => $reconciliation->statement_date->toDateString(),
+                'statement_balance' => (string) $reconciliation->statement_balance,
+                'entries_count' => $reconciliation->entries_count,
+            ]);
 
         $beginningBalance = $this->reconcileAccount->reconciledBalanceAsOf($account, $statementDate);
 

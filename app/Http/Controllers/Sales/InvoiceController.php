@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Sales;
 
 use App\Actions\Sales\PostInvoice;
 use App\Actions\Sales\SaveInvoiceDraft;
+use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Sales\StoreInvoiceRequest;
 use App\Models\Accounting\Account;
@@ -20,6 +21,8 @@ use Inertia\Response;
 
 class InvoiceController extends Controller
 {
+    use FormatsPlainDates;
+
     public function index(Request $request): Response
     {
         $invoices = Invoice::query()
@@ -102,8 +105,17 @@ class InvoiceController extends Controller
             'paymentAllocations.payment:id,payment_number,payment_date',
         ]);
 
+        $invoiceData = $this->withPlainDates($invoice, ['invoice_date', 'due_date']);
+        $invoiceData['payment_allocations'] = $invoice->paymentAllocations->map(fn ($allocation) => [
+            ...$allocation->toArray(),
+            'payment' => [
+                ...$allocation->payment->toArray(),
+                'payment_date' => $allocation->payment->payment_date->toDateString(),
+            ],
+        ])->all();
+
         return Inertia::render('Sales/Invoices/Show', [
-            'invoice' => $invoice,
+            'invoice' => $invoiceData,
             'amountPaid' => $invoice->amountPaid(),
             'amountDue' => $invoice->amountDue(),
         ]);

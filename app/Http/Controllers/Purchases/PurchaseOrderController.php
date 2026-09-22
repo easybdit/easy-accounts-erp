@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Purchases;
 
 use App\Actions\Purchases\ConvertPurchaseOrderToBill;
 use App\Actions\Purchases\SavePurchaseOrderDraft;
+use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Purchases\StorePurchaseOrderRequest;
 use App\Models\Accounting\Account;
@@ -18,6 +19,8 @@ use RuntimeException;
 
 class PurchaseOrderController extends Controller
 {
+    use FormatsPlainDates;
+
     public function index(Request $request): Response
     {
         $purchaseOrders = PurchaseOrder::query()
@@ -93,7 +96,7 @@ class PurchaseOrderController extends Controller
         ]);
 
         return Inertia::render('Purchases/PurchaseOrders/Show', [
-            'purchaseOrder' => $purchaseOrder,
+            'purchaseOrder' => $this->withPlainDates($purchaseOrder, ['order_date', 'expected_date']),
         ]);
     }
 

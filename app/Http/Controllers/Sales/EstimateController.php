@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Sales;
 
 use App\Actions\Sales\ConvertEstimateToInvoice;
 use App\Actions\Sales\SaveEstimateDraft;
+use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Sales\StoreEstimateRequest;
 use App\Models\Accounting\Account;
@@ -18,6 +19,8 @@ use RuntimeException;
 
 class EstimateController extends Controller
 {
+    use FormatsPlainDates;
+
     public function index(Request $request): Response
     {
         $estimates = Estimate::query()
@@ -93,7 +96,7 @@ class EstimateController extends Controller
         ]);
 
         return Inertia::render('Sales/Estimates/Show', [
-            'estimate' => $estimate,
+            'estimate' => $this->withPlainDates($estimate, ['estimate_date', 'expiry_date']),
         ]);
     }
 

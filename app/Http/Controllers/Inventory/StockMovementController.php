@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Actions\Inventory\AdjustStock;
+use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StoreStockAdjustmentRequest;
 use App\Models\Inventory\Product;
@@ -15,6 +16,8 @@ use RuntimeException;
 
 class StockMovementController extends Controller
 {
+    use FormatsPlainDates;
+
     public function index(Request $request): Response
     {
         $movements = StockMovement::query()
@@ -23,7 +26,14 @@ class StockMovementController extends Controller
             ->orderByDesc('date')
             ->orderByDesc('id')
             ->paginate(20)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn (StockMovement $movement) => [
+                'id' => $movement->id,
+                'date' => $movement->date->toDateString(),
+                'product' => ['sku' => $movement->product->sku, 'name' => $movement->product->name],
+                'reason' => $movement->reason,
+                'quantity' => (string) $movement->quantity,
+            ]);
 
         return Inertia::render('Inventory/StockMovements/Index', [
             'movements' => $movements,
@@ -65,7 +75,7 @@ class StockMovementController extends Controller
         $stockMovement->load(['product:id,sku,name', 'journal']);
 
         return Inertia::render('Inventory/StockMovements/Show', [
-            'movement' => $stockMovement,
+            'movement' => $this->withPlainDates($stockMovement, ['date']),
         ]);
     }
 }

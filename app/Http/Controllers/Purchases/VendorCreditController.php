@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Purchases;
 
 use App\Actions\Purchases\PostVendorCredit;
 use App\Actions\Purchases\SaveVendorCreditDraft;
+use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Purchases\StoreVendorCreditRequest;
 use App\Models\Accounting\Account;
@@ -18,6 +19,8 @@ use RuntimeException;
 
 class VendorCreditController extends Controller
 {
+    use FormatsPlainDates;
+
     public function index(Request $request): Response
     {
         $vendorCredits = VendorCredit::query()
@@ -94,7 +97,7 @@ class VendorCreditController extends Controller
         ]);
 
         return Inertia::render('Purchases/VendorCredits/Show', [
-            'vendorCredit' => $vendorCredit,
+            'vendorCredit' => $this->withPlainDates($vendorCredit, ['vendor_credit_date']),
         ]);
     }
 

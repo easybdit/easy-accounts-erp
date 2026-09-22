@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Purchases;
 
 use App\Actions\Purchases\MakePayment;
+use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Purchases\StoreVendorPaymentRequest;
 use App\Models\Accounting\Account;
@@ -17,6 +18,8 @@ use RuntimeException;
 
 class VendorPaymentController extends Controller
 {
+    use FormatsPlainDates;
+
     public function index(Request $request): Response
     {
         $payments = VendorPayment::query()
@@ -31,7 +34,15 @@ class VendorPaymentController extends Controller
             ->orderByDesc('payment_date')
             ->orderByDesc('id')
             ->paginate(20)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn (VendorPayment $payment) => [
+                'id' => $payment->id,
+                'payment_number' => $payment->payment_number,
+                'vendor' => ['name' => $payment->vendor->name],
+                'payment_date' => $payment->payment_date->toDateString(),
+                'method' => $payment->method,
+                'amount' => (string) $payment->amount,
+            ]);
 
         return Inertia::render('Purchases/VendorPayments/Index', [
             'payments' => $payments,
@@ -63,7 +74,7 @@ class VendorPaymentController extends Controller
         $vendorPayment->load(['vendor:id,name', 'paymentAccount:id,code,name', 'allocations.bill:id,bill_number,total', 'journal']);
 
         return Inertia::render('Purchases/VendorPayments/Show', [
-            'payment' => $vendorPayment,
+            'payment' => $this->withPlainDates($vendorPayment, ['payment_date']),
         ]);
     }
 

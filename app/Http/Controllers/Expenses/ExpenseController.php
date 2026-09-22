@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Expenses;
 
 use App\Actions\Expenses\RecordExpense;
 use App\Actions\Expenses\StoreExpenseAttachments;
+use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Expenses\StoreExpenseRequest;
 use App\Models\Accounting\Account;
@@ -21,6 +22,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExpenseController extends Controller
 {
+    use FormatsPlainDates;
+
     public function index(Request $request): Response
     {
         $expenses = Expense::query()
@@ -34,7 +37,15 @@ class ExpenseController extends Controller
             ->orderByDesc('expense_date')
             ->orderByDesc('id')
             ->paginate(20)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn (Expense $expense) => [
+                'id' => $expense->id,
+                'expense_number' => $expense->expense_number,
+                'payee' => $expense->payee,
+                'category' => ['name' => $expense->category->name],
+                'expense_date' => $expense->expense_date->toDateString(),
+                'amount' => (string) $expense->amount,
+            ]);
 
         return Inertia::render('Expenses/Index', [
             'expenses' => $expenses,
@@ -66,7 +77,7 @@ class ExpenseController extends Controller
         $expense->load(['category:id,name', 'account:id,code,name', 'paymentAccount:id,code,name', 'vendor:id,name', 'taxRate:id,name,rate', 'journal', 'attachments']);
 
         return Inertia::render('Expenses/Show', [
-            'expense' => $expense,
+            'expense' => $this->withPlainDates($expense, ['expense_date']),
             'totalPaid' => $expense->totalPaid(),
         ]);
     }

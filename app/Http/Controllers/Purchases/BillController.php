@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Purchases;
 
 use App\Actions\Purchases\PostBill;
 use App\Actions\Purchases\SaveBillDraft;
+use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Purchases\StoreBillRequest;
 use App\Models\Accounting\Account;
@@ -21,6 +22,8 @@ use RuntimeException;
 
 class BillController extends Controller
 {
+    use FormatsPlainDates;
+
     public function index(Request $request): Response
     {
         $bills = Bill::query()
@@ -103,8 +106,17 @@ class BillController extends Controller
             'paymentAllocations.vendorPayment:id,payment_number,payment_date',
         ]);
 
+        $billData = $this->withPlainDates($bill, ['bill_date', 'due_date']);
+        $billData['payment_allocations'] = $bill->paymentAllocations->map(fn ($allocation) => [
+            ...$allocation->toArray(),
+            'vendor_payment' => [
+                ...$allocation->vendorPayment->toArray(),
+                'payment_date' => $allocation->vendorPayment->payment_date->toDateString(),
+            ],
+        ])->all();
+
         return Inertia::render('Purchases/Bills/Show', [
-            'bill' => $bill,
+            'bill' => $billData,
             'amountPaid' => $bill->amountPaid(),
             'amountDue' => $bill->amountDue(),
         ]);

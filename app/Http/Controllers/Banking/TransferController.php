@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Banking;
 
 use App\Actions\Banking\RecordTransfer;
+use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Banking\StoreTransferRequest;
 use App\Models\Accounting\Account;
@@ -14,6 +15,8 @@ use Inertia\Response;
 
 class TransferController extends Controller
 {
+    use FormatsPlainDates;
+
     public function index(Request $request): Response
     {
         $transfers = Transfer::query()
@@ -21,7 +24,15 @@ class TransferController extends Controller
             ->orderByDesc('transfer_date')
             ->orderByDesc('id')
             ->paginate(20)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn (Transfer $transfer) => [
+                'id' => $transfer->id,
+                'transfer_number' => $transfer->transfer_number,
+                'from_account' => ['code' => $transfer->fromAccount->code, 'name' => $transfer->fromAccount->name],
+                'to_account' => ['code' => $transfer->toAccount->code, 'name' => $transfer->toAccount->name],
+                'transfer_date' => $transfer->transfer_date->toDateString(),
+                'amount' => (string) $transfer->amount,
+            ]);
 
         return Inertia::render('Banking/Transfers/Index', [
             'transfers' => $transfers,
@@ -50,7 +61,7 @@ class TransferController extends Controller
         $transfer->load(['fromAccount:id,code,name', 'toAccount:id,code,name', 'journal']);
 
         return Inertia::render('Banking/Transfers/Show', [
-            'transfer' => $transfer,
+            'transfer' => $this->withPlainDates($transfer, ['transfer_date']),
         ]);
     }
 

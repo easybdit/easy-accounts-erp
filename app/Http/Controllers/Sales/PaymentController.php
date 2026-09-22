@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Sales;
 
 use App\Actions\Sales\ReceivePayment;
+use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Sales\StorePaymentRequest;
 use App\Models\Accounting\Account;
@@ -17,6 +18,8 @@ use RuntimeException;
 
 class PaymentController extends Controller
 {
+    use FormatsPlainDates;
+
     public function index(Request $request): Response
     {
         $payments = Payment::query()
@@ -31,7 +34,15 @@ class PaymentController extends Controller
             ->orderByDesc('payment_date')
             ->orderByDesc('id')
             ->paginate(20)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn (Payment $payment) => [
+                'id' => $payment->id,
+                'payment_number' => $payment->payment_number,
+                'customer' => ['name' => $payment->customer->name],
+                'payment_date' => $payment->payment_date->toDateString(),
+                'method' => $payment->method,
+                'amount' => (string) $payment->amount,
+            ]);
 
         return Inertia::render('Sales/Payments/Index', [
             'payments' => $payments,
@@ -63,7 +74,7 @@ class PaymentController extends Controller
         $payment->load(['customer:id,name', 'depositAccount:id,code,name', 'allocations.invoice:id,invoice_number,total', 'journal']);
 
         return Inertia::render('Sales/Payments/Show', [
-            'payment' => $payment,
+            'payment' => $this->withPlainDates($payment, ['payment_date']),
         ]);
     }
 

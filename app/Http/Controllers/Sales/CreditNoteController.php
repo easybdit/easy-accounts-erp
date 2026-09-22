@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Sales;
 
 use App\Actions\Sales\PostCreditNote;
 use App\Actions\Sales\SaveCreditNoteDraft;
+use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Sales\StoreCreditNoteRequest;
 use App\Models\Accounting\Account;
@@ -18,6 +19,8 @@ use RuntimeException;
 
 class CreditNoteController extends Controller
 {
+    use FormatsPlainDates;
+
     public function index(Request $request): Response
     {
         $creditNotes = CreditNote::query()
@@ -94,7 +97,7 @@ class CreditNoteController extends Controller
         ]);
 
         return Inertia::render('Sales/CreditNotes/Show', [
-            'creditNote' => $creditNote,
+            'creditNote' => $this->withPlainDates($creditNote, ['credit_note_date']),
         ]);
     }
 
