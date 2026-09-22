@@ -25,6 +25,14 @@ const navGroups = [
             { label: 'Trial Balance', routeName: 'accounting.trial-balance.index' },
         ],
     },
+    {
+        label: 'Sales',
+        links: [{ label: 'Customers', routeName: 'customers.index' }],
+    },
+    {
+        label: 'Purchases',
+        links: [{ label: 'Vendors', routeName: 'vendors.index' }],
+    },
 ];
 
 function isActive(routeName) {

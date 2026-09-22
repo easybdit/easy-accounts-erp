@@ -2772,6 +2772,18 @@ Implemented (General Ledger, Trial Balance):
 
 Not implemented yet: none of the remaining Phase 2 items — Chart of Accounts, Journal, Posting Engine, General Ledger, and Trial Balance are now all implemented. Phase 2 is functionally complete pending real-world review. Void/Reversal workflow for posted journals remains an open decision (Section 20, Section 84 item 33) before Phase 3 (Customers & Vendors) needs it.
 
+## Phase 3 — Customers & Vendors: Implemented
+
+* Migrations: `customers` and `vendors` (name, email, phone, address, billing_address, `opening_balance` `DECIMAL(19,4)`, is_active). `journal_entries` gained optional `customer_id`/`vendor_id` (nullable, `restrictOnDelete`) so any journal line can tag a subsidiary-ledger party — a line cannot be tagged to both (Section 26/27: Transaction History without needing Invoices/Bills yet).
+* Models: `App\Models\Contacts\Customer` / `Vendor` (kept out of the `Accounting` namespace per Section 10's "Business Modules" vs "Accounting Core" split, for portability — Section 76). Each has `currentBalance()`: opening balance + tagged entries, debit-normal for customers (amount owed to the business) and credit-normal for vendors (amount owed by the business).
+* CRUD: full create/edit/delete for both, with a delete guard when a party has transaction history (mirrors the Account guard).
+* Show page doubles as **Customer/Vendor Statement + Transaction History**: opening balance, running balance per tagged journal line, each line traceable to its source journal.
+* The manual Journal Entry form (`accounting.journals.create`) gained an optional per-line "Customer/Vendor" tag, so this data is usable today, not just scaffolding for a future Invoices module.
+* Demo data (Section 62 — realistic, generic, not client-specific): `CustomerSeeder` (3 customers), `VendorSeeder` (3 vendors), and `DemoTransactionsSeeder`, which posts two real balanced journals through `PostJournal` — a sale on account tagged to "Acme Traders" and an expense on account tagged to "Global Supplies Co" — so `currentBalance()`, the Statement page, and the Trial Balance are all populated and verifiably correct out of the box, not empty tables. Idempotent (safe to re-run).
+* Tests: 18 new tests (CRUD, validation, delete guards, balance arithmetic on both party types, the customer-and-vendor-on-one-line rejection, and a dedicated seeder test asserting the demo journals are balanced and the demo balances are exactly right). Full suite: 79 tests passing.
+
+Not implemented: Payment History (needs the Payments module, Phase 4/5) — the Statement page currently shows all tagged journal-entry activity, which is the only transaction type that exists so far.
+
 ## Everything Else
 
 Not implemented. See Section 83 for phase order.

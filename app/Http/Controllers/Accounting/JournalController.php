@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Accounting\StoreJournalRequest;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Journal;
+use App\Models\Contacts\Customer;
+use App\Models\Contacts\Vendor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -44,6 +46,8 @@ class JournalController extends Controller
                 ->select('id', 'code', 'name', 'type')
                 ->orderBy('code')
                 ->get(),
+            'customers' => Customer::query()->where('is_active', true)->select('id', 'name')->orderBy('name')->get(),
+            'vendors' => Vendor::query()->where('is_active', true)->select('id', 'name')->orderBy('name')->get(),
         ]);
     }
 

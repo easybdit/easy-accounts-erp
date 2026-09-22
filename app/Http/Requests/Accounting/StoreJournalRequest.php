@@ -21,6 +21,8 @@ class StoreJournalRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:1000'],
             'lines' => ['required', 'array', 'min:2'],
             'lines.*.account_id' => ['required', 'integer', 'exists:accounts,id'],
+            'lines.*.customer_id' => ['nullable', 'integer', 'exists:customers,id'],
+            'lines.*.vendor_id' => ['nullable', 'integer', 'exists:vendors,id'],
             'lines.*.debit' => ['required', 'numeric', 'min:0'],
             'lines.*.credit' => ['required', 'numeric', 'min:0'],
             'lines.*.description' => ['nullable', 'string', 'max:255'],
@@ -53,6 +55,13 @@ class StoreJournalRequest extends FormRequest
                     $validator->errors()->add(
                         "lines.{$index}",
                         'Each line must have either a debit or a credit amount, not both or neither.'
+                    );
+                }
+
+                if (! empty($line['customer_id']) && ! empty($line['vendor_id'])) {
+                    $validator->errors()->add(
+                        "lines.{$index}",
+                        'A line cannot be tagged to both a customer and a vendor.'
                     );
                 }
 

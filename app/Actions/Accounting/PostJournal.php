@@ -51,6 +51,8 @@ class PostJournal
             foreach ($lines as $line) {
                 $journal->entries()->create([
                     'account_id' => $line['account_id'],
+                    'customer_id' => $line['customer_id'] ?? null,
+                    'vendor_id' => $line['vendor_id'] ?? null,
                     'date' => $data['date'],
                     'debit' => $line['debit'] ?? 0,
                     'credit' => $line['credit'] ?? 0,

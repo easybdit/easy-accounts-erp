@@ -11,6 +11,8 @@ import InputError from '@/Components/InputError.vue';
 
 const props = defineProps({
     accounts: Array,
+    customers: Array,
+    vendors: Array,
 });
 
 const form = useForm({
@@ -18,13 +20,28 @@ const form = useForm({
     reference: '',
     description: '',
     lines: [
-        { account_id: '', debit: '', credit: '', description: '' },
-        { account_id: '', debit: '', credit: '', description: '' },
+        { account_id: '', party: '', debit: '', credit: '', description: '' },
+        { account_id: '', party: '', debit: '', credit: '', description: '' },
     ],
 });
 
 function addLine() {
-    form.lines.push({ account_id: '', debit: '', credit: '', description: '' });
+    form.lines.push({ account_id: '', party: '', debit: '', credit: '', description: '' });
+}
+
+function submitTransform(lines) {
+    return lines.map((line) => {
+        const [partyType, partyId] = line.party ? line.party.split(':') : [null, null];
+
+        return {
+            account_id: line.account_id,
+            debit: line.debit,
+            credit: line.credit,
+            description: line.description,
+            customer_id: partyType === 'customer' ? partyId : null,
+            vendor_id: partyType === 'vendor' ? partyId : null,
+        };
+    });
 }
 
 function removeLine(index) {
@@ -44,7 +61,10 @@ const isBalanced = computed(
 );
 
 function submit() {
-    form.post(route('accounting.journals.store'));
+    form.transform((data) => ({
+        ...data,
+        lines: submitTransform(data.lines),
+    })).post(route('accounting.journals.store'));
 }
 </script>
 
@@ -86,6 +106,7 @@ function submit() {
                     <thead>
                         <tr>
                             <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Account</th>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Customer/Vendor</th>
                             <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Debit</th>
                             <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Credit</th>
                             <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Line Description</th>
@@ -103,6 +124,24 @@ function submit() {
                                     <option v-for="account in accounts" :key="account.id" :value="account.id">
                                         {{ account.code }} — {{ account.name }}
                                     </option>
+                                </select>
+                            </td>
+                            <td class="px-2 py-2">
+                                <select
+                                    v-model="line.party"
+                                    class="block w-48 rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                >
+                                    <option value="">None</option>
+                                    <optgroup label="Customers">
+                                        <option v-for="c in customers" :key="`customer-${c.id}`" :value="`customer:${c.id}`">
+                                            {{ c.name }}
+                                        </option>
+                                    </optgroup>
+                                    <optgroup label="Vendors">
+                                        <option v-for="v in vendors" :key="`vendor-${v.id}`" :value="`vendor:${v.id}`">
+                                            {{ v.name }}
+                                        </option>
+                                    </optgroup>
                                 </select>
                             </td>
                             <td class="px-2 py-2">
