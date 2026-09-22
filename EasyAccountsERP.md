@@ -2727,9 +2727,10 @@ Vertical packs are **out of scope** until the QuickBooks-style core (Phases 1–
 
 Per Section 82 (Documentation Rules), status is tracked here as work proceeds. Only actually-built and actually-tested items may be marked Implemented.
 
-## Environment (Verified 2026-09-22)
+## Environment (Verified 2026-09-22; dependency versions updated 2026-09-22 per Phase 12 security audit)
 
-* Laravel: 13.0.0 (verified via `php artisan --version`)
+* Laravel: 13.32.0 (upgraded from 13.0.0 during the Phase 12 security audit — see that section; originally verified via `php artisan --version`)
+* Guzzle: 8.2.0 (upgraded from 7.10.0, a major version bump, in the same Phase 12 pass; `composer audit` clean afterward)
 * PHP: 8.4.16 installed (verified via `php -v`); `composer.json` currently constrains `^8.3` — should be widened/confirmed to match, not yet done.
 * Database: MariaDB 10.4.32, not MySQL 8.0+ — see Section 49 deviation note.
 * Frontend: Inertia.js 2.0, Vue 3.4, Tailwind 3.2, Vite 7 (Laravel Breeze scaffold).
@@ -2931,7 +2932,7 @@ Per Section 82 ("implement only after approval") and Sections 59/60 (Export Stra
 * CSRF protection, mass-assignment protection (`$fillable` throughout), and FormRequest validation confirmed unchanged from Laravel defaults — nothing overrides `VerifyCsrfToken`.
 * All 18 `FormRequest::authorize()` methods return `true` unconditionally by design — authorization is enforced once, at the route-permission-middleware layer, not duplicated per-request (avoids two sources of truth on who can do what).
 * No `dd()`/`dump()`/`var_dump()`/`console.log()` debug leftovers found in `app/` or `resources/js/`.
-* `composer audit` reports 35 advisories across 10 packages (`guzzlehttp/guzzle`, `guzzlehttp/psr7`, `laravel/framework`, `league/commonmark`, and five `symfony/*` components) — all pre-existing in the base Laravel 13.0.0 install, none introduced by this project's own code. A scoped `composer update` (limited to just those 10 packages) resolves cleanly without touching `muradbdinfo/laravelai`, but **was not applied**: it upgrades `laravel/framework` v13.0.0 → v13.32.0 and `guzzlehttp/guzzle` **7.10.0 → 8.2.0 (a major version bump)**, which needs its own regression pass and is a call for the repo owner, not something to do silently inside an audit. Command is ready to run on approval: `composer update guzzlehttp/guzzle guzzlehttp/psr7 laravel/framework league/commonmark symfony/http-foundation symfony/http-kernel symfony/mailer symfony/mime symfony/polyfill-intl-idn symfony/routing --with-dependencies`.
+* `composer audit` originally reported 35 advisories across 10 packages (`guzzlehttp/guzzle`, `guzzlehttp/psr7`, `laravel/framework`, `league/commonmark`, and five `symfony/*` components) — all pre-existing in the base Laravel 13.0.0 install, none introduced by this project's own code. **Applied, on explicit approval**, via a scoped update limited to those 10 packages (`composer update guzzlehttp/guzzle guzzlehttp/psr7 laravel/framework league/commonmark symfony/http-foundation symfony/http-kernel symfony/mailer symfony/mime symfony/polyfill-intl-idn symfony/routing --with-dependencies`), which left `muradbdinfo/laravelai` untouched: `laravel/framework` v13.0.0 → v13.32.0, `guzzlehttp/guzzle` v7.10.0 → **v8.2.0 (major version bump)**. `composer audit` now reports zero advisories. Full regression re-run after upgrading: 209/209 tests, Pint clean, `npm run build` clean, `migrate:fresh --seed --force` clean. The verified environment baseline (Section 49) should be treated as Laravel 13.32.0 / Guzzle 8.2.0 going forward, not 13.0.0.
 
 **Performance audit (Section 54) — done:**
 * No N+1 queries found in the Security controllers added in Phase 11 (`RoleController`/`UserController`/`AuditLogController` all eager-load or use `withCount`).
