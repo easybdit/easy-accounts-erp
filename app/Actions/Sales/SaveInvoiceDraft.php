@@ -82,6 +82,7 @@ class SaveInvoiceDraft
                 : Invoice::create([
                     'invoice_number' => $this->nextInvoiceNumber($data['invoice_date']),
                     'customer_id' => $data['customer_id'],
+                    'recurring_invoice_id' => $data['recurring_invoice_id'] ?? null,
                     'receivable_account_id' => $data['receivable_account_id'],
                     'invoice_date' => $data['invoice_date'],
                     'due_date' => $data['due_date'] ?? null,

@@ -42,6 +42,21 @@ class NotificationController extends Controller
             if ($overdue->isNotEmpty()) {
                 $groups[] = ['label' => 'Overdue Invoices', 'items' => $overdue];
             }
+
+            $awaitingReview = Invoice::query()
+                ->where('status', 'draft')
+                ->whereNotNull('recurring_invoice_id')
+                ->with('customer:id,name')
+                ->get()
+                ->map(fn (Invoice $invoice) => [
+                    'message' => "Invoice {$invoice->invoice_number} ({$invoice->customer->name}) was auto-generated and needs review",
+                    'link' => route('sales.invoices.edit', $invoice->id),
+                ])
+                ->values();
+
+            if ($awaitingReview->isNotEmpty()) {
+                $groups[] = ['label' => 'Auto-Generated Invoices Awaiting Review', 'items' => $awaitingReview];
+            }
         }
 
         if ($user->can('bills.view')) {

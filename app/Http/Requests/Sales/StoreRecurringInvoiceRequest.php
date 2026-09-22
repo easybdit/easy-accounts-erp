@@ -22,6 +22,7 @@ class StoreRecurringInvoiceRequest extends FormRequest
             'receivable_account_id' => ['required', 'integer', 'exists:accounts,id'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'is_active' => ['boolean'],
+            'next_generation_date' => ['nullable', 'date'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.account_id' => ['required', 'integer', 'exists:accounts,id'],
             'items.*.tax_rate_id' => ['nullable', 'integer', 'exists:tax_rates,id'],

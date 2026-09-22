@@ -23,6 +23,7 @@ class GenerateInvoiceFromRecurring
 
         return $this->saveInvoiceDraft->handle([
             'customer_id' => $template->customer_id,
+            'recurring_invoice_id' => $template->id,
             'receivable_account_id' => $template->receivable_account_id,
             'invoice_date' => now()->toDateString(),
             'due_date' => null,

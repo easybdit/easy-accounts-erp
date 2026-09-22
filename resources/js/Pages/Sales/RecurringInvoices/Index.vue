@@ -37,6 +37,7 @@ function generate(template) {
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Customer</th>
                         <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Lines</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Next Auto-Generation</th>
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
                         <th class="px-4 py-3" />
                     </tr>
@@ -46,6 +47,9 @@ function generate(template) {
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ template.name }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ template.customer.name }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-500">{{ template.items_count }}</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                            {{ template.next_generation_date ?? 'Manual only' }}
+                        </td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm">
                             <Badge :variant="template.is_active ? 'success' : 'neutral'">
                                 {{ template.is_active ? 'Active' : 'Inactive' }}

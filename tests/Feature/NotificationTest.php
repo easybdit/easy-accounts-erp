@@ -12,6 +12,7 @@ use App\Models\Inventory\Product;
 use App\Models\Purchases\Bill;
 use App\Models\Sales\Invoice;
 use App\Models\Sales\Payment;
+use App\Models\Sales\RecurringInvoice;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -140,6 +141,41 @@ class NotificationTest extends TestCase
         $group = collect($response->json('groups'))->firstWhere('label', 'Low Stock');
         $this->assertNotNull($group);
         $this->assertStringContainsString($product->name, $group['items'][0]['message']);
+    }
+
+    public function test_a_draft_invoice_generated_from_a_recurring_template_is_reported_for_review(): void
+    {
+        $user = User::factory()->create();
+        $customer = Customer::factory()->create();
+        $receivable = Account::factory()->create(['type' => 'asset']);
+        $template = RecurringInvoice::create([
+            'name' => 'Monthly Hosting',
+            'customer_id' => $customer->id,
+            'receivable_account_id' => $receivable->id,
+            'is_active' => true,
+        ]);
+        $invoice = Invoice::factory()->create([
+            'customer_id' => $customer->id,
+            'recurring_invoice_id' => $template->id,
+            'receivable_account_id' => $receivable->id,
+            'status' => 'draft',
+        ]);
+
+        $response = $this->actingAs($user)->getJson(route('notifications.index'));
+
+        $group = collect($response->json('groups'))->firstWhere('label', 'Auto-Generated Invoices Awaiting Review');
+        $this->assertNotNull($group);
+        $this->assertStringContainsString($invoice->invoice_number, $group['items'][0]['message']);
+    }
+
+    public function test_a_manually_created_draft_invoice_is_not_reported_as_auto_generated(): void
+    {
+        $user = User::factory()->create();
+        Invoice::factory()->create(['status' => 'draft']);
+
+        $response = $this->actingAs($user)->getJson(route('notifications.index'));
+
+        $this->assertNull(collect($response->json('groups'))->firstWhere('label', 'Auto-Generated Invoices Awaiting Review'));
     }
 
     public function test_a_user_without_bills_permission_does_not_see_overdue_bills(): void

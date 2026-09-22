@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Sales;
 
 use App\Actions\Sales\GenerateInvoiceFromRecurring;
 use App\Actions\Sales\SaveRecurringInvoice;
+use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Sales\StoreRecurringInvoiceRequest;
 use App\Models\Accounting\Account;
@@ -16,13 +17,23 @@ use Inertia\Response;
 
 class RecurringInvoiceController extends Controller
 {
+    use FormatsPlainDates;
+
     public function index(): Response
     {
         $templates = RecurringInvoice::query()
             ->with('customer:id,name')
             ->withCount('items')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(fn (RecurringInvoice $template) => [
+                'id' => $template->id,
+                'name' => $template->name,
+                'customer' => ['name' => $template->customer->name],
+                'items_count' => $template->items_count,
+                'is_active' => $template->is_active,
+                'next_generation_date' => $template->next_generation_date?->toDateString(),
+            ]);
 
         return Inertia::render('Sales/RecurringInvoices/Index', [
             'templates' => $templates,
@@ -46,8 +57,10 @@ class RecurringInvoiceController extends Controller
 
     public function edit(RecurringInvoice $recurringInvoice): Response
     {
+        $recurringInvoice->load('items');
+
         return Inertia::render('Sales/RecurringInvoices/Edit', [
-            'template' => $recurringInvoice->load('items'),
+            'template' => $this->withPlainDates($recurringInvoice, ['next_generation_date']),
             ...$this->formOptions(),
         ]);
     }

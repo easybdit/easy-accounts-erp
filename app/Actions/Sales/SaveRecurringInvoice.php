@@ -23,6 +23,7 @@ class SaveRecurringInvoice
                     'receivable_account_id' => $data['receivable_account_id'],
                     'notes' => $data['notes'] ?? null,
                     'is_active' => $data['is_active'] ?? true,
+                    'next_generation_date' => $data['next_generation_date'] ?? null,
                 ])
                 : RecurringInvoice::create([
                     'name' => $data['name'],
@@ -30,6 +31,7 @@ class SaveRecurringInvoice
                     'receivable_account_id' => $data['receivable_account_id'],
                     'notes' => $data['notes'] ?? null,
                     'is_active' => $data['is_active'] ?? true,
+                    'next_generation_date' => $data['next_generation_date'] ?? null,
                     'created_by' => $data['created_by'] ?? null,
                 ]);
 

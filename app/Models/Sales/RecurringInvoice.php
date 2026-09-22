@@ -12,10 +12,14 @@ use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
- * A saved invoice template a user manually generates a draft Invoice from
- * (Section 60: "do not implement automation prematurely" — no scheduler-
- * driven auto-generation, just a "Generate Now" action; see Section 90
- * Phase 12 notes for why).
+ * A saved invoice template a user generates a draft Invoice from — either
+ * manually ("Generate Now") or, if next_generation_date is set,
+ * automatically via the scheduled invoices:generate-recurring command
+ * (Section 90 Phase 12: explicitly requested automation, a deliberate
+ * reversal of the original "no scheduler-driven generation" decision).
+ * Either way the result is always a DRAFT invoice, never auto-posted —
+ * automation removes the "remember to click a button" step, not the
+ * review-before-posting safety net.
  */
 class RecurringInvoice extends Model
 {
@@ -27,11 +31,13 @@ class RecurringInvoice extends Model
         'receivable_account_id',
         'notes',
         'is_active',
+        'next_generation_date',
         'created_by',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'next_generation_date' => 'date',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -52,6 +58,11 @@ class RecurringInvoice extends Model
     public function items(): HasMany
     {
         return $this->hasMany(RecurringInvoiceItem::class);
+    }
+
+    public function generatedInvoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
     }
 
     public function createdBy(): BelongsTo

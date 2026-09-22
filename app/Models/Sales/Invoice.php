@@ -27,6 +27,7 @@ class Invoice extends Model
     protected $fillable = [
         'invoice_number',
         'customer_id',
+        'recurring_invoice_id',
         'receivable_account_id',
         'invoice_date',
         'due_date',
@@ -60,6 +61,11 @@ class Invoice extends Model
     public function receivableAccount(): BelongsTo
     {
         return $this->belongsTo(Account::class, 'receivable_account_id');
+    }
+
+    public function recurringInvoice(): BelongsTo
+    {
+        return $this->belongsTo(RecurringInvoice::class);
     }
 
     public function items(): HasMany

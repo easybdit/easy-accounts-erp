@@ -18,3 +18,8 @@ Schedule::command('activitylog:clean --force')->daily();
 // for every active asset, on the 1st of each month. Idempotent — see
 // PostMonthlyDepreciation's docblock.
 Schedule::command('assets:post-depreciation')->monthlyOn(1, '01:00');
+
+// Scheduled Recurring Invoicing: daily check for templates whose
+// next_generation_date is due. Daily (not monthly) since each template
+// carries its own due date — see GenerateScheduledRecurringInvoices.
+Schedule::command('invoices:generate-recurring')->dailyAt('02:00');

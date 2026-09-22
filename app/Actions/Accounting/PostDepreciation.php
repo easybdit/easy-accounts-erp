@@ -31,7 +31,7 @@ class PostDepreciation
             throw new RuntimeException('This asset is already fully depreciated.');
         }
 
-        if ($asset->depreciations()->where('period_date', $periodDate)->exists()) {
+        if ($asset->depreciations()->whereDate('period_date', $periodDate)->exists()) {
             throw new RuntimeException('Depreciation has already been posted for this asset and period.');
         }
 

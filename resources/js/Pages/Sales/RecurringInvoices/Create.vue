@@ -22,6 +22,7 @@ const form = useForm({
     receivable_account_id: '',
     notes: '',
     is_active: true,
+    next_generation_date: '',
     items: [{ account_id: '', tax_rate_id: '', description: '', quantity: 1, unit_price: '', discount: 0 }],
 });
 
@@ -66,6 +67,16 @@ function submit() {
                 :tax-rates="taxRates"
                 :show-dates="false"
             />
+
+            <div class="mt-4 max-w-md">
+                <InputLabel for="next_generation_date" value="Next Auto-Generation Date (optional)" />
+                <TextInput id="next_generation_date" v-model="form.next_generation_date" type="date" class="mt-1 block w-full" />
+                <p class="mt-1 text-xs text-gray-400">
+                    If set, a draft invoice is generated automatically on this date and then every month after —
+                    still requires review before posting. Leave blank to keep this template manual-only ("Generate Now").
+                </p>
+                <InputError :message="form.errors.next_generation_date" class="mt-2" />
+            </div>
 
             <div class="mt-4 flex items-center gap-2">
                 <input id="is_active" v-model="form.is_active" type="checkbox" class="rounded border-gray-300" />

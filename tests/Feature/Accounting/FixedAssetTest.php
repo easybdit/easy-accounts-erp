@@ -122,7 +122,14 @@ class FixedAssetTest extends TestCase
 
         app(PostDepreciation::class)->handle($asset, '2026-01-01');
 
+        // Asserting the exact message (not just RuntimeException::class)
+        // matters here: Laravel's QueryException/UniqueConstraintViolation
+        // also extend RuntimeException, so a broken duplicate-check that
+        // silently falls through to the DB's unique constraint would make
+        // a bare "expectException(RuntimeException::class)" pass too,
+        // without ever exercising the intended clean-error path.
         $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Depreciation has already been posted for this asset and period.');
         app(PostDepreciation::class)->handle($asset, '2026-01-01');
     }
 
