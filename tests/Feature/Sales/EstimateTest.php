@@ -5,6 +5,7 @@ namespace Tests\Feature\Sales;
 use App\Models\Accounting\Account;
 use App\Models\Contacts\Customer;
 use App\Models\Sales\Estimate;
+use App\Models\Sales\Invoice;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -74,7 +75,7 @@ class EstimateTest extends TestCase
         $response = $this->actingAs($user)->post(route('sales.estimates.convert', $estimate));
 
         $this->assertDatabaseCount('invoices', 1);
-        $invoice = \App\Models\Sales\Invoice::first();
+        $invoice = Invoice::first();
         $response->assertRedirect(route('sales.invoices.edit', $invoice));
         $this->assertSame('200.0000', (string) $invoice->total);
         $this->assertSame('draft', $invoice->status);

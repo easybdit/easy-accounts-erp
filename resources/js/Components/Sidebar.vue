@@ -46,6 +46,7 @@ const allNavGroups = [
             { label: 'Customers', routeName: 'customers.index' },
             { label: 'Estimates', routeName: 'sales.estimates.index' },
             { label: 'Invoices', routeName: 'sales.invoices.index' },
+            { label: 'Credit Notes', routeName: 'sales.credit-notes.index' },
             { label: 'Recurring Invoices', routeName: 'sales.recurring-invoices.index' },
             { label: 'Payments', routeName: 'sales.payments.index' },
         ],

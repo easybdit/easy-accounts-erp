@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Sales\CreditNoteController;
 use App\Http\Controllers\Sales\EstimateController;
 use App\Http\Controllers\Sales\InvoiceController;
 use App\Http\Controllers\Sales\PaymentController;
@@ -43,6 +44,23 @@ Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(
     });
     Route::middleware('permission:invoices.view')->group(function () {
         Route::get('estimates/{estimate}', [EstimateController::class, 'show'])->name('estimates.show');
+    });
+
+    // Credit Notes are the exact reverse of an Invoice posting (Section 90
+    // Phase 4 open item, now resolved). Also reuses invoices.*.
+    Route::middleware('permission:invoices.view')->group(function () {
+        Route::get('credit-notes', [CreditNoteController::class, 'index'])->name('credit-notes.index');
+    });
+    Route::middleware('permission:invoices.manage')->group(function () {
+        Route::get('credit-notes/create', [CreditNoteController::class, 'create'])->name('credit-notes.create');
+        Route::post('credit-notes', [CreditNoteController::class, 'store'])->name('credit-notes.store');
+        Route::get('credit-notes/{credit_note}/edit', [CreditNoteController::class, 'edit'])->name('credit-notes.edit');
+        Route::put('credit-notes/{credit_note}', [CreditNoteController::class, 'update'])->name('credit-notes.update');
+        Route::delete('credit-notes/{credit_note}', [CreditNoteController::class, 'destroy'])->name('credit-notes.destroy');
+        Route::post('credit-notes/{credit_note}/post', [CreditNoteController::class, 'post'])->name('credit-notes.post');
+    });
+    Route::middleware('permission:invoices.view')->group(function () {
+        Route::get('credit-notes/{credit_note}', [CreditNoteController::class, 'show'])->name('credit-notes.show');
     });
 
     // Recurring invoices are templates only (Section 60: manual "Generate
