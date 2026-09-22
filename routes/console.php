@@ -27,3 +27,7 @@ Schedule::command('invoices:generate-recurring')->dailyAt('02:00');
 // Deferred Revenue Recognition: monthly on the 1st, same cadence as
 // depreciation. Each schedule tracks its own next_period_date.
 Schedule::command('revenue:recognize')->monthlyOn(1, '01:30');
+
+// Scheduled Recurring Expenses: daily check for templates whose
+// next_generation_date is due — mirrors invoices:generate-recurring.
+Schedule::command('expenses:generate-recurring')->dailyAt('02:15');

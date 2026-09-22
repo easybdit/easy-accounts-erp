@@ -28,6 +28,7 @@ class StoreRecurringExpenseRequest extends FormRequest
             'reference' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'is_active' => ['boolean'],
+            'next_generation_date' => ['nullable', 'date'],
         ];
     }
 

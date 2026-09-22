@@ -30,6 +30,7 @@ const form = useForm({
     reference: props.template.reference ?? '',
     notes: props.template.notes ?? '',
     is_active: props.template.is_active,
+    next_generation_date: props.template.next_generation_date ?? '',
 });
 
 watch(
@@ -164,6 +165,16 @@ function submit() {
                 <input v-model="form.is_active" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" />
                 Active
             </label>
+
+            <div class="mt-4 max-w-md">
+                <InputLabel for="next_generation_date" value="Next Auto-Generation Date (optional)" />
+                <TextInput id="next_generation_date" v-model="form.next_generation_date" type="date" class="mt-1 block w-full" />
+                <p class="mt-1 text-xs text-gray-400">
+                    If set, an expense is recorded automatically on this date and then every month after. Leave
+                    blank to keep this template manual-only ("Generate Now").
+                </p>
+                <InputError :message="form.errors.next_generation_date" class="mt-2" />
+            </div>
 
             <div class="mt-4">
                 <InputLabel for="notes" value="Notes (optional)" />

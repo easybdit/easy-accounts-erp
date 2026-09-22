@@ -85,4 +85,63 @@ class RecurringExpenseTest extends TestCase
         $this->actingAs($user)->delete(route('expenses.recurring.destroy', $template))->assertRedirect();
         $this->assertDatabaseCount('recurring_expenses', 0);
     }
+
+    public function test_a_template_with_no_next_generation_date_stays_manual_only(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post(route('expenses.recurring.store'), $this->payload());
+
+        $this->artisan('expenses:generate-recurring')->assertSuccessful();
+
+        $this->assertDatabaseCount('expenses', 0);
+    }
+
+    public function test_the_scheduled_command_records_an_expense_and_advances_the_next_generation_date_by_one_month(): void
+    {
+        $user = User::factory()->create();
+        $dueDate = now()->toDateString();
+        $this->actingAs($user)->post(route('expenses.recurring.store'), $this->payload([
+            'next_generation_date' => $dueDate,
+        ]));
+        $template = RecurringExpense::first();
+
+        $this->artisan('expenses:generate-recurring')->assertSuccessful();
+
+        $this->assertDatabaseCount('expenses', 1);
+        $expense = Expense::first();
+        $this->assertNotNull($expense->journal);
+        $this->assertTrue($expense->journal->isBalanced());
+
+        $this->assertSame(now()->addMonthNoOverflow()->toDateString(), $template->fresh()->next_generation_date->toDateString());
+
+        // Running it again the same day does not record a second expense —
+        // the due date has already moved a month into the future.
+        $this->artisan('expenses:generate-recurring')->assertSuccessful();
+        $this->assertDatabaseCount('expenses', 1);
+    }
+
+    public function test_an_inactive_template_is_not_auto_generated(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post(route('expenses.recurring.store'), $this->payload([
+            'next_generation_date' => now()->toDateString(),
+            'is_active' => false,
+        ]));
+
+        $this->artisan('expenses:generate-recurring')->assertSuccessful();
+
+        $this->assertDatabaseCount('expenses', 0);
+    }
+
+    public function test_a_future_next_generation_date_is_not_generated_early(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post(route('expenses.recurring.store'), $this->payload([
+            'next_generation_date' => now()->addMonth()->toDateString(),
+        ]));
+
+        $this->artisan('expenses:generate-recurring')->assertSuccessful();
+
+        $this->assertDatabaseCount('expenses', 0);
+    }
 }

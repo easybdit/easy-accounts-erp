@@ -12,12 +12,13 @@ use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
- * A saved expense template a user manually generates a new Expense from
- * (Section 60: no scheduler-driven automation, just a "Generate Now"
- * action — mirrors App\Models\Sales\RecurringInvoice). Unlike a recurring
- * invoice, a generated expense posts immediately: Expense has never had a
- * draft state, so this isn't a special case, it's the same behavior as
- * recording one by hand.
+ * A saved expense template a user generates a new Expense from — either
+ * manually ("Generate Now") or, if next_generation_date is set,
+ * automatically via the scheduled expenses:generate-recurring command
+ * (mirrors App\Models\Sales\RecurringInvoice). Unlike a recurring invoice,
+ * a generated expense posts immediately: Expense has never had a draft
+ * state, so this isn't a special case, it's the same behavior as recording
+ * one by hand.
  */
 class RecurringExpense extends Model
 {
@@ -35,12 +36,14 @@ class RecurringExpense extends Model
         'reference',
         'notes',
         'is_active',
+        'next_generation_date',
         'created_by',
     ];
 
     protected $casts = [
         'amount' => 'decimal:4',
         'is_active' => 'boolean',
+        'next_generation_date' => 'date',
     ];
 
     public function getActivitylogOptions(): LogOptions

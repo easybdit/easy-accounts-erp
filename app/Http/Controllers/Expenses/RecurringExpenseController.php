@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Expenses;
 
 use App\Actions\Expenses\GenerateExpenseFromRecurring;
 use App\Actions\Expenses\SaveRecurringExpense;
+use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Expenses\StoreRecurringExpenseRequest;
 use App\Models\Accounting\Account;
@@ -17,12 +18,23 @@ use Inertia\Response;
 
 class RecurringExpenseController extends Controller
 {
+    use FormatsPlainDates;
+
     public function index(): Response
     {
         $templates = RecurringExpense::query()
             ->with('category:id,name')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(fn (RecurringExpense $template) => [
+                'id' => $template->id,
+                'name' => $template->name,
+                'category' => ['name' => $template->category->name],
+                'payee' => $template->payee,
+                'amount' => (string) $template->amount,
+                'is_active' => $template->is_active,
+                'next_generation_date' => $template->next_generation_date?->toDateString(),
+            ]);
 
         return Inertia::render('Expenses/Recurring/Index', [
             'templates' => $templates,
@@ -47,7 +59,7 @@ class RecurringExpenseController extends Controller
     public function edit(RecurringExpense $recurringExpense): Response
     {
         return Inertia::render('Expenses/Recurring/Edit', [
-            'template' => $recurringExpense,
+            'template' => $this->withPlainDates($recurringExpense, ['next_generation_date']),
             ...$this->formOptions(),
         ]);
     }
