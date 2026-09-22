@@ -2,6 +2,7 @@
 
 namespace App\Models\Accounting;
 
+use App\Models\Banking\BankReconciliation;
 use Database\Factories\Accounting\AccountFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -73,6 +74,11 @@ class Account extends Model
     public function journalEntries(): HasMany
     {
         return $this->hasMany(JournalEntry::class);
+    }
+
+    public function reconciliations(): HasMany
+    {
+        return $this->hasMany(BankReconciliation::class);
     }
 
     /**

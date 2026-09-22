@@ -2,8 +2,12 @@
 
 namespace Tests\Feature\Accounting;
 
+use App\Actions\Accounting\PostJournal;
+use App\Actions\Sales\PostInvoice;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Journal;
+use App\Models\Contacts\Customer;
+use App\Models\Sales\Invoice;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
@@ -234,10 +238,10 @@ class JournalTest extends TestCase
     public function test_a_journal_generated_behind_an_invoice_cannot_be_voided_here(): void
     {
         $user = User::factory()->create();
-        $customer = \App\Models\Contacts\Customer::factory()->create();
+        $customer = Customer::factory()->create();
         $receivable = Account::factory()->create(['type' => 'asset']);
         $income = Account::factory()->create(['type' => 'income']);
-        $invoice = \App\Models\Sales\Invoice::factory()->create([
+        $invoice = Invoice::factory()->create([
             'customer_id' => $customer->id,
             'receivable_account_id' => $receivable->id,
             'status' => 'draft',
@@ -251,7 +255,7 @@ class JournalTest extends TestCase
             'discount' => 0,
             'line_total' => 100,
         ]);
-        (new \App\Actions\Sales\PostInvoice(new \App\Actions\Accounting\PostJournal))->handle($invoice->fresh());
+        (new PostInvoice(new PostJournal))->handle($invoice->fresh());
         $journal = $invoice->fresh()->journal;
 
         $this->actingAs($user)->post(route('accounting.journals.void', $journal))

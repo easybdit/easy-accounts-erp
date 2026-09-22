@@ -43,9 +43,12 @@ const props = defineProps({
                         <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
                             <Link
                                 :href="route('accounting.ledger.index', { account_id: account.id })"
-                                class="text-indigo-600 hover:text-indigo-900"
+                                class="mr-3 text-indigo-600 hover:text-indigo-900"
                             >
                                 View Transactions
+                            </Link>
+                            <Link :href="route('banking.reconciliation.index', account.id)" class="text-indigo-600 hover:text-indigo-900">
+                                Reconcile
                             </Link>
                         </td>
                     </tr>

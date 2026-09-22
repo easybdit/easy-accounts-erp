@@ -1,12 +1,17 @@
 <?php
 
 use App\Http\Controllers\Banking\BankAccountController;
+use App\Http\Controllers\Banking\ReconciliationController;
 use App\Http\Controllers\Banking\TransferController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('banking')->name('banking.')->group(function () {
     Route::middleware('permission:banking.view')->group(function () {
         Route::get('accounts', [BankAccountController::class, 'index'])->name('accounts.index');
+        Route::get('accounts/{account}/reconcile', [ReconciliationController::class, 'index'])->name('reconciliation.index');
+    });
+    Route::middleware('permission:banking.manage')->group(function () {
+        Route::post('accounts/{account}/reconcile', [ReconciliationController::class, 'store'])->name('reconciliation.store');
     });
 
     // Transfers are posted immediately on creation (Section 20), same as
