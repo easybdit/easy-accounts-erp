@@ -1,0 +1,102 @@
+<?php
+
+namespace App\Models\Purchases;
+
+use App\Models\Accounting\Account;
+use App\Models\Accounting\Journal;
+use App\Models\Contacts\Vendor;
+use App\Models\User;
+use Database\Factories\Purchases\BillFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
+
+class Bill extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'bill_number',
+        'vendor_id',
+        'payable_account_id',
+        'bill_date',
+        'due_date',
+        'status',
+        'subtotal',
+        'discount_total',
+        'total',
+        'notes',
+        'posted_at',
+        'created_by',
+    ];
+
+    protected $casts = [
+        'bill_date' => 'date',
+        'due_date' => 'date',
+        'subtotal' => 'decimal:4',
+        'discount_total' => 'decimal:4',
+        'total' => 'decimal:4',
+        'posted_at' => 'datetime',
+    ];
+
+    protected static function newFactory(): BillFactory
+    {
+        return BillFactory::new();
+    }
+
+    public function vendor(): BelongsTo
+    {
+        return $this->belongsTo(Vendor::class);
+    }
+
+    public function payableAccount(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'payable_account_id');
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(BillItem::class);
+    }
+
+    public function paymentAllocations(): HasMany
+    {
+        return $this->hasMany(VendorPaymentAllocation::class);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function journal(): MorphOne
+    {
+        return $this->morphOne(Journal::class, 'source');
+    }
+
+    public function isDraft(): bool
+    {
+        return $this->status === 'draft';
+    }
+
+    /**
+     * Always computed from real VendorPaymentAllocation rows (Section 79
+     * Payment Integrity) — never a separate, independently-editable column.
+     */
+    public function amountPaid(): string
+    {
+        return (string) ($this->paymentAllocations()->sum('amount') ?: '0.0000');
+    }
+
+    public function amountDue(): string
+    {
+        return bcsub((string) $this->total, $this->amountPaid(), 4);
+    }
+
+    public function isFullyPaid(): bool
+    {
+        return $this->status === 'posted' && bccomp($this->amountDue(), '0', 4) <= 0;
+    }
+}

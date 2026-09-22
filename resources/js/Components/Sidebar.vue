@@ -35,7 +35,11 @@ const navGroups = [
     },
     {
         label: 'Purchases',
-        links: [{ label: 'Vendors', routeName: 'vendors.index' }],
+        links: [
+            { label: 'Vendors', routeName: 'vendors.index' },
+            { label: 'Bills', routeName: 'purchases.bills.index' },
+            { label: 'Vendor Payments', routeName: 'purchases.vendor-payments.index' },
+        ],
     },
 ];
 

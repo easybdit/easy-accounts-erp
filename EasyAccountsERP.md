@@ -2811,7 +2811,22 @@ Not implemented yet: Estimates, Credit Notes (remaining Phase 4 items).
 * Demo data: `PaymentSeeder` posts a real partial payment (half the demo invoice's total) via Bank, so a partial-payment scenario — not just "fully paid" — is visible and verifiable out of the box.
 * Tests: 11 new tests (full payment, partial payment, allocation-total mismatch, over-allocation, wrong customer, draft invoice, wrong account type, journal correctness, two-partial-payments-fully-pay, and an action-level atomicity test). Full suite: 100 tests passing.
 
-Not implemented yet: Estimates, Credit Notes, unapplied/on-account payments, Vendor-side payments (Bills, Phase 5).
+Not implemented yet: Estimates, Credit Notes, unapplied/on-account payments.
+
+## Phase 5 — Purchases: Bills & Vendor Payments Implemented (Purchase Orders, Purchase Returns not yet)
+
+Structural mirror of Phase 4's Sales module, in `App\Models\Purchases`:
+
+* Migrations: `bills`/`bill_items` (mirrors `invoices`/`invoice_items`, but `payable_account_id` must be a **liability** account and each item's account must be an **expense** account — the reverse of Invoices) and `vendor_payments`/`vendor_payment_allocations` (mirrors `payments`/`payment_allocations`).
+* Actions: `SaveBillDraft` (mirrors `SaveInvoiceDraft`), `PostBill` (mirrors `PostInvoice` — debits each item's expense account, credits the bill's payable account tagged to the vendor, self-healing total per Section 80), `MakePayment` (mirrors `ReceivePayment` — debits each allocated bill's payable account tagged to the vendor, credits the payment account). Same draft/posted immutability rule as Invoices (Section 20); vendor payments are immediately posted on creation, same as customer Payments — no edit/update/destroy routes for either.
+* `Bill::amountPaid()`/`amountDue()`/`isFullyPaid()` mirror `Invoice`'s, always computed live from real `VendorPaymentAllocation` rows (Section 79). Full allocation required at payment creation time — no "on account" vendor payment yet, same documented scope limit as customer Payments.
+* Numbering: `BILL-{year}-{seq}` and `VPAY-{year}-{seq}` (kept visually distinct from customer `PAY-{year}-{seq}` on purpose, both are implementation defaults pending confirmation, Section 50).
+* Vendor's existing `currentBalance()`/subsidiary ledger (built in Phase 3) needed no changes — Bill and Vendor Payment posting both just use the `vendor_id` tagging column on `journal_entries` that already existed.
+* UI: Bills list/Create/Edit/Show (mirrors Invoices exactly, vendor/payable/expense in place of customer/receivable/income), Vendor Payments list/Create ("apply to bills" picker with live remaining-unallocated indicator)/Show. Vendor show page's existing statement already surfaces this activity automatically (no changes needed there either, same subsidiary-ledger reuse).
+* Demo data: `BillSeeder` posts a real 2-line bill for "City Hardware"; `VendorPaymentSeeder` pays half of it in Cash — so both a payable balance and a partial vendor payment are visible and verifiable out of the box, on both sides of the books.
+* Tests: 18 new tests (9 Bill, 9 VendorPayment) closely mirroring the Invoice/Payment test suites. Full suite: 118 tests passing.
+
+Not implemented yet: Purchase Orders, Purchase Returns, Vendor Credits (remaining Phase 5 items); Estimates and Credit Notes (remaining Phase 4 items).
 
 ## Everything Else
 
