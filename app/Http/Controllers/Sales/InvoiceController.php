@@ -20,6 +20,7 @@ class InvoiceController extends Controller
     {
         $invoices = Invoice::query()
             ->with('customer:id,name')
+            ->withSum('paymentAllocations as amount_paid', 'amount')
             ->when($request->string('search')->toString(), function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('invoice_number', 'like', "%{$search}%")
@@ -30,7 +31,21 @@ class InvoiceController extends Controller
             ->orderByDesc('invoice_date')
             ->orderByDesc('id')
             ->paginate(20)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(function (Invoice $invoice) {
+                $amountPaid = (string) ($invoice->amount_paid ?? '0.0000');
+
+                return [
+                    'id' => $invoice->id,
+                    'invoice_number' => $invoice->invoice_number,
+                    'customer' => ['id' => $invoice->customer->id, 'name' => $invoice->customer->name],
+                    'invoice_date' => $invoice->invoice_date->toDateString(),
+                    'total' => (string) $invoice->total,
+                    'amount_paid' => $amountPaid,
+                    'amount_due' => bcsub((string) $invoice->total, $amountPaid, 4),
+                    'status' => $invoice->status,
+                ];
+            });
 
         return Inertia::render('Sales/Invoices/Index', [
             'invoices' => $invoices,
@@ -74,10 +89,18 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice): Response
     {
-        $invoice->load(['customer:id,name', 'receivableAccount:id,code,name', 'items.account:id,code,name', 'journal']);
+        $invoice->load([
+            'customer:id,name',
+            'receivableAccount:id,code,name',
+            'items.account:id,code,name',
+            'journal',
+            'paymentAllocations.payment:id,payment_number,payment_date',
+        ]);
 
         return Inertia::render('Sales/Invoices/Show', [
             'invoice' => $invoice,
+            'amountPaid' => $invoice->amountPaid(),
+            'amountDue' => $invoice->amountDue(),
         ]);
     }
 

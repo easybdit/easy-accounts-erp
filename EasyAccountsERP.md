@@ -2796,7 +2796,22 @@ Not implemented: Payment History (needs the Payments module, Phase 4/5) — the 
 * Demo data: `InvoiceSeeder` creates and **posts** a real 2-line invoice for "Rahman Enterprise" (idempotent), so the Invoices list, the posted journal, and the customer's current balance are all populated and correct out of the box.
 * Tests: 10 new tests (computed totals, both account-type validations, discount-exceeds-line validation, draft editing, posting producing a balanced customer-tagged journal, immutability after posting, draft deletion, posting-without-items rejection). Full suite: 89 tests passing.
 
-Not implemented yet: Estimates, Customer Payments, Payment Allocation, Credit Notes (remaining Phase 4 items).
+Not implemented yet: Estimates, Credit Notes (remaining Phase 4 items).
+
+## Phase 4 — Sales: Customer Payments & Payment Allocation Implemented
+
+* Migrations: `payments` (payment_number unique, customer_id, deposit_account_id, payment_date, reference, method, amount `DECIMAL(19,4)`, notes) and `payment_allocations` (payment_id, invoice_id, amount).
+* Model: `App\Models\Sales\Payment` / `PaymentAllocation`. `Payment::journal()` reuses the same `source_type`/`source_id` `morphOne` pattern as `Invoice::journal()`.
+* `Invoice::amountPaid()` / `amountDue()` / `isFullyPaid()` are always computed live from real `PaymentAllocation` rows — never a separately-editable stored column — so an invoice can structurally never be "marked paid" without a corresponding payment/accounting record (Section 79 Payment Integrity).
+* Posting model: unlike Invoices, a Payment has no draft state — like a manual Journal Entry, creating it **is** posting it, atomically, through the same shared `PostJournal` engine: debit the deposit account (Cash/Bank) for the full amount, credit each allocated invoice's own `receivable_account_id` (tagged to the customer) for its allocated share. No edit/update/destroy routes (same immutability stance as Journals, Section 20).
+* **Every dollar received must be allocated to an open invoice at creation time** — there is no "unapplied/on-account payment" concept yet, since that GL treatment (which account holds unapplied cash) is a business-policy decision nobody has confirmed (Section 20/84). Documented as a scope limit, not an oversight.
+* Validation (defense-in-depth in both `StorePaymentRequest` and `ReceivePayment`): allocated total must equal the payment amount exactly (bcmath); every allocated invoice must be `posted` and belong to the paying customer; an allocation cannot exceed that invoice's current `amountDue()`; the same invoice cannot be allocated twice in one payment; the deposit account must be an active asset account.
+* **Bug fixed while wiring this up:** `PostInvoice` computed the invoice's total for the journal but never wrote it back onto the `invoices` row — an invoice created with a stale/inconsistent stored total (which cannot happen via the normal Create→Post UI flow, but is exactly the kind of drift Section 80 warns about) would keep the wrong `total` forever. `PostInvoice` now recomputes and persists `subtotal`/`discount_total`/`total` from the actual items at the moment of posting, so the stored total is self-healing and always matches what was posted, not just "whatever `SaveInvoiceDraft` last cached."
+* UI: Payments list, "Receive Payment" form (pick customer → shows that customer's open invoices with remaining due, check to allocate, live remaining-unallocated indicator), Payment show page (allocations, link to the posted journal). Invoice show page now displays Paid/Due and a Payment History table.
+* Demo data: `PaymentSeeder` posts a real partial payment (half the demo invoice's total) via Bank, so a partial-payment scenario — not just "fully paid" — is visible and verifiable out of the box.
+* Tests: 11 new tests (full payment, partial payment, allocation-total mismatch, over-allocation, wrong customer, draft invoice, wrong account type, journal correctness, two-partial-payments-fully-pay, and an action-level atomicity test). Full suite: 100 tests passing.
+
+Not implemented yet: Estimates, Credit Notes, unapplied/on-account payments, Vendor-side payments (Bills, Phase 5).
 
 ## Everything Else
 

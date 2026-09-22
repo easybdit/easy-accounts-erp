@@ -10,6 +10,8 @@ import Modal from '@/Components/Modal.vue';
 
 const props = defineProps({
     invoice: Object,
+    amountPaid: String,
+    amountDue: String,
 });
 
 const page = usePage();
@@ -47,6 +49,9 @@ function destroy() {
                         <DangerButton type="button" @click="confirmingDelete = true">Delete</DangerButton>
                         <PrimaryButton type="button" @click="confirmingPost = true">Post Invoice</PrimaryButton>
                     </template>
+                    <Link v-else-if="parseFloat(amountDue) > 0" :href="route('sales.payments.create')">
+                        <PrimaryButton type="button">Receive Payment</PrimaryButton>
+                    </Link>
                 </template>
             </PageHeader>
         </template>
@@ -96,6 +101,15 @@ function destroy() {
                 <div>
                     <dt class="text-xs font-medium uppercase text-gray-400">Receivable Account</dt>
                     <dd class="text-sm text-gray-800">{{ invoice.receivable_account.code }} — {{ invoice.receivable_account.name }}</dd>
+                </div>
+                <div v-if="invoice.status === 'posted'">
+                    <dt class="text-xs font-medium uppercase text-gray-400">Paid / Due</dt>
+                    <dd class="text-sm text-gray-800">
+                        {{ amountPaid }} paid —
+                        <span :class="parseFloat(amountDue) > 0 ? 'font-semibold text-red-600' : 'font-semibold text-green-600'">
+                            {{ amountDue }} due
+                        </span>
+                    </dd>
                 </div>
                 <div v-if="invoice.journal">
                     <dt class="text-xs font-medium uppercase text-gray-400">Posted Journal</dt>
@@ -149,6 +163,30 @@ function destroy() {
                         <dd>{{ invoice.total }}</dd>
                     </div>
                 </dl>
+            </div>
+
+            <div v-if="invoice.payment_allocations?.length" class="mt-6 border-t border-gray-100 pt-4">
+                <h2 class="mb-2 text-sm font-semibold text-gray-700">Payment History</h2>
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Payment #</th>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
+                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Applied Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr v-for="allocation in invoice.payment_allocations" :key="allocation.id">
+                            <td class="px-2 py-2 text-sm text-gray-700">
+                                <Link :href="route('sales.payments.show', allocation.payment.id)" class="text-indigo-600 hover:text-indigo-900">
+                                    {{ allocation.payment.payment_number }}
+                                </Link>
+                            </td>
+                            <td class="px-2 py-2 text-sm text-gray-500">{{ allocation.payment.payment_date }}</td>
+                            <td class="px-2 py-2 text-right text-sm text-gray-700">{{ allocation.amount }}</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 

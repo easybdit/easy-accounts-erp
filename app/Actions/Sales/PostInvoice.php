@@ -34,10 +34,23 @@ class PostInvoice
         }
 
         return DB::transaction(function () use ($invoice) {
+            $subtotal = '0.0000';
+            $discountTotal = '0.0000';
+
+            foreach ($invoice->items as $item) {
+                $subtotal = bcadd($subtotal, bcmul((string) $item->quantity, (string) $item->unit_price, 4), 4);
+                $discountTotal = bcadd($discountTotal, (string) $item->discount, 4);
+            }
+
             $total = $invoice->items->reduce(
                 fn (string $carry, $item) => bcadd($carry, (string) $item->line_total, 4),
                 '0.0000'
             );
+
+            // Self-healing: whatever gets posted to accounting also becomes the
+            // invoice's authoritative stored total (Section 80 — the two must
+            // never diverge), regardless of what was cached before posting.
+            $invoice->update(['subtotal' => $subtotal, 'discount_total' => $discountTotal, 'total' => $total]);
 
             if (bccomp($total, '0', 4) <= 0) {
                 throw new RuntimeException('An invoice with a zero or negative total cannot be posted.');

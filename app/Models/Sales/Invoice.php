@@ -56,6 +56,32 @@ class Invoice extends Model
         return $this->hasMany(InvoiceItem::class);
     }
 
+    public function paymentAllocations(): HasMany
+    {
+        return $this->hasMany(PaymentAllocation::class);
+    }
+
+    /**
+     * Amount paid/due are always computed from real PaymentAllocation rows
+     * (never a stored, independently-editable column), so an invoice can
+     * never be "marked paid" without a corresponding payment record
+     * (Section 79 Payment Integrity).
+     */
+    public function amountPaid(): string
+    {
+        return (string) ($this->paymentAllocations()->sum('amount') ?: '0.0000');
+    }
+
+    public function amountDue(): string
+    {
+        return bcsub((string) $this->total, $this->amountPaid(), 4);
+    }
+
+    public function isFullyPaid(): bool
+    {
+        return $this->status === 'posted' && bccomp($this->amountDue(), '0', 4) <= 0;
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
