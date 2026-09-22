@@ -16,8 +16,8 @@ class TrialBalanceController extends Controller
 
         $accounts = Account::query()
             ->where('is_active', true)
-            ->withSum(['journalEntries as period_debit' => fn ($query) => $query->where('date', '<=', $asOf)], 'debit')
-            ->withSum(['journalEntries as period_credit' => fn ($query) => $query->where('date', '<=', $asOf)], 'credit')
+            ->withSum(['journalEntries as period_debit' => fn ($query) => $query->whereDate('date', '<=', $asOf)], 'debit')
+            ->withSum(['journalEntries as period_credit' => fn ($query) => $query->whereDate('date', '<=', $asOf)], 'credit')
             ->orderBy('code')
             ->get()
             ->map(function (Account $account) {

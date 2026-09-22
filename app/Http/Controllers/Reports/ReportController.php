@@ -378,8 +378,8 @@ class ReportController extends Controller
         return Account::query()
             ->whereIn('type', $types)
             ->where('is_active', true)
-            ->withSum(['journalEntries as period_debit' => fn ($q) => $q->when($from, fn ($q2) => $q2->where('date', '>=', $from))->when($to, fn ($q2) => $q2->where('date', '<=', $to))], 'debit')
-            ->withSum(['journalEntries as period_credit' => fn ($q) => $q->when($from, fn ($q2) => $q2->where('date', '>=', $from))->when($to, fn ($q2) => $q2->where('date', '<=', $to))], 'credit')
+            ->withSum(['journalEntries as period_debit' => fn ($q) => $q->when($from, fn ($q2) => $q2->whereDate('date', '>=', $from))->when($to, fn ($q2) => $q2->whereDate('date', '<=', $to))], 'debit')
+            ->withSum(['journalEntries as period_credit' => fn ($q) => $q->when($from, fn ($q2) => $q2->whereDate('date', '>=', $from))->when($to, fn ($q2) => $q2->whereDate('date', '<=', $to))], 'credit')
             ->orderBy('code')
             ->get()
             ->map(function (Account $account) {

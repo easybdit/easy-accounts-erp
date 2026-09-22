@@ -110,8 +110,8 @@ class Account extends Model
     public function netMovement(?string $from = null, ?string $to = null): array
     {
         $row = $this->journalEntries()
-            ->when($from, fn ($query) => $query->where('date', '>=', $from))
-            ->when($to, fn ($query) => $query->where('date', '<=', $to))
+            ->when($from, fn ($query) => $query->whereDate('date', '>=', $from))
+            ->when($to, fn ($query) => $query->whereDate('date', '<=', $to))
             ->selectRaw('COALESCE(SUM(debit), 0) as debit, COALESCE(SUM(credit), 0) as credit')
             ->first();
 

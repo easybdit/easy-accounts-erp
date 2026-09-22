@@ -33,8 +33,8 @@ class GeneralLedgerController extends Controller
 
             $entries = $account->journalEntries()
                 ->with('journal:id,reference,description')
-                ->when($from, fn ($query) => $query->where('date', '>=', $from))
-                ->when($to, fn ($query) => $query->where('date', '<=', $to))
+                ->when($from, fn ($query) => $query->whereDate('date', '>=', $from))
+                ->when($to, fn ($query) => $query->whereDate('date', '<=', $to))
                 ->orderBy('date')
                 ->orderBy('id')
                 ->get();
