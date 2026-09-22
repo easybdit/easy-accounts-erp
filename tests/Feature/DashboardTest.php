@@ -78,6 +78,11 @@ class DashboardTest extends TestCase
                 ->where('kpis.monthProfit', '370.0000')
                 ->where('kpis.arOutstanding', '150.0000')
                 ->where('kpis.apOutstanding', '80.0000')
+                ->has('trend', 6)
+                ->where('trend.5.month', now()->format('M Y'))
+                ->where('trend.5.income', '650.0000')
+                ->where('trend.5.expense', '280.0000')
+                ->where('trend.0.income', '0.0000')
             );
     }
 
@@ -101,6 +106,9 @@ class DashboardTest extends TestCase
                 ->where('kpis.monthIncome', '0.0000')
                 // The bank balance itself is a point-in-time total, so the prior month's deposit still counts.
                 ->where('kpis.bankBalance', '900.0000')
+                // Prior month is the second-to-last of the 6 trend buckets (index 4); it should carry the 900, not the current month.
+                ->where('trend.4.income', '900.0000')
+                ->where('trend.5.income', '0.0000')
             );
     }
 }

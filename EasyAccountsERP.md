@@ -2960,6 +2960,8 @@ Fixed by switching every such comparison to `whereDate('date', ...)` (which extr
 
 **Full regression testing — done:** 213/213 tests passing, `./vendor/bin/pint --test` clean, `npm run build` clean, `php artisan migrate:fresh --seed --force` clean, and a live curl smoke test against real seeded demo data confirming the Dashboard's numbers.
 
+**Income vs Expense trend chart:** added `chart.js` (^4.5.1) + `vue-chartjs` (^5.3.4) — the first charting dependency in the project, justified per Section 38 since hand-rolled SVG bar charts aren't a reasonable substitute for an interactive, accessible chart with tooltips/legend. `DashboardController::monthlyIncomeExpenseTrend()` buckets the last 6 calendar months' income/expense in PHP (not a driver-specific SQL `GROUP BY strftime(...)`/`DATE_FORMAT(...)`), keeping it portable across MySQL/MariaDB and the SQLite test database per Section 75. Rendered via a new `IncomeExpenseChart.vue` (green/red grouped bar chart, matches the KPI cards' positive/negative color convention). Tests extended to assert the trend array's shape and that a transaction dated last month lands in the correct bucket, not the current month's.
+
 ## Everything Else
 
 Not implemented. See Section 83 for phase order.

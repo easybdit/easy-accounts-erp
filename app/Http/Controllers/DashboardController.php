@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Accounting\Account;
+use App\Models\Accounting\JournalEntry;
 use App\Models\Contacts\Customer;
 use App\Models\Contacts\Vendor;
 use Illuminate\Support\Collection;
@@ -63,7 +64,66 @@ class DashboardController extends Controller
                 'arOutstanding' => $arOutstanding,
                 'apOutstanding' => $apOutstanding,
             ],
+            'trend' => $this->monthlyIncomeExpenseTrend(),
         ]);
+    }
+
+    /**
+     * Income vs Expense for each of the last $months calendar months
+     * (oldest first), grouped in PHP rather than a driver-specific SQL
+     * date-group-by so this stays portable across MySQL/MariaDB and the
+     * SQLite test database (Section 75 Portability Audit).
+     *
+     * @return array<int, array{month:string,income:string,expense:string}>
+     */
+    private function monthlyIncomeExpenseTrend(int $months = 6): array
+    {
+        $start = now()->subMonths($months - 1)->startOfMonth();
+        $end = now()->endOfMonth();
+
+        $accountTypes = Account::query()
+            ->whereIn('type', ['income', 'expense'])
+            ->where('is_active', true)
+            ->pluck('type', 'id');
+
+        $buckets = [];
+        for ($i = $months - 1; $i >= 0; $i--) {
+            $cursor = now()->subMonths($i);
+            $buckets[$cursor->format('Y-m')] = [
+                'month' => $cursor->format('M Y'),
+                'income' => '0.0000',
+                'expense' => '0.0000',
+            ];
+        }
+
+        if ($accountTypes->isEmpty()) {
+            return array_values($buckets);
+        }
+
+        JournalEntry::query()
+            ->whereIn('account_id', $accountTypes->keys())
+            ->whereDate('date', '>=', $start->toDateString())
+            ->whereDate('date', '<=', $end->toDateString())
+            ->get(['account_id', 'date', 'debit', 'credit'])
+            ->each(function (JournalEntry $entry) use (&$buckets, $accountTypes) {
+                $key = $entry->date->format('Y-m');
+
+                if (! isset($buckets[$key])) {
+                    return;
+                }
+
+                $type = $accountTypes[$entry->account_id];
+                $debit = (string) $entry->debit;
+                $credit = (string) $entry->credit;
+
+                if ($type === 'income') {
+                    $buckets[$key]['income'] = bcadd($buckets[$key]['income'], bcsub($credit, $debit, 4), 4);
+                } else {
+                    $buckets[$key]['expense'] = bcadd($buckets[$key]['expense'], bcsub($debit, $credit, 4), 4);
+                }
+            });
+
+        return array_values($buckets);
     }
 
     /**

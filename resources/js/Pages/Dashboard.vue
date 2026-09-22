@@ -5,10 +5,12 @@ import PageHeader from '@/Components/PageHeader.vue';
 import Card from '@/Components/Card.vue';
 import StatCard from '@/Components/StatCard.vue';
 import ModuleFlowDiagram from '@/Components/ModuleFlowDiagram.vue';
+import IncomeExpenseChart from '@/Components/IncomeExpenseChart.vue';
 import { icons } from '@/icons';
 
 const props = defineProps({
     kpis: Object,
+    trend: Array,
 });
 
 const isProfit = parseFloat(props.kpis.monthProfit) >= 0;
@@ -35,6 +37,11 @@ const isProfit = parseFloat(props.kpis.monthProfit) >= 0;
             <StatCard label="Receivable (AR)" :value="kpis.arOutstanding" tone="neutral" :icon="icons.cart" />
             <StatCard label="Payable (AP)" :value="kpis.apOutstanding" tone="neutral" :icon="icons.bag" />
         </div>
+
+        <Card padded class="mt-6">
+            <h2 class="mb-4 text-sm font-semibold text-gray-700">Income vs Expense (Last 6 Months)</h2>
+            <IncomeExpenseChart :trend="trend" />
+        </Card>
 
         <Card padded class="mt-6">
             <h2 class="mb-1 text-sm font-semibold text-gray-700">How the modules connect</h2>
