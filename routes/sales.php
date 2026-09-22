@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Sales\EstimateController;
 use App\Http\Controllers\Sales\InvoiceController;
 use App\Http\Controllers\Sales\PaymentController;
 use App\Http\Controllers\Sales\RecurringInvoiceController;
@@ -22,6 +23,26 @@ Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(
     Route::middleware('permission:invoices.view')->group(function () {
         Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
         Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
+    });
+
+    // Estimates are non-financial (never post to the Journal) until
+    // converted to a real draft Invoice (Section 90 Phase 4 open item,
+    // now resolved). Reuses the invoices.* permission — a separate
+    // estimates.* permission would be more granularity than this app's
+    // two-tier model needs (Section 36).
+    Route::middleware('permission:invoices.view')->group(function () {
+        Route::get('estimates', [EstimateController::class, 'index'])->name('estimates.index');
+    });
+    Route::middleware('permission:invoices.manage')->group(function () {
+        Route::get('estimates/create', [EstimateController::class, 'create'])->name('estimates.create');
+        Route::post('estimates', [EstimateController::class, 'store'])->name('estimates.store');
+        Route::get('estimates/{estimate}/edit', [EstimateController::class, 'edit'])->name('estimates.edit');
+        Route::put('estimates/{estimate}', [EstimateController::class, 'update'])->name('estimates.update');
+        Route::delete('estimates/{estimate}', [EstimateController::class, 'destroy'])->name('estimates.destroy');
+        Route::post('estimates/{estimate}/convert', [EstimateController::class, 'convert'])->name('estimates.convert');
+    });
+    Route::middleware('permission:invoices.view')->group(function () {
+        Route::get('estimates/{estimate}', [EstimateController::class, 'show'])->name('estimates.show');
     });
 
     // Recurring invoices are templates only (Section 60: manual "Generate

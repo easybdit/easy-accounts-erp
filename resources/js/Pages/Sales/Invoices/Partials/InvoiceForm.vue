@@ -29,6 +29,22 @@ const props = defineProps({
         type: Boolean,
         default: true,
     },
+    dateField: {
+        type: String,
+        default: 'invoice_date',
+    },
+    dateLabel: {
+        type: String,
+        default: 'Invoice Date',
+    },
+    dueDateField: {
+        type: String,
+        default: 'due_date',
+    },
+    dueDateLabel: {
+        type: String,
+        default: 'Due Date',
+    },
 });
 
 function addItem() {
@@ -100,14 +116,14 @@ const total = computed(() => subtotal.value - discountTotal.value + taxTotal.val
 
         <div v-if="showDates" class="grid grid-cols-2 gap-4">
             <div>
-                <InputLabel for="invoice_date" value="Invoice Date" />
-                <TextInput id="invoice_date" v-model="form.invoice_date" type="date" class="mt-1 block w-full" required />
-                <InputError :message="form.errors.invoice_date" class="mt-2" />
+                <InputLabel :for="dateField" :value="dateLabel" />
+                <TextInput :id="dateField" v-model="form[dateField]" type="date" class="mt-1 block w-full" required />
+                <InputError :message="form.errors[dateField]" class="mt-2" />
             </div>
             <div>
-                <InputLabel for="due_date" value="Due Date" />
-                <TextInput id="due_date" v-model="form.due_date" type="date" class="mt-1 block w-full" />
-                <InputError :message="form.errors.due_date" class="mt-2" />
+                <InputLabel :for="dueDateField" :value="dueDateLabel" />
+                <TextInput :id="dueDateField" v-model="form[dueDateField]" type="date" class="mt-1 block w-full" />
+                <InputError :message="form.errors[dueDateField]" class="mt-2" />
             </div>
         </div>
     </div>
