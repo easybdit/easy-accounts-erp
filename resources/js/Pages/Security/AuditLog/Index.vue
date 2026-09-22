@@ -10,6 +10,7 @@ import EmptyState from '@/Components/EmptyState.vue';
 const props = defineProps({
     activities: Object,
     subjectTypes: Array,
+    events: Array,
     filters: Object,
 });
 
@@ -29,7 +30,34 @@ function eventBadgeVariant(event) {
         created: 'success',
         updated: 'info',
         deleted: 'danger',
+        roles_updated: 'info',
     }[event] ?? 'neutral';
+}
+
+function formatEvent(event) {
+    return event ? event.replace(/_/g, ' ') : event;
+}
+
+// A field-by-field diff of an activity's attribute_changes {old, attributes}
+// shape — the same shape both LogsActivity's automatic tracking and the
+// manual Role/Permission-change logging (RoleController, UserController)
+// produce, so this renders both identically.
+function diffFields(activity) {
+    const old = activity.attribute_changes?.old ?? {};
+    const attributes = activity.attribute_changes?.attributes ?? {};
+    const keys = [...new Set([...Object.keys(old), ...Object.keys(attributes)])];
+
+    return keys.map((key) => ({ key, old: old[key], new: attributes[key] }));
+}
+
+function added(oldValue, newValue) {
+    const before = oldValue ?? [];
+    return (newValue ?? []).filter((item) => !before.includes(item));
+}
+
+function removed(oldValue, newValue) {
+    const after = newValue ?? [];
+    return (oldValue ?? []).filter((item) => !after.includes(item));
 }
 </script>
 
@@ -54,9 +82,9 @@ function eventBadgeVariant(event) {
                 class="rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             >
                 <option value="">All events</option>
-                <option value="created">Created</option>
-                <option value="updated">Updated</option>
-                <option value="deleted">Deleted</option>
+                <option v-for="eventOption in events" :key="eventOption" :value="eventOption">
+                    {{ eventOption.replace(/_/g, ' ') }}
+                </option>
             </select>
         </div>
 
@@ -76,15 +104,37 @@ function eventBadgeVariant(event) {
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ activity.created_at }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm">
                             <Badge :variant="eventBadgeVariant(activity.event)">
-                                {{ activity.event ?? activity.description }}
+                                {{ formatEvent(activity.event) ?? activity.description }}
                             </Badge>
                         </td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
                             {{ activity.subject_type }}<span v-if="activity.subject_id"> #{{ activity.subject_id }}</span>
                         </td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ activity.causer ?? 'System' }}</td>
-                        <td class="px-4 py-3 text-xs text-gray-500">
-                            <pre class="max-w-md whitespace-pre-wrap break-words">{{ JSON.stringify(activity.attribute_changes, null, 2) }}</pre>
+                        <td class="max-w-md px-4 py-3 text-xs text-gray-500">
+                            <div v-if="diffFields(activity).length > 0" class="space-y-1.5">
+                                <div v-for="field in diffFields(activity)" :key="field.key">
+                                    <template v-if="Array.isArray(field.old) || Array.isArray(field.new)">
+                                        <p class="font-medium text-gray-600">{{ field.key }}</p>
+                                        <p v-if="added(field.old, field.new).length > 0" class="text-green-700">
+                                            + {{ added(field.old, field.new).join(', ') }}
+                                        </p>
+                                        <p v-if="removed(field.old, field.new).length > 0" class="text-red-700">
+                                            − {{ removed(field.old, field.new).join(', ') }}
+                                        </p>
+                                        <p v-if="added(field.old, field.new).length === 0 && removed(field.old, field.new).length === 0" class="text-gray-400">
+                                            No change
+                                        </p>
+                                    </template>
+                                    <template v-else>
+                                        <span class="font-medium text-gray-600">{{ field.key }}:</span>
+                                        <span v-if="field.old !== undefined" class="text-red-600 line-through">{{ field.old }}</span>
+                                        <span v-if="field.old !== undefined && field.new !== undefined"> → </span>
+                                        <span v-if="field.new !== undefined" class="text-green-700">{{ field.new }}</span>
+                                    </template>
+                                </div>
+                            </div>
+                            <span v-else class="text-gray-400">—</span>
                         </td>
                     </tr>
                 </tbody>

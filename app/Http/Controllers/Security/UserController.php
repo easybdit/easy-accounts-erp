@@ -43,7 +43,20 @@ class UserController extends Controller
             return back()->with('error', 'You cannot remove your own Administrator role.');
         }
 
-        $user->syncRoles($validated['roles'] ?? []);
+        $oldRoles = $user->roles->pluck('name')->sort()->values()->all();
+        $newRoles = collect($validated['roles'] ?? [])->sort()->values()->all();
+
+        $user->syncRoles($newRoles);
+
+        // Role model isn't LogsActivity-tracked and syncRoles() is a pivot
+        // sync, not a plain attribute — logged explicitly, same as
+        // RoleController's permission changes (Section 90 Phase 11).
+        activity()
+            ->causedBy($request->user())
+            ->performedOn($user)
+            ->event('roles_updated')
+            ->withChanges(['old' => ['roles' => $oldRoles], 'attributes' => ['roles' => $newRoles]])
+            ->log("Roles updated for user \"{$user->name}\"");
 
         return redirect()->route('security.users.index')->with('success', 'User roles updated.');
     }

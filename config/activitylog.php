@@ -13,9 +13,10 @@ return [
 
     /*
      * When the clean command is executed, all recording activities older than
-     * the number of days specified here will be deleted.
+     * the number of days specified here will be deleted. Scheduled to run
+     * daily via routes/console.php (Section 90 Phase 11 log retention policy).
      */
-    'clean_after_days' => 365,
+    'clean_after_days' => env('ACTIVITYLOG_CLEAN_AFTER_DAYS', 365),
 
     /*
      * If no log name is passed to the activity() helper

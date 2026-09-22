@@ -38,9 +38,17 @@ class AuditLogController extends Controller
             ->map(fn (string $type) => ['value' => $type, 'label' => class_basename($type)])
             ->values();
 
+        $events = Activity::query()
+            ->whereNotNull('event')
+            ->distinct()
+            ->orderBy('event')
+            ->pluck('event')
+            ->values();
+
         return Inertia::render('Security/AuditLog/Index', [
             'activities' => $activities,
             'subjectTypes' => $subjectTypes,
+            'events' => $events,
             'filters' => $request->only(['subject_type', 'event']),
         ]);
     }
