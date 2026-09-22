@@ -234,6 +234,25 @@ class PaymentTest extends TestCase
         $this->assertTrue($invoice->fresh()->isFullyPaid());
     }
 
+    public function test_amount_paid_is_formatted_with_four_decimals(): void
+    {
+        $user = User::factory()->create();
+        $invoice = $this->postedInvoice(['total' => 1000]);
+        $bank = Account::factory()->create(['type' => 'asset']);
+
+        $this->actingAs($user)->post(route('sales.payments.store'), [
+            'customer_id' => $invoice->customer_id,
+            'deposit_account_id' => $bank->id,
+            'payment_date' => '2026-01-20',
+            'amount' => 400,
+            'allocations' => [['invoice_id' => $invoice->id, 'amount' => 400]],
+        ]);
+
+        // Regression: amountPaid() must not return a raw, unnormalized SQL
+        // SUM() result (e.g. "400" instead of "400.0000").
+        $this->assertSame('400.0000', $invoice->fresh()->amountPaid());
+    }
+
     public function test_action_rejects_mismatched_allocation_total_before_writing_anything(): void
     {
         $invoice = $this->postedInvoice(['total' => 1000]);

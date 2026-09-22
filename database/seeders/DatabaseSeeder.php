@@ -10,6 +10,8 @@ use Database\Seeders\Contacts\CustomerSeeder;
 use Database\Seeders\Contacts\VendorSeeder;
 use Database\Seeders\Expenses\ExpenseCategorySeeder;
 use Database\Seeders\Expenses\ExpenseSeeder;
+use Database\Seeders\Inventory\ProductCategorySeeder;
+use Database\Seeders\Inventory\ProductSeeder;
 use Database\Seeders\Purchases\BillSeeder;
 use Database\Seeders\Purchases\VendorPaymentSeeder;
 use Database\Seeders\Sales\InvoiceSeeder;
@@ -44,5 +46,7 @@ class DatabaseSeeder extends Seeder
         $this->call(ExpenseCategorySeeder::class);
         $this->call(ExpenseSeeder::class);
         $this->call(TransferSeeder::class);
+        $this->call(ProductCategorySeeder::class);
+        $this->call(ProductSeeder::class);
     }
 }

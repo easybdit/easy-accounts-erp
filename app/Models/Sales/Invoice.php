@@ -69,7 +69,11 @@ class Invoice extends Model
      */
     public function amountPaid(): string
     {
-        return (string) ($this->paymentAllocations()->sum('amount') ?: '0.0000');
+        // bcadd (not a raw cast) normalizes the DB driver's raw SUM()
+        // result to a consistent DECIMAL(19,4)-formatted string — SQLite
+        // (used in tests) does not preserve column scale the way
+        // MySQL/MariaDB do.
+        return bcadd((string) ($this->paymentAllocations()->sum('amount') ?: 0), '0', 4);
     }
 
     public function amountDue(): string

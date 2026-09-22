@@ -55,6 +55,14 @@ const navGroups = [
             { label: 'Transfers', routeName: 'banking.transfers.index' },
         ],
     },
+    {
+        label: 'Inventory',
+        links: [
+            { label: 'Products', routeName: 'inventory.products.index' },
+            { label: 'Categories', routeName: 'inventory.categories.index' },
+            { label: 'Stock Movements', routeName: 'inventory.stock-movements.index' },
+        ],
+    },
 ];
 
 function isActive(routeName) {

@@ -187,6 +187,25 @@ class VendorPaymentTest extends TestCase
         $this->actingAs($user)->get(route('purchases.vendor-payments.show', $payment))->assertOk();
     }
 
+    public function test_amount_paid_is_formatted_with_four_decimals(): void
+    {
+        $user = User::factory()->create();
+        $bill = $this->postedBill(['total' => 1000]);
+        $cash = Account::factory()->create(['type' => 'asset']);
+
+        $this->actingAs($user)->post(route('purchases.vendor-payments.store'), [
+            'vendor_id' => $bill->vendor_id,
+            'payment_account_id' => $cash->id,
+            'payment_date' => '2026-01-20',
+            'amount' => 400,
+            'allocations' => [['bill_id' => $bill->id, 'amount' => 400]],
+        ]);
+
+        // Regression: amountPaid() must not return a raw, unnormalized SQL
+        // SUM() result (e.g. "400" instead of "400.0000").
+        $this->assertSame('400.0000', $bill->fresh()->amountPaid());
+    }
+
     public function test_action_rejects_mismatched_allocation_total_before_writing_anything(): void
     {
         $bill = $this->postedBill(['total' => 1000]);
