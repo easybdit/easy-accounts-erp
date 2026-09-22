@@ -171,11 +171,31 @@ class JournalTest extends TestCase
     public function test_journal_index_and_show_pages_render(): void
     {
         $user = User::factory()->create();
-        $this->actingAs($user)->post(route('accounting.journals.store'), $this->payload());
+        $this->actingAs($user)->post(route('accounting.journals.store'), $this->payload(['date' => '2026-01-10']));
         $journal = Journal::first();
 
         $this->actingAs($user)->get(route('accounting.journals.index'))->assertOk();
         $this->actingAs($user)->get(route('accounting.journals.show', $journal))->assertOk();
+    }
+
+    /**
+     * Regression test: the "date" cast always serializes to full ISO8601
+     * with a midnight time component (e.g. "2026-01-10T00:00:00.000000Z")
+     * unless explicitly formatted — both the index and show pages must send
+     * a plain "Y-m-d" string instead, matching how every other list/detail
+     * page in the app formats its date columns.
+     */
+    public function test_journal_dates_render_as_plain_dates_not_full_timestamps(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post(route('accounting.journals.store'), $this->payload(['date' => '2026-01-10']));
+        $journal = Journal::first();
+
+        $this->actingAs($user)->get(route('accounting.journals.index'))
+            ->assertInertia(fn ($page) => $page->where('journals.data.0.date', '2026-01-10'));
+
+        $this->actingAs($user)->get(route('accounting.journals.show', $journal))
+            ->assertInertia(fn ($page) => $page->where('journal.date', '2026-01-10'));
     }
 
     public function test_no_edit_or_delete_routes_exist_for_posted_journals(): void

@@ -32,7 +32,15 @@ class JournalController extends Controller
             ->orderByDesc('date')
             ->orderByDesc('id')
             ->paginate(20)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn (Journal $journal) => [
+                'id' => $journal->id,
+                'date' => $journal->date->toDateString(),
+                'reference' => $journal->reference,
+                'description' => $journal->description,
+                'total_debit' => (string) $journal->total_debit,
+                'total_credit' => (string) $journal->total_credit,
+            ]);
 
         return Inertia::render('Accounting/Journals/Index', [
             'journals' => $journals,
@@ -68,8 +76,16 @@ class JournalController extends Controller
     {
         $journal->load(['entries.account', 'createdBy', 'reversalOfJournal:id,reference', 'reversalJournal:id,reference']);
 
+        // The 'date' cast always serializes through Carbon's default JSON
+        // format (full ISO8601 with a midnight time component), which reads
+        // wrong for a plain calendar date — overridden here rather than on
+        // the model, since voided_at/created_at are real timestamps that
+        // should keep full precision.
+        $journalData = $journal->toArray();
+        $journalData['date'] = $journal->date->toDateString();
+
         return Inertia::render('Accounting/Journals/Show', [
-            'journal' => $journal,
+            'journal' => $journalData,
             'canBeVoided' => $journal->canBeVoided(),
         ]);
     }
