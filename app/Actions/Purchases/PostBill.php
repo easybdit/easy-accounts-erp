@@ -25,7 +25,7 @@ class PostBill
             throw new RuntimeException('Only a draft bill can be posted.');
         }
 
-        $bill->loadMissing('items');
+        $bill->loadMissing('items.taxRate');
 
         if ($bill->items->isEmpty()) {
             throw new RuntimeException('A bill must have at least one item before it can be posted.');
@@ -34,18 +34,35 @@ class PostBill
         return DB::transaction(function () use ($bill) {
             $subtotal = '0.0000';
             $discountTotal = '0.0000';
+            $taxTotal = '0.0000';
+            $taxByAccount = [];
 
             foreach ($bill->items as $item) {
                 $subtotal = bcadd($subtotal, bcmul((string) $item->quantity, (string) $item->unit_price, 4), 4);
                 $discountTotal = bcadd($discountTotal, (string) $item->discount, 4);
+
+                $taxAmount = $item->taxRate ? $item->taxRate->calculate((string) $item->line_total) : '0.0000';
+                $item->update(['tax_amount' => $taxAmount]);
+                $taxTotal = bcadd($taxTotal, $taxAmount, 4);
+
+                if ($item->taxRate && bccomp($taxAmount, '0', 4) > 0) {
+                    $accountId = $item->taxRate->tax_account_id;
+                    $taxByAccount[$accountId] = bcadd($taxByAccount[$accountId] ?? '0.0000', $taxAmount, 4);
+                }
             }
 
-            $total = $bill->items->reduce(
-                fn (string $carry, $item) => bcadd($carry, (string) $item->line_total, 4),
-                '0.0000'
+            $total = bcadd(
+                $bill->items->reduce(fn (string $carry, $item) => bcadd($carry, (string) $item->line_total, 4), '0.0000'),
+                $taxTotal,
+                4
             );
 
-            $bill->update(['subtotal' => $subtotal, 'discount_total' => $discountTotal, 'total' => $total]);
+            $bill->update([
+                'subtotal' => $subtotal,
+                'discount_total' => $discountTotal,
+                'tax_total' => $taxTotal,
+                'total' => $total,
+            ]);
 
             if (bccomp($total, '0', 4) <= 0) {
                 throw new RuntimeException('A bill with a zero or negative total cannot be posted.');
@@ -67,6 +84,19 @@ class PostBill
                     'debit' => (string) $item->line_total,
                     'credit' => 0,
                     'description' => $item->description,
+                ];
+            }
+
+            // Debited (not credited): input tax paid on a purchase offsets
+            // output tax collected on sales in the same tax_account_id,
+            // rather than assuming separate input/output accounts — a
+            // deliberate, jurisdiction-neutral simplification (Section 33).
+            foreach ($taxByAccount as $accountId => $amount) {
+                $lines[] = [
+                    'account_id' => $accountId,
+                    'debit' => $amount,
+                    'credit' => 0,
+                    'description' => "Tax paid — Bill {$bill->bill_number}",
                 ];
             }
 

@@ -63,6 +63,13 @@ const navGroups = [
             { label: 'Stock Movements', routeName: 'inventory.stock-movements.index' },
         ],
     },
+    {
+        label: 'Tax',
+        links: [
+            { label: 'Tax Rates', routeName: 'tax.rates.index' },
+            { label: 'Tax Report', routeName: 'tax.report' },
+        ],
+    },
 ];
 
 function isActive(routeName) {

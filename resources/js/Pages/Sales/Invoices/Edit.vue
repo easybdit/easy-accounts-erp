@@ -11,6 +11,7 @@ const props = defineProps({
     customers: Array,
     receivableAccounts: Array,
     incomeAccounts: Array,
+    taxRates: Array,
 });
 
 const form = useForm({
@@ -21,6 +22,7 @@ const form = useForm({
     notes: props.invoice.notes,
     items: props.invoice.items.map((item) => ({
         account_id: item.account_id,
+        tax_rate_id: item.tax_rate_id ?? '',
         description: item.description,
         quantity: item.quantity,
         unit_price: item.unit_price,
@@ -53,6 +55,7 @@ function submit() {
                 :customers="customers"
                 :receivable-accounts="receivableAccounts"
                 :income-accounts="incomeAccounts"
+                :tax-rates="taxRates"
             />
 
             <div class="mt-6 flex justify-end gap-3">

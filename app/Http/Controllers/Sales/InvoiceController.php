@@ -9,6 +9,7 @@ use App\Http\Requests\Sales\StoreInvoiceRequest;
 use App\Models\Accounting\Account;
 use App\Models\Contacts\Customer;
 use App\Models\Sales\Invoice;
+use App\Models\Tax\TaxRate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -93,6 +94,7 @@ class InvoiceController extends Controller
             'customer:id,name',
             'receivableAccount:id,code,name',
             'items.account:id,code,name',
+            'items.taxRate:id,name,rate',
             'journal',
             'paymentAllocations.payment:id,payment_number,payment_date',
         ]);
@@ -132,6 +134,7 @@ class InvoiceController extends Controller
                 ->select('id', 'code', 'name')->orderBy('code')->get(),
             'incomeAccounts' => Account::query()->where('is_active', true)->where('type', 'income')
                 ->select('id', 'code', 'name')->orderBy('code')->get(),
+            'taxRates' => TaxRate::query()->where('is_active', true)->select('id', 'name', 'rate')->orderBy('name')->get(),
         ];
     }
 }

@@ -133,6 +133,7 @@ function destroy() {
                         <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Qty</th>
                         <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Unit Price</th>
                         <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Discount</th>
+                        <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tax</th>
                         <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Line Total</th>
                     </tr>
                 </thead>
@@ -143,6 +144,9 @@ function destroy() {
                         <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.quantity }}</td>
                         <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.unit_price }}</td>
                         <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.discount }}</td>
+                        <td class="px-2 py-2 text-sm text-gray-500">
+                            {{ item.tax_rate ? `${item.tax_rate.name} (${item.tax_amount})` : '—' }}
+                        </td>
                         <td class="px-2 py-2 text-right text-sm font-medium text-gray-800">{{ item.line_total }}</td>
                     </tr>
                 </tbody>
@@ -157,6 +161,10 @@ function destroy() {
                     <div class="flex justify-between">
                         <dt>Discount</dt>
                         <dd>{{ bill.discount_total }}</dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt>Tax</dt>
+                        <dd>{{ bill.tax_total }}</dd>
                     </div>
                     <div class="flex justify-between text-base font-semibold">
                         <dt>Total</dt>

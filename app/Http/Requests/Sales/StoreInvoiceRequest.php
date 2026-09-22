@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Sales;
 
 use App\Models\Accounting\Account;
+use App\Models\Tax\TaxRate;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -23,6 +24,7 @@ class StoreInvoiceRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:1000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.account_id' => ['required', 'integer', 'exists:accounts,id'],
+            'items.*.tax_rate_id' => ['nullable', 'integer', 'exists:tax_rates,id'],
             'items.*.description' => ['required', 'string', 'max:255'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.0001'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
@@ -69,6 +71,14 @@ class StoreInvoiceRequest extends FormRequest
 
                 if (bccomp($lineTotal, '0', 4) < 0) {
                     $validator->errors()->add("items.{$index}.discount", 'The discount cannot exceed the line amount.');
+                }
+
+                if (! empty($item['tax_rate_id'])) {
+                    $taxRate = TaxRate::find($item['tax_rate_id']);
+
+                    if ($taxRate && ! $taxRate->is_active) {
+                        $validator->errors()->add("items.{$index}.tax_rate_id", 'This tax rate is inactive.');
+                    }
                 }
             }
         });

@@ -26,6 +26,7 @@ class Bill extends Model
         'status',
         'subtotal',
         'discount_total',
+        'tax_total',
         'total',
         'notes',
         'posted_at',
@@ -37,6 +38,7 @@ class Bill extends Model
         'due_date' => 'date',
         'subtotal' => 'decimal:4',
         'discount_total' => 'decimal:4',
+        'tax_total' => 'decimal:4',
         'total' => 'decimal:4',
         'posted_at' => 'datetime',
     ];

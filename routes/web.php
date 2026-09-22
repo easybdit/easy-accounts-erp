@@ -31,4 +31,5 @@ require __DIR__.'/purchases.php';
 require __DIR__.'/expenses.php';
 require __DIR__.'/banking.php';
 require __DIR__.'/inventory.php';
+require __DIR__.'/tax.php';
 require __DIR__.'/auth.php';

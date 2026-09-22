@@ -16,6 +16,8 @@ use Database\Seeders\Purchases\BillSeeder;
 use Database\Seeders\Purchases\VendorPaymentSeeder;
 use Database\Seeders\Sales\InvoiceSeeder;
 use Database\Seeders\Sales\PaymentSeeder;
+use Database\Seeders\Tax\TaxDemoInvoiceSeeder;
+use Database\Seeders\Tax\TaxRateSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -36,10 +38,12 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(ChartOfAccountsSeeder::class);
+        $this->call(TaxRateSeeder::class);
         $this->call(CustomerSeeder::class);
         $this->call(VendorSeeder::class);
         $this->call(DemoTransactionsSeeder::class);
         $this->call(InvoiceSeeder::class);
+        $this->call(TaxDemoInvoiceSeeder::class);
         $this->call(PaymentSeeder::class);
         $this->call(BillSeeder::class);
         $this->call(VendorPaymentSeeder::class);

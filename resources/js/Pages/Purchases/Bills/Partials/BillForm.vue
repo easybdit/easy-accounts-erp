@@ -21,10 +21,14 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    taxRates: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 function addItem() {
-    props.form.items.push({ account_id: '', description: '', quantity: 1, unit_price: '', discount: 0 });
+    props.form.items.push({ account_id: '', tax_rate_id: '', description: '', quantity: 1, unit_price: '', discount: 0 });
 }
 
 function removeItem(index) {
@@ -41,13 +45,19 @@ function lineTotal(item) {
     return quantity * unitPrice - discount;
 }
 
+function lineTax(item) {
+    const rate = props.taxRates.find((r) => r.id === item.tax_rate_id);
+    return rate ? (lineTotal(item) * parseFloat(rate.rate)) / 100 : 0;
+}
+
 const subtotal = computed(() =>
     props.form.items.reduce((sum, item) => sum + (parseFloat(item.quantity) || 0) * (parseFloat(item.unit_price) || 0), 0)
 );
 const discountTotal = computed(() =>
     props.form.items.reduce((sum, item) => sum + (parseFloat(item.discount) || 0), 0)
 );
-const total = computed(() => subtotal.value - discountTotal.value);
+const taxTotal = computed(() => props.form.items.reduce((sum, item) => sum + lineTax(item), 0));
+const total = computed(() => subtotal.value - discountTotal.value + taxTotal.value);
 </script>
 
 <template>
@@ -107,6 +117,7 @@ const total = computed(() => subtotal.value - discountTotal.value);
                     <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Qty</th>
                     <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Unit Price</th>
                     <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Discount</th>
+                    <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tax</th>
                     <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Line Total</th>
                     <th class="px-2 py-2" />
                 </tr>
@@ -156,8 +167,20 @@ const total = computed(() => subtotal.value - discountTotal.value);
                             class="block w-28 rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         />
                     </td>
+                    <td class="px-2 py-2">
+                        <select
+                            v-model="item.tax_rate_id"
+                            class="block w-36 rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        >
+                            <option :value="''">No tax</option>
+                            <option v-for="rate in taxRates" :key="rate.id" :value="rate.id">
+                                {{ rate.name }} ({{ rate.rate }}%)
+                            </option>
+                        </select>
+                        <InputError :message="form.errors[`items.${index}.tax_rate_id`]" class="mt-1" />
+                    </td>
                     <td class="whitespace-nowrap px-2 py-2 text-right text-sm text-gray-700">
-                        {{ lineTotal(item).toFixed(4) }}
+                        {{ (lineTotal(item) + lineTax(item)).toFixed(4) }}
                     </td>
                     <td class="px-2 py-2 text-right">
                         <button
@@ -183,6 +206,7 @@ const total = computed(() => subtotal.value - discountTotal.value);
     <div class="mt-6 space-y-1 border-t border-gray-100 pt-4 text-right text-sm">
         <p>Subtotal: <strong>{{ subtotal.toFixed(4) }}</strong></p>
         <p>Discount: <strong>{{ discountTotal.toFixed(4) }}</strong></p>
+        <p>Tax: <strong>{{ taxTotal.toFixed(4) }}</strong></p>
         <p class="text-base">Total: <strong>{{ total.toFixed(4) }}</strong></p>
     </div>
     <p class="mt-1 text-right text-xs text-gray-400">

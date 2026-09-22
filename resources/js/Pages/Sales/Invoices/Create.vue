@@ -10,6 +10,7 @@ const props = defineProps({
     customers: Array,
     receivableAccounts: Array,
     incomeAccounts: Array,
+    taxRates: Array,
 });
 
 const form = useForm({
@@ -18,7 +19,7 @@ const form = useForm({
     invoice_date: new Date().toISOString().slice(0, 10),
     due_date: '',
     notes: '',
-    items: [{ account_id: '', description: '', quantity: 1, unit_price: '', discount: 0 }],
+    items: [{ account_id: '', tax_rate_id: '', description: '', quantity: 1, unit_price: '', discount: 0 }],
 });
 
 function submit() {
@@ -46,6 +47,7 @@ function submit() {
                 :customers="customers"
                 :receivable-accounts="receivableAccounts"
                 :income-accounts="incomeAccounts"
+                :tax-rates="taxRates"
             />
 
             <div class="mt-6 flex justify-end gap-3">

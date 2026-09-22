@@ -27,7 +27,7 @@ class PostInvoice
             throw new RuntimeException('Only a draft invoice can be posted.');
         }
 
-        $invoice->loadMissing('items');
+        $invoice->loadMissing('items.taxRate');
 
         if ($invoice->items->isEmpty()) {
             throw new RuntimeException('An invoice must have at least one item before it can be posted.');
@@ -36,21 +36,41 @@ class PostInvoice
         return DB::transaction(function () use ($invoice) {
             $subtotal = '0.0000';
             $discountTotal = '0.0000';
+            $taxTotal = '0.0000';
+            $taxByAccount = [];
 
             foreach ($invoice->items as $item) {
                 $subtotal = bcadd($subtotal, bcmul((string) $item->quantity, (string) $item->unit_price, 4), 4);
                 $discountTotal = bcadd($discountTotal, (string) $item->discount, 4);
+
+                // Self-healing, same as subtotal/discount/total below: never
+                // trust a cached tax_amount, recompute fresh from the tax
+                // rate at posting time.
+                $taxAmount = $item->taxRate ? $item->taxRate->calculate((string) $item->line_total) : '0.0000';
+                $item->update(['tax_amount' => $taxAmount]);
+                $taxTotal = bcadd($taxTotal, $taxAmount, 4);
+
+                if ($item->taxRate && bccomp($taxAmount, '0', 4) > 0) {
+                    $accountId = $item->taxRate->tax_account_id;
+                    $taxByAccount[$accountId] = bcadd($taxByAccount[$accountId] ?? '0.0000', $taxAmount, 4);
+                }
             }
 
-            $total = $invoice->items->reduce(
-                fn (string $carry, $item) => bcadd($carry, (string) $item->line_total, 4),
-                '0.0000'
+            $total = bcadd(
+                $invoice->items->reduce(fn (string $carry, $item) => bcadd($carry, (string) $item->line_total, 4), '0.0000'),
+                $taxTotal,
+                4
             );
 
             // Self-healing: whatever gets posted to accounting also becomes the
             // invoice's authoritative stored total (Section 80 — the two must
             // never diverge), regardless of what was cached before posting.
-            $invoice->update(['subtotal' => $subtotal, 'discount_total' => $discountTotal, 'total' => $total]);
+            $invoice->update([
+                'subtotal' => $subtotal,
+                'discount_total' => $discountTotal,
+                'tax_total' => $taxTotal,
+                'total' => $total,
+            ]);
 
             if (bccomp($total, '0', 4) <= 0) {
                 throw new RuntimeException('An invoice with a zero or negative total cannot be posted.');
@@ -72,6 +92,15 @@ class PostInvoice
                     'debit' => 0,
                     'credit' => (string) $item->line_total,
                     'description' => $item->description,
+                ];
+            }
+
+            foreach ($taxByAccount as $accountId => $amount) {
+                $lines[] = [
+                    'account_id' => $accountId,
+                    'debit' => 0,
+                    'credit' => $amount,
+                    'description' => "Tax collected — Invoice {$invoice->invoice_number}",
                 ];
             }
 

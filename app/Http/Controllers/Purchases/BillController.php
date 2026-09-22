@@ -9,6 +9,7 @@ use App\Http\Requests\Purchases\StoreBillRequest;
 use App\Models\Accounting\Account;
 use App\Models\Contacts\Vendor;
 use App\Models\Purchases\Bill;
+use App\Models\Tax\TaxRate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -94,6 +95,7 @@ class BillController extends Controller
             'vendor:id,name',
             'payableAccount:id,code,name',
             'items.account:id,code,name',
+            'items.taxRate:id,name,rate',
             'journal',
             'paymentAllocations.vendorPayment:id,payment_number,payment_date',
         ]);
@@ -133,6 +135,7 @@ class BillController extends Controller
                 ->select('id', 'code', 'name')->orderBy('code')->get(),
             'expenseAccounts' => Account::query()->where('is_active', true)->where('type', 'expense')
                 ->select('id', 'code', 'name')->orderBy('code')->get(),
+            'taxRates' => TaxRate::query()->where('is_active', true)->select('id', 'name', 'rate')->orderBy('name')->get(),
         ];
     }
 }
