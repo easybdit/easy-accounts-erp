@@ -7,6 +7,8 @@ use Database\Seeders\Accounting\ChartOfAccountsSeeder;
 use Database\Seeders\Accounting\DemoTransactionsSeeder;
 use Database\Seeders\Contacts\CustomerSeeder;
 use Database\Seeders\Contacts\VendorSeeder;
+use Database\Seeders\Expenses\ExpenseCategorySeeder;
+use Database\Seeders\Expenses\ExpenseSeeder;
 use Database\Seeders\Purchases\BillSeeder;
 use Database\Seeders\Purchases\VendorPaymentSeeder;
 use Database\Seeders\Sales\InvoiceSeeder;
@@ -38,5 +40,7 @@ class DatabaseSeeder extends Seeder
         $this->call(PaymentSeeder::class);
         $this->call(BillSeeder::class);
         $this->call(VendorPaymentSeeder::class);
+        $this->call(ExpenseCategorySeeder::class);
+        $this->call(ExpenseSeeder::class);
     }
 }

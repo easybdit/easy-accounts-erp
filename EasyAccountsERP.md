@@ -2828,6 +2828,20 @@ Structural mirror of Phase 4's Sales module, in `App\Models\Purchases`:
 
 Not implemented yet: Purchase Orders, Purchase Returns, Vendor Credits (remaining Phase 5 items); Estimates and Credit Notes (remaining Phase 4 items).
 
+## Phase 6 — Expenses: Expense Categories & Expense Entry Implemented (Tax, Attachments, Recurring not yet)
+
+* Migrations: `expense_categories` (name unique, optional `default_account_id` for UI convenience only) and `expenses` (expense_category_id, `account_id` = the actual GL expense account posted to — authoritative, not the category's default; `payment_account_id`; optional `vendor_id`; required free-text `payee`; date; amount `DECIMAL(19,4)`; reference; notes).
+* Model: `App\Models\Expenses\Expense` / `ExpenseCategory`.
+* Like a manual Journal Entry or a Payment, recording an expense **is** posting it (Section 15's diagram shows `Expense -> Accounting Posting -> Journal` directly, with no "Expense Items" step, unlike Invoice/Bill) — `RecordExpense` debits the expense account, credits the payment account, atomically, through the same `PostJournal` engine. No edit/update/destroy routes.
+* **Deliberate design decision, not an oversight:** `Expense.vendor_id` is optional and purely informational (e.g. "show all expenses paid to vendor X" via a query on the `expenses` table). It is intentionally **not** tagged onto the posted journal lines, because `Vendor::currentBalance()` is strictly an Accounts Payable subsidiary ledger fed by Bills/Vendor Payments — a cash expense isn't a payable movement, and tagging it there would silently corrupt that balance. A dedicated test (`expense can optionally be linked to a vendor without affecting vendor balance`) locks this in.
+* Validation: expense account must be an active expense-type account; payment account must be an active asset account.
+* Numbering: `EXP-{year}-{seq}` (Section 50).
+* UI: Expense Categories (full CRUD, delete blocked if expenses reference it — mirrors the Account/Customer/Vendor delete-guard pattern), Expenses list/Create (category selection pre-fills its default account as a convenience; selecting a vendor pre-fills the payee name)/Show.
+* Demo data: `ExpenseCategorySeeder` (4 categories) and `ExpenseSeeder` — a cash expense with **no** vendor link (a one-off payee), deliberately distinct from the vendor-linked Bill/Vendor Payment demo data already seeded, so both paths are visible.
+* Tests: 12 new tests (5 category, 7 expense, including the vendor-balance-isolation test). Full suite: 130 tests passing.
+
+Not implemented yet: Tax on expenses, Attachments, Recurring Expenses (all explicitly deferred per Section 30/52/60 — no confirmed policy or storage decision yet, not guessed).
+
 ## Everything Else
 
 Not implemented. See Section 83 for phase order.

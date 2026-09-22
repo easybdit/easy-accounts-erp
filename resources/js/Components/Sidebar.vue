@@ -41,6 +41,13 @@ const navGroups = [
             { label: 'Vendor Payments', routeName: 'purchases.vendor-payments.index' },
         ],
     },
+    {
+        label: 'Expenses',
+        links: [
+            { label: 'Expenses', routeName: 'expenses.entries.index' },
+            { label: 'Categories', routeName: 'expenses.categories.index' },
+        ],
+    },
 ];
 
 function isActive(routeName) {
