@@ -24,7 +24,7 @@ class OtherReportsTest extends TestCase
     public function test_guest_is_blocked_from_every_report(): void
     {
         foreach ([
-            'reports.cash-flow', 'reports.sales', 'reports.purchases', 'reports.expenses',
+            'reports.cash-flow', 'reports.cash-flow-statement', 'reports.sales', 'reports.purchases', 'reports.expenses',
             'reports.customer-balances', 'reports.vendor-balances', 'reports.payments', 'reports.inventory',
         ] as $routeName) {
             $this->get(route($routeName))->assertRedirect(route('login'));

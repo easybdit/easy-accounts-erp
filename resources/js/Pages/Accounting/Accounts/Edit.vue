@@ -20,6 +20,7 @@ const form = useForm({
     opening_balance: props.account.opening_balance,
     is_active: props.account.is_active,
     is_bank_account: props.account.is_bank_account,
+    cash_flow_category: props.account.cash_flow_category,
 });
 
 function submit() {

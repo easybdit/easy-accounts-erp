@@ -10,6 +10,7 @@ Route::middleware(['auth', 'verified', 'permission:reports.view'])->prefix('repo
     Route::get('ar-aging', [ReportController::class, 'arAging'])->name('ar-aging');
     Route::get('ap-aging', [ReportController::class, 'apAging'])->name('ap-aging');
     Route::get('cash-flow', [ReportController::class, 'cashFlow'])->name('cash-flow');
+    Route::get('cash-flow-statement', [ReportController::class, 'cashFlowStatement'])->name('cash-flow-statement');
     Route::get('sales', [ReportController::class, 'sales'])->name('sales');
     Route::get('purchases', [ReportController::class, 'purchases'])->name('purchases');
     Route::get('expenses', [ReportController::class, 'expenses'])->name('expenses');

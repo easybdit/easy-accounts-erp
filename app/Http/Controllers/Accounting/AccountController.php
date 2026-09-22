@@ -45,7 +45,10 @@ class AccountController extends Controller
 
     public function store(StoreAccountRequest $request): RedirectResponse
     {
-        Account::create($request->validated());
+        $data = $request->validated();
+        $data['cash_flow_category'] ??= Account::defaultCashFlowCategory($data['type']);
+
+        Account::create($data);
 
         return redirect()->route('accounting.accounts.index')
             ->with('success', 'Account created.');
@@ -66,7 +69,10 @@ class AccountController extends Controller
 
     public function update(UpdateAccountRequest $request, Account $account): RedirectResponse
     {
-        $account->update($request->validated());
+        $data = $request->validated();
+        $data['cash_flow_category'] ??= Account::defaultCashFlowCategory($data['type']);
+
+        $account->update($data);
 
         return redirect()->route('accounting.accounts.index')
             ->with('success', 'Account updated.');

@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 
@@ -44,8 +44,9 @@ function apply() {
                 <input v-model="to" type="date" class="mt-1 block rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500" @change="apply" />
             </div>
             <p class="text-xs text-gray-400">
-                A cash movement summary for Bank/Cash accounts, not a categorized
-                Operating/Investing/Financing statement.
+                A per-account cash movement summary. For an Operating/Investing/Financing
+                breakdown, see the
+                <Link :href="route('reports.cash-flow-statement')" class="text-indigo-600 hover:text-indigo-900">Cash Flow Statement</Link>.
             </p>
         </div>
 

@@ -19,6 +19,7 @@ const form = useForm({
     opening_balance: 0,
     is_active: true,
     is_bank_account: false,
+    cash_flow_category: 'operating',
 });
 
 function submit() {

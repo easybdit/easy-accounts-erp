@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
 use App\Models\Accounting\Account;
+use App\Models\Accounting\JournalEntry;
 use App\Models\Contacts\Customer;
 use App\Models\Contacts\Vendor;
 use App\Models\Expenses\Expense;
@@ -138,11 +139,10 @@ class ReportController extends Controller
     }
 
     /**
-     * A cash movement summary for Cash/Bank accounts (opening, in, out,
-     * closing) — deliberately NOT a categorized (Operating/Investing/
-     * Financing) Cash Flow Statement, since that requires transaction
-     * classification rules nobody has confirmed (Section 33/84 pattern:
-     * do not invent policy without a verified requirement).
+     * A per-account cash movement summary for Cash/Bank accounts (opening,
+     * in, out, closing) — kept alongside cashFlowStatement() below for
+     * account-level reconciliation-style detail; the categorized
+     * Operating/Investing/Financing breakdown lives there.
      */
     public function cashFlow(Request $request): Response
     {
@@ -175,6 +175,94 @@ class ReportController extends Controller
             'totalIn' => $accounts->reduce(fn (string $c, array $r) => bcadd($c, $r['in'], 4), '0.0000'),
             'totalOut' => $accounts->reduce(fn (string $c, array $r) => bcadd($c, $r['out'], 4), '0.0000'),
             'totalClosing' => $accounts->reduce(fn (string $c, array $r) => bcadd($c, $r['closing'], 4), '0.0000'),
+            'from' => $from,
+            'to' => $to,
+        ]);
+    }
+
+    /**
+     * The Categorized (direct-method) Cash Flow Statement (Section 90
+     * Phase 10, resolved): every bank/cash account's movement in the
+     * period, classified into Operating/Investing/Financing by the
+     * cash_flow_category of the account on the OTHER side of the journal
+     * (Account::CASH_FLOW_CATEGORIES). A movement whose only contra
+     * accounts are themselves bank accounts is an internal transfer and is
+     * excluded entirely, same as a real cash flow statement excludes
+     * moving money between your own accounts. A multi-line journal (e.g.
+     * an Expense with tax) splits the cash movement across its non-bank
+     * contra lines proportionally to their own amounts.
+     */
+    public function cashFlowStatement(Request $request): Response
+    {
+        $from = $request->date('from')?->toDateString();
+        $to = $request->date('to')?->toDateString() ?? now()->toDateString();
+
+        $bankAccounts = Account::where('is_bank_account', true)->where('is_active', true)->get();
+        $bankAccountIds = $bankAccounts->pluck('id')->all();
+
+        $totals = ['operating' => '0.0000', 'investing' => '0.0000', 'financing' => '0.0000'];
+        $byCategory = ['operating' => [], 'investing' => [], 'financing' => []];
+
+        $entries = JournalEntry::query()
+            ->whereIn('account_id', $bankAccountIds)
+            ->whereHas('journal', fn ($q) => $q->whereDate('date', '>=', $from ?? '0001-01-01')->whereDate('date', '<=', $to))
+            ->with('journal.entries.account')
+            ->get();
+
+        foreach ($entries as $entry) {
+            $siblings = $entry->journal->entries->reject(fn (JournalEntry $e) => $e->id === $entry->id);
+            $nonBankSiblings = $siblings->reject(fn (JournalEntry $e) => in_array($e->account_id, $bankAccountIds, true));
+
+            // All contra lines are also bank accounts: an internal transfer.
+            if ($nonBankSiblings->isEmpty()) {
+                continue;
+            }
+
+            $netMovement = bcsub((string) $entry->debit, (string) $entry->credit, 4);
+
+            $totalSiblingMagnitude = $nonBankSiblings->reduce(
+                fn (string $carry, JournalEntry $e) => bcadd($carry, ltrim(bcsub((string) $e->credit, (string) $e->debit, 4), '-'), 4),
+                '0.0000'
+            );
+
+            foreach ($nonBankSiblings as $sibling) {
+                $siblingMagnitude = ltrim(bcsub((string) $sibling->credit, (string) $sibling->debit, 4), '-');
+
+                $share = bccomp($totalSiblingMagnitude, '0', 4) === 0
+                    ? '0.0000'
+                    : bcdiv(bcmul($netMovement, $siblingMagnitude, 10), $totalSiblingMagnitude, 4);
+
+                $category = $sibling->account->cash_flow_category;
+                $totals[$category] = bcadd($totals[$category], $share, 4);
+
+                $accountId = $sibling->account_id;
+                $byCategory[$category][$accountId] ??= [
+                    'id' => $accountId,
+                    'code' => $sibling->account->code,
+                    'name' => $sibling->account->name,
+                    'amount' => '0.0000',
+                ];
+                $byCategory[$category][$accountId]['amount'] = bcadd($byCategory[$category][$accountId]['amount'], $share, 4);
+            }
+        }
+
+        $openingCash = $bankAccounts->reduce(
+            fn (string $carry, Account $account) => bcadd($carry, $from ? $account->balanceAsOf(date('Y-m-d', strtotime($from.' -1 day'))) : (string) $account->opening_balance, 4),
+            '0.0000'
+        );
+        $closingCash = $bankAccounts->reduce(fn (string $carry, Account $account) => bcadd($carry, $account->balanceAsOf($to), 4), '0.0000');
+        $netChange = bcadd(bcadd($totals['operating'], $totals['investing'], 4), $totals['financing'], 4);
+
+        return Inertia::render('Reports/CashFlowStatement', [
+            'operating' => array_values($byCategory['operating']),
+            'investing' => array_values($byCategory['investing']),
+            'financing' => array_values($byCategory['financing']),
+            'totalOperating' => $totals['operating'],
+            'totalInvesting' => $totals['investing'],
+            'totalFinancing' => $totals['financing'],
+            'netChange' => $netChange,
+            'openingCash' => $openingCash,
+            'closingCash' => $closingCash,
             'from' => $from,
             'to' => $to,
         ]);

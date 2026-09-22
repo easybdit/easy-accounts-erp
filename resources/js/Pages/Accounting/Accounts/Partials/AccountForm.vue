@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
@@ -21,6 +21,19 @@ const props = defineProps({
 
 const parentOptions = computed(() =>
     props.accounts.filter((account) => !props.form.type || account.type === props.form.type)
+);
+
+// Convenience default, same spirit as the backend migration's backfill:
+// equity is financing activity, everything else starts as operating. The
+// user can still freely override per account (e.g. a fixed-asset or loan
+// account) before saving.
+watch(
+    () => props.form.type,
+    (type) => {
+        if (!props.form.cash_flow_category || props.form.cash_flow_category === 'operating') {
+            props.form.cash_flow_category = type === 'equity' ? 'financing' : 'operating';
+        }
+    }
 );
 </script>
 
@@ -79,6 +92,22 @@ const parentOptions = computed(() =>
                 class="mt-1 block w-full"
             />
             <InputError :message="form.errors.opening_balance" class="mt-2" />
+        </div>
+
+        <div v-if="!form.is_bank_account">
+            <InputLabel for="cash_flow_category" value="Cash Flow Category" />
+            <select
+                id="cash_flow_category"
+                v-model="form.cash_flow_category"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                required
+            >
+                <option value="operating">Operating</option>
+                <option value="investing">Investing</option>
+                <option value="financing">Financing</option>
+            </select>
+            <p class="mt-1 text-xs text-gray-400">Used to classify this account's movements on the Cash Flow Statement.</p>
+            <InputError :message="form.errors.cash_flow_category" class="mt-2" />
         </div>
 
         <div class="flex items-center gap-2 pt-6">

@@ -10,6 +10,7 @@ const groups = [
         reports: [
             { name: 'Profit & Loss', routeName: 'reports.profit-and-loss' },
             { name: 'Balance Sheet', routeName: 'reports.balance-sheet' },
+            { name: 'Cash Flow Statement', routeName: 'reports.cash-flow-statement' },
             { name: 'Cash Flow (movement summary)', routeName: 'reports.cash-flow' },
             { name: 'Trial Balance', routeName: 'accounting.trial-balance.index' },
         ],

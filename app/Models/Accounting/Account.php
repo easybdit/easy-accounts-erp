@@ -29,6 +29,7 @@ class Account extends Model
         'opening_balance',
         'is_active',
         'is_bank_account',
+        'cash_flow_category',
     ];
 
     protected $casts = [
@@ -38,6 +39,8 @@ class Account extends Model
     ];
 
     public const TYPES = ['asset', 'liability', 'equity', 'income', 'expense'];
+
+    public const CASH_FLOW_CATEGORIES = ['operating', 'investing', 'financing'];
 
     protected static function newFactory(): AccountFactory
     {
@@ -97,6 +100,17 @@ class Account extends Model
         }
 
         return $ids;
+    }
+
+    /**
+     * Sensible default when no cash_flow_category was submitted: equity is
+     * financing activity, everything else starts as operating (mirrors the
+     * migration's backfill for pre-existing accounts). A fixed-asset or
+     * loan account can be reclassified individually afterward.
+     */
+    public static function defaultCashFlowCategory(string $type): string
+    {
+        return $type === 'equity' ? 'financing' : 'operating';
     }
 
     /**

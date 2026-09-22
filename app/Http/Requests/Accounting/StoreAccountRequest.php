@@ -24,6 +24,7 @@ class StoreAccountRequest extends FormRequest
             'opening_balance' => ['nullable', 'numeric'],
             'is_active' => ['boolean'],
             'is_bank_account' => ['boolean'],
+            'cash_flow_category' => ['nullable', Rule::in(Account::CASH_FLOW_CATEGORIES)],
         ];
     }
 
