@@ -61,6 +61,11 @@ class Account extends Model
         return $this->hasMany(self::class, 'parent_id');
     }
 
+    public function journalEntries(): HasMany
+    {
+        return $this->hasMany(JournalEntry::class);
+    }
+
     /**
      * All descendant account IDs (recursive), computed iteratively to stay
      * portable across MySQL/MariaDB versions without relying on recursive CTEs.

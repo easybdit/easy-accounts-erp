@@ -80,6 +80,12 @@ class AccountController extends Controller
             ]);
         }
 
+        if ($account->journalEntries()->exists()) {
+            return back()->withErrors([
+                'account' => 'This account has posted journal entries and cannot be deleted.',
+            ]);
+        }
+
         $account->delete();
 
         return redirect()->route('accounting.accounts.index')

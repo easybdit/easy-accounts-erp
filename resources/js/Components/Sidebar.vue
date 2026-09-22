@@ -20,6 +20,7 @@ const navGroups = [
         label: 'Accounting',
         links: [
             { label: 'Chart of Accounts', routeName: 'accounting.accounts.index' },
+            { label: 'Journal', routeName: 'accounting.journals.index' },
         ],
     },
 ];

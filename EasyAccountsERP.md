@@ -2752,7 +2752,17 @@ Implemented (Chart of Accounts):
 * UI: Inertia/Vue pages — Index (search + type filter + pagination + delete confirmation modal), Create, Edit, shared `AccountForm` partial.
 * Tests: 12 feature/unit tests covering CRUD, validation, type-matching rule, cycle prevention, delete-with-children protection, and seeder correctness. Full regression suite (38 tests) passes.
 
-Not implemented yet: Journal, Journal Entries, Double-entry Posting Engine, General Ledger, Trial Balance (next increments in dependency order per Section 83 Phase 2).
+Implemented (Journal, Journal Entries, Double-entry Posting Engine):
+
+* Migrations: `journals` (date, reference, description, `posted_at`, nullable polymorphic `source` for future Invoice/Bill/Payment traceability, `created_by`) and `journal_entries` (`account_id`, `debit`/`credit` as `DECIMAL(19,4)`, line `description`).
+* Models: `Journal` (with `totalDebit()`/`totalCredit()`/`isBalanced()` using bcmath, never float, per Section 21) and `JournalEntry`.
+* Shared posting engine: `App\Actions\Accounting\PostJournal` — the single entry point every financial transaction (manual journal now; invoices/bills/payments/expenses later per Section 15) must post through. Enforces `SUM(debit) = SUM(credit)` before writing anything, wraps creation in `DB::transaction` (Section 19), and is verified to leave zero rows on any failure (Section 64 invariant tests).
+* Validation (`StoreJournalRequest`): minimum 2 lines, each line exactly one of debit/credit (not both, not neither), all referenced accounts must exist and be active, total debit = total credit via bcmath, journal cannot be entirely zero.
+* Routes/UI: `accounting.journals.index|create|store|show` only — **no edit/update/destroy routes are registered**, since Section 20 (Financial Immutability) requires an approved void/reversal/adjustment workflow before posted transactions can be changed, and that workflow has not been defined/approved yet. This is a deliberate omission, not an oversight.
+* `AccountController@destroy` now also blocks deleting an account that has journal entries (Section 81 Balance Integrity).
+* Tests: 12 new tests (validation rules, atomicity/rollback on both a pre-check rejection and a mid-transaction DB failure, route-non-existence assertions for edit/update/destroy). Full suite: 52 tests passing.
+
+Not implemented yet: General Ledger, Trial Balance (next increment in dependency order per Section 83 Phase 2). Void/Reversal workflow for posted journals also remains an open decision (Section 20, Section 84 item 33).
 
 ## Everything Else
 
