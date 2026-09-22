@@ -36,6 +36,7 @@ const allNavGroups = [
             { label: 'Journal', routeName: 'accounting.journals.index' },
             { label: 'General Ledger', routeName: 'accounting.ledger.index' },
             { label: 'Trial Balance', routeName: 'accounting.trial-balance.index' },
+            { label: 'Fixed Assets', routeName: 'accounting.fixed-assets.index' },
         ],
     },
     {

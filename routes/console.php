@@ -13,3 +13,8 @@ Artisan::command('inspire', function () {
 // grows unbounded. --force skips the production confirmation prompt since
 // this runs unattended.
 Schedule::command('activitylog:clean --force')->daily();
+
+// Fixed Asset depreciation: post one month of straight-line depreciation
+// for every active asset, on the 1st of each month. Idempotent — see
+// PostMonthlyDepreciation's docblock.
+Schedule::command('assets:post-depreciation')->monthlyOn(1, '01:00');

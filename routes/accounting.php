@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Accounting\AccountController;
+use App\Http\Controllers\Accounting\FixedAssetController;
 use App\Http\Controllers\Accounting\GeneralLedgerController;
 use App\Http\Controllers\Accounting\JournalController;
 use App\Http\Controllers\Accounting\TrialBalanceController;
@@ -38,5 +39,23 @@ Route::middleware(['auth', 'verified'])->prefix('accounting')->name('accounting.
     });
     Route::middleware('permission:journal.view')->group(function () {
         Route::get('journals/{journal}', [JournalController::class, 'show'])->name('journals.show');
+    });
+
+    // Fixed Assets reuse accounts.* rather than a separate permission pair
+    // (Section 90) — same reasoning as every other sub-feature this session.
+    Route::middleware('permission:accounts.view')->group(function () {
+        Route::get('fixed-assets', [FixedAssetController::class, 'index'])->name('fixed-assets.index');
+    });
+    Route::middleware('permission:accounts.manage')->group(function () {
+        Route::get('fixed-assets/create', [FixedAssetController::class, 'create'])->name('fixed-assets.create');
+        Route::post('fixed-assets', [FixedAssetController::class, 'store'])->name('fixed-assets.store');
+        Route::get('fixed-assets/{fixed_asset}/edit', [FixedAssetController::class, 'edit'])->name('fixed-assets.edit');
+        Route::put('fixed-assets/{fixed_asset}', [FixedAssetController::class, 'update'])->name('fixed-assets.update');
+        Route::delete('fixed-assets/{fixed_asset}', [FixedAssetController::class, 'destroy'])->name('fixed-assets.destroy');
+        Route::post('fixed-assets/{fixed_asset}/post-depreciation', [FixedAssetController::class, 'postDepreciation'])->name('fixed-assets.post-depreciation');
+        Route::post('fixed-assets/{fixed_asset}/dispose', [FixedAssetController::class, 'dispose'])->name('fixed-assets.dispose');
+    });
+    Route::middleware('permission:accounts.view')->group(function () {
+        Route::get('fixed-assets/{fixed_asset}', [FixedAssetController::class, 'show'])->name('fixed-assets.show');
     });
 });
