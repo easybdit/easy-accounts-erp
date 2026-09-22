@@ -15,6 +15,8 @@ class Journal extends Model
         'reference',
         'description',
         'posted_at',
+        'source_type',
+        'source_id',
         'created_by',
     ];
 

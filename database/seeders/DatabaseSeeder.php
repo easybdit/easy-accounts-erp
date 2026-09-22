@@ -7,6 +7,7 @@ use Database\Seeders\Accounting\ChartOfAccountsSeeder;
 use Database\Seeders\Accounting\DemoTransactionsSeeder;
 use Database\Seeders\Contacts\CustomerSeeder;
 use Database\Seeders\Contacts\VendorSeeder;
+use Database\Seeders\Sales\InvoiceSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -30,5 +31,6 @@ class DatabaseSeeder extends Seeder
         $this->call(CustomerSeeder::class);
         $this->call(VendorSeeder::class);
         $this->call(DemoTransactionsSeeder::class);
+        $this->call(InvoiceSeeder::class);
     }
 }

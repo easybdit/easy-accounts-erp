@@ -27,7 +27,10 @@ const navGroups = [
     },
     {
         label: 'Sales',
-        links: [{ label: 'Customers', routeName: 'customers.index' }],
+        links: [
+            { label: 'Customers', routeName: 'customers.index' },
+            { label: 'Invoices', routeName: 'sales.invoices.index' },
+        ],
     },
     {
         label: 'Purchases',

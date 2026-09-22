@@ -2784,6 +2784,20 @@ Not implemented yet: none of the remaining Phase 2 items — Chart of Accounts, 
 
 Not implemented: Payment History (needs the Payments module, Phase 4/5) — the Statement page currently shows all tagged journal-entry activity, which is the only transaction type that exists so far.
 
+## Phase 4 — Sales: Invoices Implemented (Estimates, Payments, Credit Notes not yet)
+
+* Migrations: `invoices` (invoice_number unique, `customer_id`, `receivable_account_id`, invoice_date, due_date, status `draft`/`posted`, subtotal/discount_total/total as `DECIMAL(19,4)`, notes, posted_at) and `invoice_items` (account_id = the line's income account, quantity/unit_price/discount/line_total).
+* Models: `App\Models\Sales\Invoice` / `InvoiceItem` (Business Modules namespace, Section 10/76). `Invoice::journal()` is a `morphOne` reusing `Journal`'s existing `source_type`/`source_id` columns — no separate `journal_id` column needed.
+* **Bug fixed while wiring this up:** `Journal::$fillable` was missing `source_type`/`source_id`, so every prior "traceable to source" claim (Section 16/17/89/90) was silently a no-op — mass-assignment dropped those columns and they were always `NULL`. Fixed; verified with a fresh reseed that `Invoice::journal` now resolves correctly.
+* Draft/Posted lifecycle (Section 20 Financial Immutability): `SaveInvoiceDraft` creates/updates a draft and always recomputes subtotal/discount/total from the submitted items server-side via bcmath (Section 45 — frontend total is feedback only). `PostInvoice` recomputes the total fresh from the DB (never trusts a cached value), then posts one balanced journal through the same `PostJournal` engine — debit the invoice's receivable account (tagged to the customer), credit each line's income account — and only then flips status to `posted`. A posted invoice cannot be edited or deleted (`403`); no void/reversal yet, same open decision as Journals (Section 20).
+* Validation: receivable account must be an active asset account; every line's account must be an active income account; a line's discount cannot exceed its own line amount; an invoice needs ≥1 item and a positive total to post.
+* Numbering (Section 50): default `INV-{year}-{4-digit sequence}`, generated server-side, enforced unique at the DB level. Documented as a starting default, not a confirmed fixed policy — see Section 84 item 13.
+* UI: Invoice list (search/status filter), Create/Edit (dynamic line items, live client-side total preview only), Show (items, totals, link to the posted journal, Post/Edit/Delete actions gated by status).
+* Demo data: `InvoiceSeeder` creates and **posts** a real 2-line invoice for "Rahman Enterprise" (idempotent), so the Invoices list, the posted journal, and the customer's current balance are all populated and correct out of the box.
+* Tests: 10 new tests (computed totals, both account-type validations, discount-exceeds-line validation, draft editing, posting producing a balanced customer-tagged journal, immutability after posting, draft deletion, posting-without-items rejection). Full suite: 89 tests passing.
+
+Not implemented yet: Estimates, Customer Payments, Payment Allocation, Credit Notes (remaining Phase 4 items).
+
 ## Everything Else
 
 Not implemented. See Section 83 for phase order.
