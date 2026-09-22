@@ -27,10 +27,19 @@ class ChartOfAccountsSeederTest extends TestCase
     {
         $this->seed(ChartOfAccountsSeeder::class);
 
+        // The fundamental accounting equation, applied to opening balances:
+        // debit-normal accounts (assets/expenses) must net to the same
+        // total as credit-normal accounts (liabilities/equity/income).
+        // A naive SUM(opening_balance) == 0 only happened to hold when every
+        // opening balance was zero; it does not generalize to a real funded
+        // starting position (e.g. Cash offset by Owner's Equity).
+        $debitNormalTotal = (float) Account::whereIn('type', ['asset', 'expense'])->sum('opening_balance');
+        $creditNormalTotal = (float) Account::whereIn('type', ['liability', 'equity', 'income'])->sum('opening_balance');
+
         $this->assertEquals(
-            0,
-            (float) Account::sum('opening_balance'),
-            'Default seeded chart of accounts must start balanced.'
+            $debitNormalTotal,
+            $creditNormalTotal,
+            'Default seeded chart of accounts must start balanced (assets+expenses opening balances must equal liabilities+equity+income opening balances).'
         );
     }
 

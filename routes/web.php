@@ -29,4 +29,5 @@ require __DIR__.'/contacts.php';
 require __DIR__.'/sales.php';
 require __DIR__.'/purchases.php';
 require __DIR__.'/expenses.php';
+require __DIR__.'/banking.php';
 require __DIR__.'/auth.php';

@@ -20,11 +20,13 @@ class Account extends Model
         'parent_id',
         'opening_balance',
         'is_active',
+        'is_bank_account',
     ];
 
     protected $casts = [
         'opening_balance' => 'decimal:4',
         'is_active' => 'boolean',
+        'is_bank_account' => 'boolean',
     ];
 
     public const TYPES = ['asset', 'liability', 'equity', 'income', 'expense'];

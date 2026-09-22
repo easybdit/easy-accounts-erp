@@ -23,6 +23,7 @@ class StoreAccountRequest extends FormRequest
             'parent_id' => ['nullable', 'integer', 'exists:accounts,id'],
             'opening_balance' => ['nullable', 'numeric'],
             'is_active' => ['boolean'],
+            'is_bank_account' => ['boolean'],
         ];
     }
 
@@ -41,6 +42,10 @@ class StoreAccountRequest extends FormRequest
                         'The selected parent account must have the same account type.'
                     );
                 }
+            }
+
+            if ($this->boolean('is_bank_account') && $type !== 'asset') {
+                $validator->errors()->add('is_bank_account', 'Only an asset account can be marked as a bank/cash account.');
             }
         });
     }

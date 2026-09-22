@@ -48,6 +48,13 @@ const navGroups = [
             { label: 'Categories', routeName: 'expenses.categories.index' },
         ],
     },
+    {
+        label: 'Banking',
+        links: [
+            { label: 'Bank Accounts', routeName: 'banking.accounts.index' },
+            { label: 'Transfers', routeName: 'banking.transfers.index' },
+        ],
+    },
 ];
 
 function isActive(routeName) {

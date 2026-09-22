@@ -30,6 +30,7 @@ class UpdateAccountRequest extends FormRequest
             ],
             'opening_balance' => ['nullable', 'numeric'],
             'is_active' => ['boolean'],
+            'is_bank_account' => ['boolean'],
         ];
     }
 
@@ -39,6 +40,10 @@ class UpdateAccountRequest extends FormRequest
             $account = $this->route('account');
             $parentId = $this->input('parent_id');
             $type = $this->input('type');
+
+            if ($this->boolean('is_bank_account') && $type !== 'asset') {
+                $validator->errors()->add('is_bank_account', 'Only an asset account can be marked as a bank/cash account.');
+            }
 
             if (! $parentId) {
                 return;

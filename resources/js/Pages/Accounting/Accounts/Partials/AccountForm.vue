@@ -85,5 +85,10 @@ const parentOptions = computed(() =>
             <input id="is_active" v-model="form.is_active" type="checkbox" class="rounded border-gray-300" />
             <InputLabel for="is_active" value="Active" />
         </div>
+
+        <div v-if="form.type === 'asset'" class="flex items-center gap-2 pt-6">
+            <input id="is_bank_account" v-model="form.is_bank_account" type="checkbox" class="rounded border-gray-300" />
+            <InputLabel for="is_bank_account" value="Bank/Cash Account (shows on the Banking overview)" />
+        </div>
     </div>
 </template>

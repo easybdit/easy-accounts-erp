@@ -35,11 +35,37 @@ class ChartOfAccountsSeeder extends Seeder
                             'type' => $type,
                             'parent_id' => $parent->id,
                             'is_active' => true,
+                            'is_bank_account' => in_array((string) $childCode, $this->bankAccountCodes(), true),
+                            'opening_balance' => $this->openingBalances()[(string) $childCode] ?? 0,
                         ]
                     );
                 }
             }
         }
+    }
+
+    /**
+     * A starting Cash balance, offset by Owner's Equity so the seeded
+     * chart still nets to zero (assets = liabilities + equity) — purely
+     * to make the demo data look like a real, funded starting position
+     * instead of an empty/negative cash account after the other demo
+     * seeders record their transactions.
+     */
+    private function openingBalances(): array
+    {
+        return [
+            '1001' => 2000, // Cash
+            '3001' => 2000, // Owner's Equity
+        ];
+    }
+
+    /**
+     * Cash and Bank are actual Cash/Bank accounts (Section 31 Banking);
+     * Accounts Receivable and Inventory are asset-type but not bank/cash.
+     */
+    private function bankAccountCodes(): array
+    {
+        return ['1001', '1002'];
     }
 
     private function tree(): array

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Database\Seeders\Accounting\ChartOfAccountsSeeder;
 use Database\Seeders\Accounting\DemoTransactionsSeeder;
+use Database\Seeders\Banking\TransferSeeder;
 use Database\Seeders\Contacts\CustomerSeeder;
 use Database\Seeders\Contacts\VendorSeeder;
 use Database\Seeders\Expenses\ExpenseCategorySeeder;
@@ -42,5 +43,6 @@ class DatabaseSeeder extends Seeder
         $this->call(VendorPaymentSeeder::class);
         $this->call(ExpenseCategorySeeder::class);
         $this->call(ExpenseSeeder::class);
+        $this->call(TransferSeeder::class);
     }
 }

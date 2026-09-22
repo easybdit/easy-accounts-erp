@@ -18,6 +18,7 @@ const form = useForm({
     parent_id: null,
     opening_balance: 0,
     is_active: true,
+    is_bank_account: false,
 });
 
 function submit() {

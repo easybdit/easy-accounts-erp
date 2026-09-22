@@ -19,6 +19,7 @@ const form = useForm({
     parent_id: props.account.parent_id,
     opening_balance: props.account.opening_balance,
     is_active: props.account.is_active,
+    is_bank_account: props.account.is_bank_account,
 });
 
 function submit() {

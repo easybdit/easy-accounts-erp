@@ -2842,6 +2842,18 @@ Not implemented yet: Purchase Orders, Purchase Returns, Vendor Credits (remainin
 
 Not implemented yet: Tax on expenses, Attachments, Recurring Expenses (all explicitly deferred per Section 30/52/60 — no confirmed policy or storage decision yet, not guessed).
 
+## Phase 7 — Banking: Transfers & Bank Accounts Overview Implemented (Reconciliation not yet)
+
+* Schema addition: `accounts.is_bank_account` (boolean, default false) — distinguishes actual Cash/Bank accounts from other asset-type accounts (Accounts Receivable, Inventory, ...), which the Chart of Accounts had no way to express before. Only settable when `type = 'asset'` (enforced in `StoreAccountRequest`/`UpdateAccountRequest`); exposed as a checkbox on the Account form, shown only for asset accounts. Seeded COA marks Cash (1001) and Bank (1002) as bank accounts; Accounts Receivable and Inventory are not.
+* Migration: `transfers` (transfer_number unique, from_account_id, to_account_id, date, amount `DECIMAL(19,4)`, reference, notes).
+* Model: `App\Models\Banking\Transfer`. Like a manual Journal Entry, Payment, Expense, etc., recording a transfer **is** posting it immediately — `RecordTransfer` debits the destination account, credits the source account, through the existing `PostJournal` engine. No edit/update/destroy routes.
+* Validation: both accounts must be active asset accounts; source and destination must differ.
+* "Bank Accounts" overview (`banking.accounts.index`) deliberately does **not** duplicate the General Ledger — it lists only `is_bank_account = true` asset accounts with their current balance, and links each one to the existing per-account General Ledger view (built in Phase 2) for transaction history, satisfying Section 31's "Bank Transactions" register requirement through reuse rather than a second implementation.
+* Demo data: `TransferSeeder` moves 500 from Cash to Bank. Also **fixed the demo data's realism**, not correctness: the Chart of Accounts seeder now gives Cash a starting balance of 2000, offset by an equal increase to Owner's Equity (so the books still balance) — previously Cash drifted to a negative balance once the Payment/Expense/Transfer demo seeders had all drawn against a zero starting balance. This surfaced a **latent weakness in `ChartOfAccountsSeederTest`**: its "opening balances are balanced" check was `SUM(opening_balance) == 0`, which only happened to hold in the trivial all-zero case and doesn't express the actual accounting equation. Fixed the test to check `SUM(asset+expense opening balances) == SUM(liability+equity+income opening balances)`, which holds for a real funded starting position and would have caught the wrong condition if the seeder had actually been unbalanced.
+* Tests: 8 new tests (transfer posting/balances, same-account rejection, wrong-account-type rejection, correct post-transfer balances, bank-account-flag filtering and validation). Full suite: 138 tests passing.
+
+Not implemented: Reconciliation — deliberately deferred, same reasoning as Void/Reversal (Section 20): matching against a bank statement needs a defined workflow (does marking an entry "cleared" lock it? how are prior reconciled periods protected? is there a saved statement-balance history?) that hasn't been confirmed, so it isn't guessed at. `journal_entries` has no `reconciled_at` column yet — that's a real schema decision for whenever this is picked up, not an oversight.
+
 ## Everything Else
 
 Not implemented. See Section 83 for phase order.
