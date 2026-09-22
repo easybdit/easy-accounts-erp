@@ -4,6 +4,7 @@ namespace App\Actions\Purchases;
 
 use App\Actions\Accounting\PostJournal;
 use App\Models\Purchases\Bill;
+use App\Models\Purchases\BillItem;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -14,6 +15,12 @@ use RuntimeException;
  * Debit each item's expense account, credit the bill's payable account
  * (tagged to the vendor) for the total. Recomputes and persists the total
  * fresh from the current items at posting time (self-healing, Section 80).
+ *
+ * Inventory integration (Section 32): a line tagged to an inventory-tracked
+ * product AND debiting that product's inventory account (rather than a
+ * plain expense account) records a StockMovement (quantity in). No
+ * companion journal is needed here — the bill's own journal above already
+ * debits the inventory asset account for that line.
  */
 class PostBill
 {
@@ -25,7 +32,7 @@ class PostBill
             throw new RuntimeException('Only a draft bill can be posted.');
         }
 
-        $bill->loadMissing('items.taxRate');
+        $bill->loadMissing('items.taxRate', 'items.product');
 
         if ($bill->items->isEmpty()) {
             throw new RuntimeException('A bill must have at least one item before it can be posted.');
@@ -112,7 +119,24 @@ class PostBill
 
             $bill->update(['status' => 'posted', 'posted_at' => now()]);
 
+            foreach ($bill->items as $item) {
+                if ($item->product && $item->product->isInventoryTracked() && $item->account_id === $item->product->inventory_account_id) {
+                    $this->recordPurchaseStockMovement($bill, $item);
+                }
+            }
+
             return $bill->fresh(['items', 'journal']);
         });
+    }
+
+    private function recordPurchaseStockMovement(Bill $bill, BillItem $item): void
+    {
+        $item->product->stockMovements()->create([
+            'date' => $bill->bill_date->toDateString(),
+            'quantity' => $item->quantity,
+            'reason' => 'purchase',
+            'reference' => $bill->bill_number,
+            'created_by' => $bill->created_by,
+        ]);
     }
 }

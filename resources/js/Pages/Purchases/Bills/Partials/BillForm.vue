@@ -21,6 +21,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    products: {
+        type: Array,
+        default: () => [],
+    },
     taxRates: {
         type: Array,
         default: () => [],
@@ -48,12 +52,36 @@ const props = defineProps({
 });
 
 function addItem() {
-    props.form.items.push({ account_id: '', tax_rate_id: '', description: '', quantity: 1, unit_price: '', discount: 0 });
+    props.form.items.push({ product_id: '', account_id: '', tax_rate_id: '', description: '', quantity: 1, unit_price: '', discount: 0 });
 }
 
 function removeItem(index) {
     if (props.form.items.length > 1) {
         props.form.items.splice(index, 1);
+    }
+}
+
+// Selecting an inventory-tracked product auto-fills its inventory (asset)
+// account too, since buying stock is an asset addition, not an expense; a
+// service product only fills description/price and leaves the expense
+// account for the user to pick (Section 32 integration).
+function onProductChange(item, rawValue) {
+    const productId = rawValue ? Number(rawValue) : '';
+    item.product_id = productId;
+
+    if (!productId) {
+        return;
+    }
+
+    const product = props.products.find((p) => p.id === productId);
+    if (!product) {
+        return;
+    }
+
+    item.description = product.name;
+    item.unit_price = product.purchase_price;
+    if (product.type === 'inventory' && product.inventory_account_id) {
+        item.account_id = product.inventory_account_id;
     }
 }
 
@@ -68,6 +96,14 @@ function lineTotal(item) {
 function lineTax(item) {
     const rate = props.taxRates.find((r) => r.id === item.tax_rate_id);
     return rate ? (lineTotal(item) * parseFloat(rate.rate)) / 100 : 0;
+}
+
+// An inventory product's account_id points at its inventory (asset)
+// account, which isn't in expenseAccounts — surface it as an extra option
+// so the select shows the right thing instead of appearing blank.
+function inventoryAccountFor(item) {
+    const product = props.products.find((p) => p.id === item.product_id);
+    return product && product.type === 'inventory' ? product.inventory_account : null;
 }
 
 const subtotal = computed(() =>
@@ -132,6 +168,7 @@ const total = computed(() => subtotal.value - discountTotal.value + taxTotal.val
         <table class="min-w-full divide-y divide-gray-200">
             <thead>
                 <tr>
+                    <th v-if="products.length > 0" class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Product</th>
                     <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Expense Account</th>
                     <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
                     <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Qty</th>
@@ -144,6 +181,18 @@ const total = computed(() => subtotal.value - discountTotal.value + taxTotal.val
             </thead>
             <tbody class="divide-y divide-gray-100">
                 <tr v-for="(item, index) in form.items" :key="index">
+                    <td v-if="products.length > 0" class="px-2 py-2">
+                        <select
+                            :value="item.product_id"
+                            class="block w-40 rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            @change="onProductChange(item, $event.target.value)"
+                        >
+                            <option value="">Custom line</option>
+                            <option v-for="product in products" :key="product.id" :value="product.id">
+                                {{ product.sku }} — {{ product.name }}
+                            </option>
+                        </select>
+                    </td>
                     <td class="px-2 py-2">
                         <select
                             v-model="item.account_id"
@@ -152,6 +201,9 @@ const total = computed(() => subtotal.value - discountTotal.value + taxTotal.val
                             <option value="" disabled>Select account</option>
                             <option v-for="account in expenseAccounts" :key="account.id" :value="account.id">
                                 {{ account.code }} — {{ account.name }}
+                            </option>
+                            <option v-if="inventoryAccountFor(item)" :value="inventoryAccountFor(item).id">
+                                {{ inventoryAccountFor(item).code }} — {{ inventoryAccountFor(item).name }} (Inventory)
                             </option>
                         </select>
                         <InputError :message="form.errors[`items.${index}.account_id`]" class="mt-1" />

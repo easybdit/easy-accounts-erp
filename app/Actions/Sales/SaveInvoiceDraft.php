@@ -82,6 +82,7 @@ class SaveInvoiceDraft
 
             foreach ($items as $index => $item) {
                 $invoice->items()->create([
+                    'product_id' => $item['product_id'] ?? null,
                     'account_id' => $item['account_id'],
                     'tax_rate_id' => $item['tax_rate_id'] ?? null,
                     'description' => $item['description'],

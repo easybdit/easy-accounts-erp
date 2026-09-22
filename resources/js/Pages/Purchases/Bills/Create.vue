@@ -10,6 +10,7 @@ const props = defineProps({
     vendors: Array,
     payableAccounts: Array,
     expenseAccounts: Array,
+    products: Array,
     taxRates: Array,
 });
 
@@ -19,7 +20,7 @@ const form = useForm({
     bill_date: new Date().toISOString().slice(0, 10),
     due_date: '',
     notes: '',
-    items: [{ account_id: '', tax_rate_id: '', description: '', quantity: 1, unit_price: '', discount: 0 }],
+    items: [{ product_id: '', account_id: '', tax_rate_id: '', description: '', quantity: 1, unit_price: '', discount: 0 }],
 });
 
 function submit() {
@@ -47,6 +48,7 @@ function submit() {
                 :vendors="vendors"
                 :payable-accounts="payableAccounts"
                 :expense-accounts="expenseAccounts"
+                :products="products"
                 :tax-rates="taxRates"
             />
 

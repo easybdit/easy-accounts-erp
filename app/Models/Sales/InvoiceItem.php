@@ -3,6 +3,7 @@
 namespace App\Models\Sales;
 
 use App\Models\Accounting\Account;
+use App\Models\Inventory\Product;
 use App\Models\Tax\TaxRate;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class InvoiceItem extends Model
 {
     protected $fillable = [
+        'product_id',
         'account_id',
         'tax_rate_id',
         'description',
@@ -41,5 +43,10 @@ class InvoiceItem extends Model
     public function taxRate(): BelongsTo
     {
         return $this->belongsTo(TaxRate::class);
+    }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
     }
 }

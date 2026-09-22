@@ -11,6 +11,7 @@ const props = defineProps({
     vendors: Array,
     payableAccounts: Array,
     expenseAccounts: Array,
+    products: Array,
     taxRates: Array,
 });
 
@@ -21,6 +22,7 @@ const form = useForm({
     due_date: props.bill.due_date,
     notes: props.bill.notes,
     items: props.bill.items.map((item) => ({
+        product_id: item.product_id ?? '',
         account_id: item.account_id,
         tax_rate_id: item.tax_rate_id ?? '',
         description: item.description,
@@ -55,6 +57,7 @@ function submit() {
                 :vendors="vendors"
                 :payable-accounts="payableAccounts"
                 :expense-accounts="expenseAccounts"
+                :products="products"
                 :tax-rates="taxRates"
             />
 

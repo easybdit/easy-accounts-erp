@@ -3,7 +3,9 @@
 namespace App\Actions\Sales;
 
 use App\Actions\Accounting\PostJournal;
+use App\Models\Inventory\StockMovement;
 use App\Models\Sales\Invoice;
+use App\Models\Sales\InvoiceItem;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -16,6 +18,12 @@ use RuntimeException;
  * receivable account (tagged to the customer) for the total, credit each
  * item's income account for its line total (Section 80: invoice total must
  * always equal the accounting posting).
+ *
+ * Inventory integration (Section 32): a line tagged to an inventory-tracked
+ * product also records a StockMovement (quantity out) and, if that stock
+ * carries a non-zero cost, a companion COGS journal — debit COGS, credit the
+ * product's inventory asset account — kept separate from the revenue journal
+ * above so both stay independently traceable via their own source_type.
  */
 class PostInvoice
 {
@@ -27,7 +35,7 @@ class PostInvoice
             throw new RuntimeException('Only a draft invoice can be posted.');
         }
 
-        $invoice->loadMissing('items.taxRate');
+        $invoice->loadMissing('items.taxRate', 'items.product');
 
         if ($invoice->items->isEmpty()) {
             throw new RuntimeException('An invoice must have at least one item before it can be posted.');
@@ -116,7 +124,43 @@ class PostInvoice
 
             $invoice->update(['status' => 'posted', 'posted_at' => now()]);
 
+            foreach ($invoice->items as $item) {
+                if ($item->product && $item->product->isInventoryTracked()) {
+                    $this->recordSaleStockMovement($invoice, $item);
+                }
+            }
+
             return $invoice->fresh(['items', 'journal']);
         });
+    }
+
+    private function recordSaleStockMovement(Invoice $invoice, InvoiceItem $item): void
+    {
+        $product = $item->product;
+
+        $movement = $product->stockMovements()->create([
+            'date' => $invoice->invoice_date->toDateString(),
+            'quantity' => bcmul((string) $item->quantity, '-1', 4),
+            'reason' => 'sale',
+            'reference' => $invoice->invoice_number,
+            'created_by' => $invoice->created_by,
+        ]);
+
+        $cost = bcmul((string) $item->quantity, (string) $product->purchase_price, 4);
+
+        if (bccomp($cost, '0', 4) > 0) {
+            $this->postJournal->handle([
+                'date' => $invoice->invoice_date->toDateString(),
+                'reference' => $invoice->invoice_number,
+                'description' => "COGS for Invoice {$invoice->invoice_number} — {$product->sku}",
+                'created_by' => $invoice->created_by,
+                'source_type' => StockMovement::class,
+                'source_id' => $movement->id,
+                'lines' => [
+                    ['account_id' => $product->cogs_account_id, 'debit' => $cost, 'credit' => 0, 'description' => "COGS — {$product->name}"],
+                    ['account_id' => $product->inventory_account_id, 'debit' => 0, 'credit' => $cost, 'description' => "COGS — {$product->name}"],
+                ],
+            ]);
+        }
     }
 }

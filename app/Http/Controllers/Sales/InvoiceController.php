@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Sales\StoreInvoiceRequest;
 use App\Models\Accounting\Account;
 use App\Models\Contacts\Customer;
+use App\Models\Inventory\Product;
 use App\Models\Sales\Invoice;
 use App\Models\Tax\TaxRate;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -151,6 +152,9 @@ class InvoiceController extends Controller
             'incomeAccounts' => Account::query()->where('is_active', true)->where('type', 'income')
                 ->select('id', 'code', 'name')->orderBy('code')->get(),
             'taxRates' => TaxRate::query()->where('is_active', true)->select('id', 'name', 'rate')->orderBy('name')->get(),
+            'products' => Product::query()->where('is_active', true)
+                ->select('id', 'sku', 'name', 'type', 'selling_price', 'income_account_id')
+                ->orderBy('name')->get(),
         ];
     }
 }

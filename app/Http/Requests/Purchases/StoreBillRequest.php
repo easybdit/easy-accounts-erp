@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Purchases;
 
 use App\Models\Accounting\Account;
+use App\Models\Inventory\Product;
 use App\Models\Tax\TaxRate;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -23,6 +24,7 @@ class StoreBillRequest extends FormRequest
             'due_date' => ['nullable', 'date', 'after_or_equal:bill_date'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['nullable', 'integer', 'exists:products,id'],
             'items.*.account_id' => ['required', 'integer', 'exists:accounts,id'],
             'items.*.tax_rate_id' => ['nullable', 'integer', 'exists:tax_rates,id'],
             'items.*.description' => ['required', 'string', 'max:255'],
@@ -52,11 +54,22 @@ class StoreBillRequest extends FormRequest
             $itemAccountIds = collect($this->input('items', []))->pluck('account_id')->filter()->unique();
             $expenseAccounts = Account::whereIn('id', $itemAccountIds)->get()->keyBy('id');
 
+            $itemProductIds = collect($this->input('items', []))->pluck('product_id')->filter()->unique();
+            $products = Product::whereIn('id', $itemProductIds)->get()->keyBy('id');
+
             foreach ($this->input('items', []) as $index => $item) {
                 $account = $expenseAccounts->get($item['account_id'] ?? null);
+                $product = $products->get($item['product_id'] ?? null);
 
-                if ($account && $account->type !== 'expense') {
-                    $validator->errors()->add("items.{$index}.account_id", 'Each bill line must use an expense account.');
+                // A line for an inventory-tracked product is allowed to debit
+                // that product's inventory (asset) account instead of an
+                // expense account — the purchase increases stock on hand
+                // rather than being consumed immediately (Section 32).
+                $isInventoryLine = $product && $product->isInventoryTracked()
+                    && $account && $account->id === $product->inventory_account_id;
+
+                if ($account && $account->type !== 'expense' && ! $isInventoryLine) {
+                    $validator->errors()->add("items.{$index}.account_id", 'Each bill line must use an expense account, or the inventory account of the selected inventory product.');
                 }
 
                 if ($account && ! $account->is_active) {

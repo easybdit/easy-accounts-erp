@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Purchases\StoreBillRequest;
 use App\Models\Accounting\Account;
 use App\Models\Contacts\Vendor;
+use App\Models\Inventory\Product;
 use App\Models\Purchases\Bill;
 use App\Models\Tax\TaxRate;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -152,6 +153,10 @@ class BillController extends Controller
             'expenseAccounts' => Account::query()->where('is_active', true)->where('type', 'expense')
                 ->select('id', 'code', 'name')->orderBy('code')->get(),
             'taxRates' => TaxRate::query()->where('is_active', true)->select('id', 'name', 'rate')->orderBy('name')->get(),
+            'products' => Product::query()->where('is_active', true)
+                ->with('inventoryAccount:id,code,name')
+                ->select('id', 'sku', 'name', 'type', 'purchase_price', 'inventory_account_id')
+                ->orderBy('name')->get(),
         ];
     }
 }
