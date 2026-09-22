@@ -59,6 +59,7 @@ const allNavGroups = [
             { label: 'Vendors', routeName: 'vendors.index' },
             { label: 'Purchase Orders', routeName: 'purchases.purchase-orders.index' },
             { label: 'Bills', routeName: 'purchases.bills.index' },
+            { label: 'Vendor Credits', routeName: 'purchases.vendor-credits.index' },
             { label: 'Vendor Payments', routeName: 'purchases.vendor-payments.index' },
         ],
     },

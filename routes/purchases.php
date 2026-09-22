@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Purchases\BillController;
 use App\Http\Controllers\Purchases\PurchaseOrderController;
+use App\Http\Controllers\Purchases\VendorCreditController;
 use App\Http\Controllers\Purchases\VendorPaymentController;
 use Illuminate\Support\Facades\Route;
 
@@ -40,6 +41,24 @@ Route::middleware(['auth', 'verified'])->prefix('purchases')->name('purchases.')
     });
     Route::middleware('permission:bills.view')->group(function () {
         Route::get('purchase-orders/{purchase_order}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
+    });
+
+    // Vendor Credits are the Purchases-side mirror of Sales Credit Notes
+    // (Section 90 Phase 5 open item, now resolved). Reuses bills.* rather
+    // than a separate permission pair.
+    Route::middleware('permission:bills.view')->group(function () {
+        Route::get('vendor-credits', [VendorCreditController::class, 'index'])->name('vendor-credits.index');
+    });
+    Route::middleware('permission:bills.manage')->group(function () {
+        Route::get('vendor-credits/create', [VendorCreditController::class, 'create'])->name('vendor-credits.create');
+        Route::post('vendor-credits', [VendorCreditController::class, 'store'])->name('vendor-credits.store');
+        Route::get('vendor-credits/{vendor_credit}/edit', [VendorCreditController::class, 'edit'])->name('vendor-credits.edit');
+        Route::put('vendor-credits/{vendor_credit}', [VendorCreditController::class, 'update'])->name('vendor-credits.update');
+        Route::delete('vendor-credits/{vendor_credit}', [VendorCreditController::class, 'destroy'])->name('vendor-credits.destroy');
+        Route::post('vendor-credits/{vendor_credit}/post', [VendorCreditController::class, 'post'])->name('vendor-credits.post');
+    });
+    Route::middleware('permission:bills.view')->group(function () {
+        Route::get('vendor-credits/{vendor_credit}', [VendorCreditController::class, 'show'])->name('vendor-credits.show');
     });
 
     // Vendor payments are posted immediately on creation (Section 20): no
