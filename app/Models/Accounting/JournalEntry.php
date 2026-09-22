@@ -9,12 +9,14 @@ class JournalEntry extends Model
 {
     protected $fillable = [
         'account_id',
+        'date',
         'debit',
         'credit',
         'description',
     ];
 
     protected $casts = [
+        'date' => 'date',
         'debit' => 'decimal:4',
         'credit' => 'decimal:4',
     ];

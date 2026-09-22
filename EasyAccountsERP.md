@@ -2762,7 +2762,15 @@ Implemented (Journal, Journal Entries, Double-entry Posting Engine):
 * `AccountController@destroy` now also blocks deleting an account that has journal entries (Section 81 Balance Integrity).
 * Tests: 12 new tests (validation rules, atomicity/rollback on both a pre-check rejection and a mid-transaction DB failure, route-non-existence assertions for edit/update/destroy). Full suite: 52 tests passing.
 
-Not implemented yet: General Ledger, Trial Balance (next increment in dependency order per Section 83 Phase 2). Void/Reversal workflow for posted journals also remains an open decision (Section 20, Section 84 item 33).
+Implemented (General Ledger, Trial Balance):
+
+* `journal_entries.date` added (denormalized copy of the parent journal's date, per Section 17's "Ledger entries carry a Date" and Section 54 performance — avoids joining `journals` on every report query). Populated by `PostJournal` at posting time.
+* `Account::netMovement()` / `Account::balanceAsOf()` — bcmath-based, DB-aggregated (no N+1) helpers shared by both reports.
+* General Ledger (`accounting.ledger.index`): pick an account, optional date range; shows a per-line running balance computed server-side (starting balance = opening balance + all prior movement before the range, correctly signed per the account's normal balance side), each line traceable to its source journal (Section 17).
+* Trial Balance (`accounting.trial-balance.index`): all active accounts as of a given date, each shown in its natural Debit or Credit column (opening balance + period movement, split by normal side); grand totals with an automatic **Balanced/Not Balanced** indicator (Section 18: "accounting consistency must be automatically testable").
+* Tests: 7 new tests covering running-balance arithmetic, date-range starting-balance correctness, trial balance staying balanced after posting, as-of filtering, and opening-balance placement on the correct side. Full suite: 60 tests passing.
+
+Not implemented yet: none of the remaining Phase 2 items — Chart of Accounts, Journal, Posting Engine, General Ledger, and Trial Balance are now all implemented. Phase 2 is functionally complete pending real-world review. Void/Reversal workflow for posted journals remains an open decision (Section 20, Section 84 item 33) before Phase 3 (Customers & Vendors) needs it.
 
 ## Everything Else
 

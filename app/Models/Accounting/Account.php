@@ -93,4 +93,35 @@ class Account extends Model
     {
         return in_array($this->type, ['asset', 'expense'], true) ? 'debit' : 'credit';
     }
+
+    /**
+     * Sum of posted entry debit/credit amounts in an inclusive date range,
+     * using the database's own SUM (no N+1) with a bcmath-safe string return.
+     */
+    public function netMovement(?string $from = null, ?string $to = null): array
+    {
+        $row = $this->journalEntries()
+            ->when($from, fn ($query) => $query->where('date', '>=', $from))
+            ->when($to, fn ($query) => $query->where('date', '<=', $to))
+            ->selectRaw('COALESCE(SUM(debit), 0) as debit, COALESCE(SUM(credit), 0) as credit')
+            ->first();
+
+        return [
+            'debit' => (string) ($row->debit ?? '0.0000'),
+            'credit' => (string) ($row->credit ?? '0.0000'),
+        ];
+    }
+
+    /**
+     * Signed balance as of a date, in this account's natural (normal-balance) direction.
+     */
+    public function balanceAsOf(?string $asOf = null): string
+    {
+        $movement = $this->netMovement(null, $asOf);
+        $opening = (string) $this->opening_balance;
+
+        return $this->normalBalance() === 'debit'
+            ? bcsub(bcadd($opening, $movement['debit'], 4), $movement['credit'], 4)
+            : bcsub(bcadd($opening, $movement['credit'], 4), $movement['debit'], 4);
+    }
 }

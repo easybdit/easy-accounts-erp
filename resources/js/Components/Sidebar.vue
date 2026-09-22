@@ -21,6 +21,8 @@ const navGroups = [
         links: [
             { label: 'Chart of Accounts', routeName: 'accounting.accounts.index' },
             { label: 'Journal', routeName: 'accounting.journals.index' },
+            { label: 'General Ledger', routeName: 'accounting.ledger.index' },
+            { label: 'Trial Balance', routeName: 'accounting.trial-balance.index' },
         ],
     },
 ];
