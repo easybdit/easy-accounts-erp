@@ -5,12 +5,6 @@ namespace Database\Seeders\Accounting;
 use App\Models\Accounting\Account;
 use Illuminate\Database\Seeder;
 
-/**
- * Minimal starter Chart of Accounts.
- *
- * This is generic demo/default data, not a fixed accounting policy.
- * All opening balances are zero, so the chart is trivially balanced.
- */
 class ChartOfAccountsSeeder extends Seeder
 {
     public function run(): void
@@ -36,7 +30,7 @@ class ChartOfAccountsSeeder extends Seeder
                             'parent_id' => $parent->id,
                             'is_active' => true,
                             'is_bank_account' => in_array((string) $childCode, $this->bankAccountCodes(), true),
-                            'opening_balance' => $this->openingBalances()[(string) $childCode] ?? 0,
+                            'opening_balance' => 0, // শুরুতে সব ব্যালেন্স শূন্য থাকবে
                         ]
                     );
                 }
@@ -45,77 +39,81 @@ class ChartOfAccountsSeeder extends Seeder
     }
 
     /**
-     * A starting Cash balance, offset by Owner's Equity so the seeded
-     * chart still nets to zero (assets = liabilities + equity) — purely
-     * to make the demo data look like a real, funded starting position
-     * instead of an empty/negative cash account after the other demo
-     * seeders record their transactions.
-     */
-    private function openingBalances(): array
-    {
-        return [
-            '1001' => 2000, // Cash
-            '3001' => 2000, // Owner's Equity
-        ];
-    }
-
-    /**
-     * Cash and Bank are actual Cash/Bank accounts (Section 31 Banking);
-     * Accounts Receivable and Inventory are asset-type but not bank/cash.
+     * ক্যাশ, ব্যাংক এবং মোবাইল ব্যাংকিং (bKash/Nagad) অ্যাকাউন্টের কোড
      */
     private function bankAccountCodes(): array
     {
-        return ['1001', '1002'];
+        return ['1001', '1002', '1003'];
     }
 
     private function tree(): array
     {
         return [
+            // ১. সম্পদ (Assets) - যা আপনার আছে
             'asset' => [
                 1000 => [
-                    'name' => 'Assets',
+                    'name' => 'Assets (সম্পদ)',
                     'children' => [
-                        1001 => 'Cash',
-                        1002 => 'Bank',
-                        1003 => 'Accounts Receivable',
-                        1004 => 'Inventory',
+                        1001 => 'Cash (হাতে থাকা ক্যাশ)',
+                        1002 => 'Bank Accounts (ব্যাংক অ্যাকাউন্ট)',
+                        1003 => 'Mobile Banking (বিকাশ/নগদ)',
+                        1004 => 'Accounts Receivable (কাস্টমারের কাছে পাওনা)',
+                        1005 => 'Hardware Inventory (পিসি, রাউটার, বক্সের স্টক)',
+                        1006 => 'Server & Networking Equipment (নিজস্ব সার্ভার ও নেটওয়ার্কিং যন্ত্রপাতি)',
+                        1007 => 'Prepaid Server Rent (সার্ভারের অগ্রিম ভাড়া)',
                     ],
                 ],
             ],
+
+            // ২. দেনা (Liabilities) - যা আপনাকে দিতে হবে
             'liability' => [
                 2000 => [
-                    'name' => 'Liabilities',
+                    'name' => 'Liabilities (দেনা)',
                     'children' => [
-                        2001 => 'Accounts Payable',
-                        2002 => 'Tax Payable',
+                        2001 => 'Accounts Payable (সাপ্লায়ার/ডাটা সেন্টারের পাওনা)',
+                        2002 => 'Tax/VAT Payable (সরকারি ভ্যাট)',
+                        2003 => 'Deferred Revenue (কাস্টমারের অগ্রিম দেওয়া হোস্টিং ফি)',
                     ],
                 ],
             ],
+
+            // ৩. মালিকানার পুঁজি (Equity)
             'equity' => [
                 3000 => [
-                    'name' => 'Equity',
+                    'name' => 'Equity (মালিকানার পুঁজি)',
                     'children' => [
-                        3001 => "Owner's Equity",
-                        3002 => 'Retained Earnings',
+                        3001 => "Owner's Equity (মালিকের বিনিয়োগ)",
+                        3002 => 'Retained Earnings (সঞ্চিত লাভ)',
                     ],
                 ],
             ],
+
+            // ৪. আয় (Income) - আপনার ব্যবসার মূল উৎস
             'income' => [
                 4000 => [
-                    'name' => 'Income',
+                    'name' => 'Income (আয়)',
                     'children' => [
-                        4001 => 'Sales Revenue',
-                        4002 => 'Service Revenue',
+                        4001 => 'Hosting & Domain Income (হোস্টিং ও ডোমেইন বিক্রি)',
+                        4002 => 'Networking Service Income (নেটওয়ার্কিং সেটআপ ফি)',
+                        4003 => 'Corporate Monthly Fee Income (কর্পোরেট মাসিক সার্ভিস ফি)',
+                        4004 => 'Server Maintenance Income (সার্ভার মেইনটেন্যান্স আয়)',
+                        4005 => 'Hardware Sales Income (পিসি, রাউটার, বক্স বিক্রি)',
                     ],
                 ],
             ],
+
+            // ৫. খরচ (Expenses) - যা আপনি খরচ করছেন
             'expense' => [
                 5000 => [
-                    'name' => 'Expenses',
+                    'name' => 'Expenses (খরচ)',
                     'children' => [
-                        5001 => 'Cost of Goods Sold',
-                        5002 => 'Operating Expenses',
-                        5003 => 'Salaries Expense',
+                        5001 => 'Bandwidth & Server Cost (জিবি/সার্ভার কেনার খরচ)',
+                        5002 => 'Domain Reseller Cost (ডোমেইন কেনার খরচ)',
+                        5003 => 'Cost of Goods Sold - Hardware (হার্ডওয়্যার কেনার খরচ)',
+                        5004 => 'Salaries & Wages (স্টাফদের বেতন)',
+                        5005 => 'Office Rent & Utilities (অফিস ভাড়া ও বিদ্যুৎ বিল)',
+                        5006 => 'Marketing & Advertising (মার্কেটিং খরচ)',
+                        5007 => 'Software & Licenses (সফটওয়্যার লাইসেন্স ক্রয়)',
                     ],
                 ],
             ],

@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Database\Seeders\Accounting\ChartOfAccountsSeeder;
+use Database\Seeders\Accounting\ChartOfAccountsSeeder_old;
 use Database\Seeders\Accounting\DemoTransactionsSeeder;
 use Database\Seeders\Banking\TransferSeeder;
 use Database\Seeders\Contacts\CustomerSeeder;
@@ -35,13 +35,13 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         $testUser = User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Md Murad Hosen',
+            'email' => 'murad@easyit.com.bd',
         ]);
 
         $accountantUser = User::factory()->create([
-            'name' => 'Accountant User',
-            'email' => 'accountant@example.com',
+            'name' => 'Esrat Jahan Shawon',
+            'email' => 'esrat@easyit.com.bd',
         ]);
 
         $this->call(PermissionSeeder::class);
@@ -49,7 +49,7 @@ class DatabaseSeeder extends Seeder
         $testUser->assignRole('Administrator');
         $accountantUser->assignRole('Accountant');
 
-        $this->call(ChartOfAccountsSeeder::class);
+        $this->call(ChartOfAccountsSeeder_old::class);
         $this->call(TaxRateSeeder::class);
         $this->call(CustomerSeeder::class);
         $this->call(VendorSeeder::class);
