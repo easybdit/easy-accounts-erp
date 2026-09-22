@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -34,6 +35,9 @@ class FixedAsset extends Model
         'status',
         'disposed_at',
         'disposal_notes',
+        'disposal_proceeds',
+        'disposal_proceeds_account_id',
+        'gain_loss_account_id',
         'notes',
         'created_by',
     ];
@@ -45,6 +49,7 @@ class FixedAsset extends Model
         'useful_life_months' => 'integer',
         'months_depreciated' => 'integer',
         'disposed_at' => 'datetime',
+        'disposal_proceeds' => 'decimal:4',
     ];
 
     public const STATUSES = ['active', 'fully_depreciated', 'disposed'];
@@ -72,6 +77,28 @@ class FixedAsset extends Model
     public function depreciations(): HasMany
     {
         return $this->hasMany(FixedAssetDepreciation::class);
+    }
+
+    public function disposalProceedsAccount(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'disposal_proceeds_account_id');
+    }
+
+    public function gainLossAccount(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'gain_loss_account_id');
+    }
+
+    /**
+     * The disposal journal — debit accumulated depreciation, debit any
+     * proceeds, debit/credit the gain or loss, credit the asset's original
+     * cost. Kept separate from each month's depreciation journal (those
+     * belong to FixedAssetDepreciation, not this model) via its own
+     * source_type.
+     */
+    public function disposalJournal(): MorphOne
+    {
+        return $this->morphOne(Journal::class, 'source');
     }
 
     public function createdBy(): BelongsTo

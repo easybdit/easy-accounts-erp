@@ -171,8 +171,12 @@ class FixedAssetTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user)->post(route('accounting.fixed-assets.store'), $this->payload());
         $asset = FixedAsset::first();
+        $lossAccount = Account::factory()->create(['type' => 'expense']);
 
-        $this->actingAs($user)->post(route('accounting.fixed-assets.dispose', $asset), ['disposal_notes' => 'Sold'])->assertRedirect();
+        $this->actingAs($user)->post(route('accounting.fixed-assets.dispose', $asset), [
+            'disposal_notes' => 'Sold',
+            'gain_loss_account_id' => $lossAccount->id,
+        ])->assertRedirect();
 
         $asset->refresh();
         $this->assertSame('disposed', $asset->status);
@@ -180,6 +184,97 @@ class FixedAssetTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         app(PostDepreciation::class)->handle($asset, '2026-01-01');
+    }
+
+    public function test_disposal_with_no_depreciation_and_no_proceeds_records_a_full_loss(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post(route('accounting.fixed-assets.store'), $this->payload(['purchase_cost' => 1200]));
+        $asset = FixedAsset::first();
+        $lossAccount = Account::factory()->create(['type' => 'expense']);
+
+        $this->actingAs($user)->post(route('accounting.fixed-assets.dispose', $asset), [
+            'gain_loss_account_id' => $lossAccount->id,
+        ])->assertRedirect();
+
+        $asset->refresh();
+        $journal = $asset->disposalJournal;
+        $this->assertTrue($journal->isBalanced());
+        $this->assertSame('1200.0000', $journal->totalDebit());
+
+        $lossLine = $journal->entries->firstWhere('account_id', $lossAccount->id);
+        $this->assertSame('1200.0000', $lossLine->debit);
+
+        $assetLine = $journal->entries->firstWhere('account_id', $asset->asset_account_id);
+        $this->assertSame('1200.0000', $assetLine->credit);
+    }
+
+    public function test_disposal_without_a_required_gain_loss_account_is_rejected(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post(route('accounting.fixed-assets.store'), $this->payload(['purchase_cost' => 1200]));
+        $asset = FixedAsset::first();
+
+        $response = $this->actingAs($user)->post(route('accounting.fixed-assets.dispose', $asset), []);
+
+        $response->assertSessionHas('error');
+        $this->assertSame('active', $asset->fresh()->status);
+    }
+
+    public function test_disposal_with_proceeds_above_book_value_records_a_gain(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post(route('accounting.fixed-assets.store'), $this->payload(['purchase_cost' => 1200, 'useful_life_months' => 12]));
+        $asset = FixedAsset::first();
+        app(PostDepreciation::class)->handle($asset, '2026-01-01');
+        $asset->refresh();
+        // Book value is now 1100. Sell for 1300 -> a 200 gain.
+        $cashAccount = Account::factory()->create(['type' => 'asset']);
+        $gainAccount = Account::factory()->create(['type' => 'income']);
+
+        $this->actingAs($user)->post(route('accounting.fixed-assets.dispose', $asset), [
+            'disposal_proceeds' => 1300,
+            'disposal_proceeds_account_id' => $cashAccount->id,
+            'gain_loss_account_id' => $gainAccount->id,
+        ])->assertRedirect();
+
+        $asset->refresh();
+        $journal = $asset->disposalJournal;
+        $this->assertTrue($journal->isBalanced());
+
+        $cashLine = $journal->entries->firstWhere('account_id', $cashAccount->id);
+        $this->assertSame('1300.0000', $cashLine->debit);
+
+        $accumulatedLine = $journal->entries->firstWhere('account_id', $asset->accumulated_depreciation_account_id);
+        $this->assertSame('100.0000', $accumulatedLine->debit);
+
+        $gainLine = $journal->entries->firstWhere('account_id', $gainAccount->id);
+        $this->assertSame('200.0000', $gainLine->credit);
+
+        $assetLine = $journal->entries->firstWhere('account_id', $asset->asset_account_id);
+        $this->assertSame('1200.0000', $assetLine->credit);
+    }
+
+    public function test_disposal_at_exact_book_value_requires_no_gain_loss_account(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post(route('accounting.fixed-assets.store'), $this->payload(['purchase_cost' => 1200, 'useful_life_months' => 12]));
+        $asset = FixedAsset::first();
+        app(PostDepreciation::class)->handle($asset, '2026-01-01');
+        $asset->refresh();
+        // Book value is now 1100 — selling for exactly that is a wash.
+        $cashAccount = Account::factory()->create(['type' => 'asset']);
+
+        $this->actingAs($user)->post(route('accounting.fixed-assets.dispose', $asset), [
+            'disposal_proceeds' => 1100,
+            'disposal_proceeds_account_id' => $cashAccount->id,
+        ])->assertRedirect();
+
+        $asset->refresh();
+        $this->assertSame('disposed', $asset->status);
+        $journal = $asset->disposalJournal;
+        $this->assertTrue($journal->isBalanced());
+        $this->assertSame('1200.0000', $journal->totalDebit());
     }
 
     public function test_locked_fields_cannot_change_once_depreciation_has_started(): void

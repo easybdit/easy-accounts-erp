@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Accounting;
 
+use App\Actions\Accounting\DisposeFixedAsset;
 use App\Actions\Accounting\PostDepreciation;
 use App\Actions\Accounting\SaveFixedAsset;
 use App\Http\Controllers\Concerns\FormatsPlainDates;
@@ -82,6 +83,9 @@ class FixedAssetController extends Controller
             'assetAccount:id,code,name',
             'accumulatedDepreciationAccount:id,code,name',
             'depreciationExpenseAccount:id,code,name',
+            'disposalProceedsAccount:id,code,name',
+            'gainLossAccount:id,code,name',
+            'disposalJournal',
             'depreciations' => fn ($query) => $query->orderByDesc('period_date'),
         ]);
 
@@ -96,6 +100,10 @@ class FixedAssetController extends Controller
             'asset' => $assetData,
             'accumulatedDepreciation' => $fixedAsset->accumulatedDepreciation(),
             'bookValue' => $fixedAsset->bookValue(),
+            'assetAccounts' => Account::query()->where('is_active', true)->where('type', 'asset')
+                ->select('id', 'code', 'name')->orderBy('code')->get(),
+            'gainLossAccounts' => Account::query()->where('is_active', true)->whereIn('type', ['income', 'expense'])
+                ->select('id', 'code', 'name', 'type')->orderBy('code')->get(),
         ]);
     }
 
@@ -121,19 +129,36 @@ class FixedAssetController extends Controller
         return redirect()->route('accounting.fixed-assets.index')->with('success', 'Fixed asset deleted.');
     }
 
-    public function dispose(FixedAsset $fixedAsset): RedirectResponse
+    public function dispose(FixedAsset $fixedAsset, Request $request, DisposeFixedAsset $action): RedirectResponse
     {
-        if (! $fixedAsset->isActive() && $fixedAsset->status !== 'fully_depreciated') {
-            return back()->with('error', 'This asset has already been disposed.');
-        }
-
-        $fixedAsset->update([
-            'status' => 'disposed',
-            'disposed_at' => now(),
-            'disposal_notes' => request()->input('disposal_notes'),
+        $validated = $request->validate([
+            'disposal_proceeds' => ['nullable', 'numeric', 'min:0'],
+            'disposal_proceeds_account_id' => ['nullable', 'integer', 'exists:accounts,id'],
+            'gain_loss_account_id' => ['nullable', 'integer', 'exists:accounts,id'],
+            'disposal_notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        return redirect()->route('accounting.fixed-assets.show', $fixedAsset)->with('success', 'Asset marked as disposed. No further depreciation will be posted.');
+        if (! empty($validated['disposal_proceeds_account_id'])) {
+            $proceedsAccount = Account::find($validated['disposal_proceeds_account_id']);
+            if ($proceedsAccount && $proceedsAccount->type !== 'asset') {
+                return back()->withErrors(['disposal_proceeds_account_id' => 'The proceeds account must be an asset account.'])->withInput();
+            }
+        }
+
+        if (! empty($validated['gain_loss_account_id'])) {
+            $gainLossAccount = Account::find($validated['gain_loss_account_id']);
+            if ($gainLossAccount && ! in_array($gainLossAccount->type, ['income', 'expense'], true)) {
+                return back()->withErrors(['gain_loss_account_id' => 'The gain/loss account must be an income or expense account.'])->withInput();
+            }
+        }
+
+        try {
+            $action->handle($fixedAsset, $validated, $request->user()->id);
+        } catch (RuntimeException $e) {
+            return back()->with('error', $e->getMessage())->withInput();
+        }
+
+        return redirect()->route('accounting.fixed-assets.show', $fixedAsset)->with('success', 'Asset disposed. No further depreciation will be posted.');
     }
 
     private function formOptions(): array

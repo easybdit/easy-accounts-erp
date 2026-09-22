@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
@@ -11,11 +11,14 @@ import Card from '@/Components/Card.vue';
 import Badge from '@/Components/Badge.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import InputError from '@/Components/InputError.vue';
+import TextInput from '@/Components/TextInput.vue';
 
 const props = defineProps({
     asset: Object,
     accumulatedDepreciation: String,
     bookValue: String,
+    assetAccounts: Array,
+    gainLossAccounts: Array,
 });
 
 const confirmingDispose = ref(false);
@@ -27,8 +30,20 @@ const statusVariant = {
 };
 
 const disposeForm = useForm({
+    disposal_proceeds: '0',
+    disposal_proceeds_account_id: '',
+    gain_loss_account_id: '',
     disposal_notes: '',
 });
+
+const projectedGainLoss = computed(() => {
+    const proceeds = Number(disposeForm.disposal_proceeds || 0);
+    const book = Number(props.bookValue || 0);
+    return proceeds - book;
+});
+
+const gainLossRequired = computed(() => Math.abs(projectedGainLoss.value) >= 0.0001);
+const proceedsAccountRequired = computed(() => Number(disposeForm.disposal_proceeds || 0) > 0);
 
 function postDepreciation() {
     router.post(route('accounting.fixed-assets.post-depreciation', props.asset.id));
@@ -139,8 +154,57 @@ function dispose() {
                 <h2 class="text-lg font-medium text-gray-900">Dispose this asset?</h2>
                 <p class="mt-1 text-sm text-gray-500">
                     No further depreciation will be posted for this asset. This does not reverse depreciation
-                    already posted.
+                    already posted. Book value at disposal is <strong>{{ bookValue }}</strong>.
                 </p>
+
+                <div class="mt-4">
+                    <InputLabel for="disposal_proceeds" value="Disposal Proceeds (optional)" />
+                    <TextInput
+                        id="disposal_proceeds"
+                        v-model="disposeForm.disposal_proceeds"
+                        type="number"
+                        step="0.0001"
+                        min="0"
+                        class="mt-1 block w-full"
+                    />
+                    <InputError :message="disposeForm.errors.disposal_proceeds" class="mt-2" />
+                </div>
+
+                <div v-if="proceedsAccountRequired" class="mt-4">
+                    <InputLabel for="disposal_proceeds_account_id" value="Proceeds Account" />
+                    <select
+                        id="disposal_proceeds_account_id"
+                        v-model="disposeForm.disposal_proceeds_account_id"
+                        class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    >
+                        <option value="" disabled>Select an account</option>
+                        <option v-for="account in assetAccounts" :key="account.id" :value="account.id">
+                            {{ account.code }} — {{ account.name }}
+                        </option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-400">Where the proceeds were deposited (e.g. Cash or Bank).</p>
+                    <InputError :message="disposeForm.errors.disposal_proceeds_account_id" class="mt-2" />
+                </div>
+
+                <div v-if="gainLossRequired" class="mt-4">
+                    <InputLabel for="gain_loss_account_id" :value="projectedGainLoss >= 0 ? 'Gain on Disposal Account' : 'Loss on Disposal Account'" />
+                    <select
+                        id="gain_loss_account_id"
+                        v-model="disposeForm.gain_loss_account_id"
+                        class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    >
+                        <option value="" disabled>Select an account</option>
+                        <option v-for="account in gainLossAccounts" :key="account.id" :value="account.id">
+                            {{ account.code }} — {{ account.name }}
+                        </option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-400">
+                        Projected {{ projectedGainLoss >= 0 ? 'gain' : 'loss' }} of {{ Math.abs(projectedGainLoss).toFixed(4) }}
+                        (proceeds less book value).
+                    </p>
+                    <InputError :message="disposeForm.errors.gain_loss_account_id" class="mt-2" />
+                </div>
+
                 <div class="mt-4">
                     <InputLabel for="disposal_notes" value="Notes (optional)" />
                     <textarea
