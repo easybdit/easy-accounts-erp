@@ -70,6 +70,10 @@ const navGroups = [
             { label: 'Tax Report', routeName: 'tax.report' },
         ],
     },
+    {
+        label: 'Reports',
+        links: [{ label: 'All Reports', routeName: 'reports.index' }],
+    },
 ];
 
 function isActive(routeName) {

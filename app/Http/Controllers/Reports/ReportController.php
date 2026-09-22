@@ -1,0 +1,465 @@
+<?php
+
+namespace App\Http\Controllers\Reports;
+
+use App\Http\Controllers\Controller;
+use App\Models\Accounting\Account;
+use App\Models\Contacts\Customer;
+use App\Models\Contacts\Vendor;
+use App\Models\Expenses\Expense;
+use App\Models\Inventory\Product;
+use App\Models\Purchases\Bill;
+use App\Models\Purchases\VendorPayment;
+use App\Models\Sales\Invoice;
+use App\Models\Sales\Payment;
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Inertia\Inertia;
+use Inertia\Response;
+
+/**
+ * Section 35's "dedicated Reports section" / Phase 10. Every report here is
+ * read-only and derived entirely from already-posted data (Section 68) —
+ * no new posting logic. Trial Balance, General Ledger, and the Tax Report
+ * already existed (Phases 2 and 9) and are linked from the hub rather than
+ * duplicated.
+ */
+class ReportController extends Controller
+{
+    public function index(): Response
+    {
+        return Inertia::render('Reports/Index');
+    }
+
+    /**
+     * Profit & Loss (Income Statement): income minus expenses over a period.
+     */
+    public function profitAndLoss(Request $request): Response
+    {
+        $from = $request->date('from')?->toDateString();
+        $to = $request->date('to')?->toDateString() ?? now()->toDateString();
+
+        $rows = $this->accountAmountsByType(['income', 'expense'], $from, $to);
+
+        $income = $rows->where('type', 'income');
+        $expense = $rows->where('type', 'expense');
+
+        $totalIncome = $income->reduce(fn (string $c, array $r) => bcadd($c, $r['amount'], 4), '0.0000');
+        $totalExpense = $expense->reduce(fn (string $c, array $r) => bcadd($c, $r['amount'], 4), '0.0000');
+
+        return Inertia::render('Reports/ProfitAndLoss', [
+            'income' => $income->values(),
+            'expense' => $expense->values(),
+            'totalIncome' => $totalIncome,
+            'totalExpense' => $totalExpense,
+            'netProfit' => bcsub($totalIncome, $totalExpense, 4),
+            'from' => $from,
+            'to' => $to,
+        ]);
+    }
+
+    /**
+     * Balance Sheet as of a date. Since there is no period-close/retained-
+     * earnings-rollover feature (Section 25 Period Lock is still open),
+     * accumulated net income to date is folded into Equity as its own line
+     * — the standard way to keep Assets = Liabilities + Equity true without
+     * a closing-entry mechanism.
+     */
+    public function balanceSheet(Request $request): Response
+    {
+        $asOf = $request->date('as_of')?->toDateString() ?? now()->toDateString();
+
+        $assets = $this->accountBalancesByType('asset', $asOf);
+        $liabilities = $this->accountBalancesByType('liability', $asOf);
+        $equity = $this->accountBalancesByType('equity', $asOf);
+
+        $incomeExpense = $this->accountAmountsByType(['income', 'expense'], null, $asOf);
+        $currentEarnings = bcsub(
+            $incomeExpense->where('type', 'income')->reduce(fn (string $c, array $r) => bcadd($c, $r['amount'], 4), '0.0000'),
+            $incomeExpense->where('type', 'expense')->reduce(fn (string $c, array $r) => bcadd($c, $r['amount'], 4), '0.0000'),
+            4
+        );
+
+        $totalAssets = $assets->reduce(fn (string $c, array $r) => bcadd($c, $r['balance'], 4), '0.0000');
+        $totalLiabilities = $liabilities->reduce(fn (string $c, array $r) => bcadd($c, $r['balance'], 4), '0.0000');
+        $totalEquity = bcadd($equity->reduce(fn (string $c, array $r) => bcadd($c, $r['balance'], 4), '0.0000'), $currentEarnings, 4);
+
+        return Inertia::render('Reports/BalanceSheet', [
+            'assets' => $assets->values(),
+            'liabilities' => $liabilities->values(),
+            'equity' => $equity->values(),
+            'currentEarnings' => $currentEarnings,
+            'totalAssets' => $totalAssets,
+            'totalLiabilities' => $totalLiabilities,
+            'totalEquity' => $totalEquity,
+            'isBalanced' => bccomp($totalAssets, bcadd($totalLiabilities, $totalEquity, 4), 4) === 0,
+            'asOf' => $asOf,
+        ]);
+    }
+
+    public function arAging(Request $request): Response
+    {
+        $asOf = $request->date('as_of')?->toDateString() ?? now()->toDateString();
+
+        $invoices = Invoice::query()
+            ->where('status', 'posted')
+            ->where('invoice_date', '<=', $asOf)
+            ->with('customer:id,name')
+            ->withSum('paymentAllocations as amount_paid', 'amount')
+            ->get();
+
+        $rows = $this->buildAging($invoices, $asOf, fn (Invoice $i) => $i->customer_id, fn (Invoice $i) => $i->customer->name, fn (Invoice $i) => ($i->due_date ?? $i->invoice_date)->toDateString());
+
+        return Inertia::render('Reports/ArAging', [
+            'rows' => $rows['rows'],
+            'totals' => $rows['totals'],
+            'asOf' => $asOf,
+        ]);
+    }
+
+    public function apAging(Request $request): Response
+    {
+        $asOf = $request->date('as_of')?->toDateString() ?? now()->toDateString();
+
+        $bills = Bill::query()
+            ->where('status', 'posted')
+            ->where('bill_date', '<=', $asOf)
+            ->with('vendor:id,name')
+            ->withSum('paymentAllocations as amount_paid', 'amount')
+            ->get();
+
+        $rows = $this->buildAging($bills, $asOf, fn (Bill $b) => $b->vendor_id, fn (Bill $b) => $b->vendor->name, fn (Bill $b) => ($b->due_date ?? $b->bill_date)->toDateString());
+
+        return Inertia::render('Reports/ApAging', [
+            'rows' => $rows['rows'],
+            'totals' => $rows['totals'],
+            'asOf' => $asOf,
+        ]);
+    }
+
+    /**
+     * A cash movement summary for Cash/Bank accounts (opening, in, out,
+     * closing) — deliberately NOT a categorized (Operating/Investing/
+     * Financing) Cash Flow Statement, since that requires transaction
+     * classification rules nobody has confirmed (Section 33/84 pattern:
+     * do not invent policy without a verified requirement).
+     */
+    public function cashFlow(Request $request): Response
+    {
+        $from = $request->date('from')?->toDateString();
+        $to = $request->date('to')?->toDateString() ?? now()->toDateString();
+
+        $accounts = Account::query()
+            ->where('is_bank_account', true)
+            ->where('is_active', true)
+            ->orderBy('code')
+            ->get()
+            ->map(function (Account $account) use ($from, $to) {
+                $opening = $from ? $account->balanceAsOf(date('Y-m-d', strtotime($from.' -1 day'))) : (string) $account->opening_balance;
+                $movement = $account->netMovement($from, $to);
+
+                return [
+                    'id' => $account->id,
+                    'code' => $account->code,
+                    'name' => $account->name,
+                    'opening' => $opening,
+                    'in' => $movement['debit'],
+                    'out' => $movement['credit'],
+                    'closing' => $account->balanceAsOf($to),
+                ];
+            });
+
+        return Inertia::render('Reports/CashFlow', [
+            'accounts' => $accounts,
+            'totalOpening' => $accounts->reduce(fn (string $c, array $r) => bcadd($c, $r['opening'], 4), '0.0000'),
+            'totalIn' => $accounts->reduce(fn (string $c, array $r) => bcadd($c, $r['in'], 4), '0.0000'),
+            'totalOut' => $accounts->reduce(fn (string $c, array $r) => bcadd($c, $r['out'], 4), '0.0000'),
+            'totalClosing' => $accounts->reduce(fn (string $c, array $r) => bcadd($c, $r['closing'], 4), '0.0000'),
+            'from' => $from,
+            'to' => $to,
+        ]);
+    }
+
+    public function sales(Request $request): Response
+    {
+        $from = $request->date('from')?->toDateString();
+        $to = $request->date('to')?->toDateString();
+
+        $invoices = Invoice::query()
+            ->where('status', 'posted')
+            ->when($from, fn ($q) => $q->where('invoice_date', '>=', $from))
+            ->when($to, fn ($q) => $q->where('invoice_date', '<=', $to))
+            ->with('customer:id,name')
+            ->get();
+
+        $rows = $invoices->groupBy('customer_id')->map(function ($group) {
+            return [
+                'customer' => $group->first()->customer->name,
+                'count' => $group->count(),
+                'total' => $group->reduce(fn (string $c, Invoice $i) => bcadd($c, (string) $i->total, 4), '0.0000'),
+            ];
+        })->sortByDesc('total')->values();
+
+        return Inertia::render('Reports/SalesReport', [
+            'rows' => $rows,
+            'total' => $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['total'], 4), '0.0000'),
+            'count' => $invoices->count(),
+            'from' => $from,
+            'to' => $to,
+        ]);
+    }
+
+    public function purchases(Request $request): Response
+    {
+        $from = $request->date('from')?->toDateString();
+        $to = $request->date('to')?->toDateString();
+
+        $bills = Bill::query()
+            ->where('status', 'posted')
+            ->when($from, fn ($q) => $q->where('bill_date', '>=', $from))
+            ->when($to, fn ($q) => $q->where('bill_date', '<=', $to))
+            ->with('vendor:id,name')
+            ->get();
+
+        $rows = $bills->groupBy('vendor_id')->map(function ($group) {
+            return [
+                'vendor' => $group->first()->vendor->name,
+                'count' => $group->count(),
+                'total' => $group->reduce(fn (string $c, Bill $b) => bcadd($c, (string) $b->total, 4), '0.0000'),
+            ];
+        })->sortByDesc('total')->values();
+
+        return Inertia::render('Reports/PurchaseReport', [
+            'rows' => $rows,
+            'total' => $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['total'], 4), '0.0000'),
+            'count' => $bills->count(),
+            'from' => $from,
+            'to' => $to,
+        ]);
+    }
+
+    public function expenses(Request $request): Response
+    {
+        $from = $request->date('from')?->toDateString();
+        $to = $request->date('to')?->toDateString();
+
+        $expenses = Expense::query()
+            ->when($from, fn ($q) => $q->where('expense_date', '>=', $from))
+            ->when($to, fn ($q) => $q->where('expense_date', '<=', $to))
+            ->with('category:id,name')
+            ->get();
+
+        $rows = $expenses->groupBy('expense_category_id')->map(function ($group) {
+            return [
+                'category' => $group->first()->category->name,
+                'count' => $group->count(),
+                'total' => $group->reduce(fn (string $c, Expense $e) => bcadd($c, (string) $e->amount, 4), '0.0000'),
+            ];
+        })->sortByDesc('total')->values();
+
+        return Inertia::render('Reports/ExpenseReport', [
+            'rows' => $rows,
+            'total' => $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['total'], 4), '0.0000'),
+            'count' => $expenses->count(),
+            'from' => $from,
+            'to' => $to,
+        ]);
+    }
+
+    public function customerBalances(): Response
+    {
+        $rows = Customer::query()
+            ->where('is_active', true)
+            ->withSum('journalEntries as entries_debit', 'debit')
+            ->withSum('journalEntries as entries_credit', 'credit')
+            ->get()
+            ->map(fn (Customer $customer) => [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'balance' => bcsub(
+                    bcadd((string) $customer->opening_balance, (string) ($customer->entries_debit ?? '0.0000'), 4),
+                    (string) ($customer->entries_credit ?? '0.0000'),
+                    4
+                ),
+            ])
+            ->sortByDesc('balance')
+            ->values();
+
+        return Inertia::render('Reports/CustomerBalances', [
+            'rows' => $rows,
+            'total' => $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['balance'], 4), '0.0000'),
+        ]);
+    }
+
+    public function vendorBalances(): Response
+    {
+        $rows = Vendor::query()
+            ->where('is_active', true)
+            ->withSum('journalEntries as entries_debit', 'debit')
+            ->withSum('journalEntries as entries_credit', 'credit')
+            ->get()
+            ->map(fn (Vendor $vendor) => [
+                'id' => $vendor->id,
+                'name' => $vendor->name,
+                'balance' => bcsub(
+                    bcadd((string) $vendor->opening_balance, (string) ($vendor->entries_credit ?? '0.0000'), 4),
+                    (string) ($vendor->entries_debit ?? '0.0000'),
+                    4
+                ),
+            ])
+            ->sortByDesc('balance')
+            ->values();
+
+        return Inertia::render('Reports/VendorBalances', [
+            'rows' => $rows,
+            'total' => $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['balance'], 4), '0.0000'),
+        ]);
+    }
+
+    public function payments(Request $request): Response
+    {
+        $from = $request->date('from')?->toDateString();
+        $to = $request->date('to')?->toDateString();
+
+        $received = Payment::query()
+            ->when($from, fn ($q) => $q->where('payment_date', '>=', $from))
+            ->when($to, fn ($q) => $q->where('payment_date', '<=', $to))
+            ->with('customer:id,name')
+            ->orderByDesc('payment_date')
+            ->get();
+
+        $made = VendorPayment::query()
+            ->when($from, fn ($q) => $q->where('payment_date', '>=', $from))
+            ->when($to, fn ($q) => $q->where('payment_date', '<=', $to))
+            ->with('vendor:id,name')
+            ->orderByDesc('payment_date')
+            ->get();
+
+        return Inertia::render('Reports/PaymentsReport', [
+            'received' => $received,
+            'made' => $made,
+            'totalReceived' => $received->reduce(fn (string $c, Payment $p) => bcadd($c, (string) $p->amount, 4), '0.0000'),
+            'totalMade' => $made->reduce(fn (string $c, VendorPayment $p) => bcadd($c, (string) $p->amount, 4), '0.0000'),
+            'from' => $from,
+            'to' => $to,
+        ]);
+    }
+
+    public function inventory(): Response
+    {
+        $rows = Product::query()
+            ->where('type', 'inventory')
+            ->where('is_active', true)
+            ->with('category:id,name')
+            ->get()
+            ->map(fn (Product $product) => [
+                'id' => $product->id,
+                'sku' => $product->sku,
+                'name' => $product->name,
+                'category' => $product->category->name,
+                'unit' => $product->unit,
+                'current_stock' => $product->currentStock(),
+                'purchase_price' => (string) $product->purchase_price,
+                'stock_value' => $product->stockValue(),
+                'is_low_stock' => $product->isLowStock(),
+            ]);
+
+        return Inertia::render('Reports/InventoryReport', [
+            'rows' => $rows,
+            'totalValue' => $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['stock_value'], 4), '0.0000'),
+        ]);
+    }
+
+    /**
+     * @return Collection<int, array{id:int,code:string,name:string,type:string,amount:string}>
+     */
+    private function accountAmountsByType(array $types, ?string $from, ?string $to): Collection
+    {
+        return Account::query()
+            ->whereIn('type', $types)
+            ->where('is_active', true)
+            ->withSum(['journalEntries as period_debit' => fn ($q) => $q->when($from, fn ($q2) => $q2->where('date', '>=', $from))->when($to, fn ($q2) => $q2->where('date', '<=', $to))], 'debit')
+            ->withSum(['journalEntries as period_credit' => fn ($q) => $q->when($from, fn ($q2) => $q2->where('date', '>=', $from))->when($to, fn ($q2) => $q2->where('date', '<=', $to))], 'credit')
+            ->orderBy('code')
+            ->get()
+            ->map(function (Account $account) {
+                $debit = (string) ($account->period_debit ?? '0.0000');
+                $credit = (string) ($account->period_credit ?? '0.0000');
+                $amount = $account->type === 'income' ? bcsub($credit, $debit, 4) : bcsub($debit, $credit, 4);
+
+                return [
+                    'id' => $account->id,
+                    'code' => $account->code,
+                    'name' => $account->name,
+                    'type' => $account->type,
+                    'amount' => $amount,
+                ];
+            })
+            ->filter(fn (array $row) => bccomp($row['amount'], '0', 4) !== 0)
+            ->values();
+    }
+
+    /**
+     * @return Collection<int, array{id:int,code:string,name:string,balance:string}>
+     */
+    private function accountBalancesByType(string $type, string $asOf): Collection
+    {
+        return Account::query()
+            ->where('type', $type)
+            ->where('is_active', true)
+            ->orderBy('code')
+            ->get()
+            ->map(fn (Account $account) => [
+                'id' => $account->id,
+                'code' => $account->code,
+                'name' => $account->name,
+                'balance' => $account->balanceAsOf($asOf),
+            ])
+            ->filter(fn (array $row) => bccomp($row['balance'], '0', 4) !== 0)
+            ->values();
+    }
+
+    /**
+     * Shared aging-bucket builder for AR/AP (Current, 1-30, 31-60, 61-90, 90+).
+     */
+    private function buildAging($documents, string $asOf, callable $partyId, callable $partyName, callable $dueDate): array
+    {
+        $buckets = ['current', 'd1_30', 'd31_60', 'd61_90', 'd90_plus'];
+        $byParty = [];
+
+        foreach ($documents as $document) {
+            $amountPaid = (string) ($document->amount_paid ?? '0.0000');
+            $due = bcsub((string) $document->total, $amountPaid, 4);
+
+            if (bccomp($due, '0', 4) <= 0) {
+                continue;
+            }
+
+            $daysOverdue = (int) floor((strtotime($asOf) - strtotime($dueDate($document))) / 86400);
+            $bucket = match (true) {
+                $daysOverdue <= 0 => 'current',
+                $daysOverdue <= 30 => 'd1_30',
+                $daysOverdue <= 60 => 'd31_60',
+                $daysOverdue <= 90 => 'd61_90',
+                default => 'd90_plus',
+            };
+
+            $id = $partyId($document);
+            $byParty[$id] ??= ['id' => $id, 'name' => $partyName($document), 'current' => '0.0000', 'd1_30' => '0.0000', 'd31_60' => '0.0000', 'd61_90' => '0.0000', 'd90_plus' => '0.0000', 'total' => '0.0000'];
+            $byParty[$id][$bucket] = bcadd($byParty[$id][$bucket], $due, 4);
+            $byParty[$id]['total'] = bcadd($byParty[$id]['total'], $due, 4);
+        }
+
+        $totals = array_fill_keys([...$buckets, 'total'], '0.0000');
+        foreach ($byParty as $row) {
+            foreach ([...$buckets, 'total'] as $key) {
+                $totals[$key] = bcadd($totals[$key], $row[$key], 4);
+            }
+        }
+
+        return [
+            'rows' => array_values($byParty),
+            'totals' => $totals,
+        ];
+    }
+}

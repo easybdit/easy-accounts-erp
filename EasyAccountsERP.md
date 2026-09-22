@@ -2883,6 +2883,22 @@ Not implemented yet: wiring Product selection into Invoice/Bill line items (auto
 
 Not implemented yet: "Tax Inclusive" pricing, Tax on Products/Inventory items (Phase 8's Product form has no tax field yet — items are taxed at the Invoice/Bill line level, not via a product default), jurisdiction-specific tax reports (e.g. Bangladesh Mushak forms).
 
+## Phase 10 — Reports: Implemented
+
+A dedicated Reports hub (`reports.index`) plus 11 new reports. Every report is read-only, derived entirely from already-posted data (Section 68 — no duplicated manual totals, no new posting logic). Trial Balance, General Ledger, and the Tax Report already existed (Phases 2 and 9) and are linked from the hub rather than rebuilt.
+
+* **Profit & Loss** (date range): income minus expenses per account, computed via the same bulk `withSum` pattern as Trial Balance (Section 54 — no N+1).
+* **Balance Sheet** (as-of date): Assets/Liabilities/Equity account balances. Since there is no period-close/retained-earnings mechanism (Section 25 Period Lock is still an open decision), accumulated net income to date is folded into Equity as its own "Current Period Earnings" line — the standard way to keep Assets = Liabilities + Equity true without a closing-entry feature. **Verified against the full demo dataset spanning every phase built so far:** `Assets − (Liabilities + Equity + Income − Expenses) = 0` exactly, confirming the whole accounting engine nets correctly end to end, not just in isolated tests.
+* **AR / AP Aging** (as-of date): posted, unpaid Invoices/Bills bucketed by days overdue (Current, 1-30, 31-60, 61-90, 90+) against `due_date` (falling back to the document date), grouped by customer/vendor.
+* **Cash Flow**: deliberately a **cash movement summary** (opening/in/out/closing per `is_bank_account` account), not a categorized Operating/Investing/Financing statement — that requires transaction-classification rules nobody has confirmed, so it isn't guessed at (same reasoning as Reconciliation and Tax Inclusive pricing being deferred elsewhere).
+* **Sales / Purchase / Expense Reports**: posted documents in a date range, grouped by customer / vendor / expense category respectively, with grand totals.
+* **Customer / Vendor Balances**: every active party with its current balance, reusing the exact bulk `withSum` balance computation already used on the Customer/Vendor index pages.
+* **Payments Report**: customer Payments received and vendor Payments made in a date range, side by side.
+* **Inventory Report**: all inventory-tracked products with current stock, unit cost, and stock value (reusing `Product::currentStock()`/`stockValue()`), low-stock flagged.
+* Tests: 17 new tests, each asserting real computed values (not just "page renders") — bucket placement in aging, income/expense grouping, the Balance Sheet's current-earnings fold-in and balanced check, bank-account-only filtering in Cash Flow, etc. Full suite: 184 tests passing.
+
+Not implemented: a categorized Cash Flow Statement, Account Statement as a distinct report (the existing General Ledger already serves this per account), jurisdiction-specific report formats.
+
 ## Everything Else
 
 Not implemented. See Section 83 for phase order.
