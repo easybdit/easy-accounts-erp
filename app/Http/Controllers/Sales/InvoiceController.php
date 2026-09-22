@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Sales;
 use App\Actions\Payments\GenerateInvoicePaymentLink;
 use App\Actions\Sales\PostInvoice;
 use App\Actions\Sales\SaveInvoiceDraft;
+use App\Actions\Sales\SendInvoiceEmail;
 use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Sales\StoreInvoiceRequest;
@@ -98,7 +99,7 @@ class InvoiceController extends Controller
     public function show(Invoice $invoice): Response
     {
         $invoice->load([
-            'customer:id,name',
+            'customer:id,name,email',
             'receivableAccount:id,code,name',
             'items.account:id,code,name',
             'items.taxRate:id,name,rate',
@@ -143,6 +144,21 @@ class InvoiceController extends Controller
         }
 
         return back()->with('success', 'Payment link generated.');
+    }
+
+    public function sendEmail(Invoice $invoice, Request $request, SendInvoiceEmail $action): RedirectResponse
+    {
+        $validated = $request->validate([
+            'recipient_email' => ['nullable', 'email'],
+        ]);
+
+        try {
+            $action->handle($invoice, $validated['recipient_email'] ?? null);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Invoice emailed.');
     }
 
     public function destroy(Invoice $invoice): RedirectResponse

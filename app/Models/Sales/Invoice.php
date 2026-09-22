@@ -39,6 +39,7 @@ class Invoice extends Model
         'total',
         'notes',
         'posted_at',
+        'last_emailed_at',
         'created_by',
     ];
 
@@ -51,6 +52,7 @@ class Invoice extends Model
         'tax_total' => 'decimal:4',
         'total' => 'decimal:4',
         'posted_at' => 'datetime',
+        'last_emailed_at' => 'datetime',
     ];
 
     public function customer(): BelongsTo

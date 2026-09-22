@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -10,6 +10,8 @@ import Modal from '@/Components/Modal.vue';
 import Card from '@/Components/Card.vue';
 import Badge from '@/Components/Badge.vue';
 import InputLabel from '@/Components/InputLabel.vue';
+import TextInput from '@/Components/TextInput.vue';
+import InputError from '@/Components/InputError.vue';
 
 const props = defineProps({
     invoice: Object,
@@ -22,8 +24,19 @@ const props = defineProps({
 const confirmingPost = ref(false);
 const confirmingDelete = ref(false);
 const confirmingPaymentLink = ref(false);
+const confirmingEmail = ref(false);
 const depositAccountId = ref('');
 const linkCopied = ref(false);
+
+const emailForm = useForm({
+    recipient_email: props.invoice.customer.email ?? '',
+});
+
+function sendEmail() {
+    emailForm.post(route('sales.invoices.email', props.invoice.id), {
+        onFinish: () => (confirmingEmail.value = false),
+    });
+}
 
 function post() {
     router.post(route('sales.invoices.post', props.invoice.id), {}, {
@@ -81,6 +94,9 @@ function copyLink() {
                             {{ activePaymentLink ? 'New Payment Link' : 'Generate Payment Link' }}
                         </SecondaryButton>
                     </template>
+                    <SecondaryButton v-if="invoice.status === 'posted'" type="button" @click="confirmingEmail = true">
+                        Email Invoice
+                    </SecondaryButton>
                 </template>
             </PageHeader>
         </template>
@@ -138,6 +154,10 @@ function copyLink() {
                             #{{ invoice.journal.id }}
                         </Link>
                     </dd>
+                </div>
+                <div v-if="invoice.last_emailed_at">
+                    <dt class="text-xs font-medium uppercase text-gray-400">Last Emailed</dt>
+                    <dd class="text-sm text-gray-800">{{ new Date(invoice.last_emailed_at).toLocaleString() }}</dd>
                 </div>
                 <div v-if="invoice.notes" class="sm:col-span-4">
                     <dt class="text-xs font-medium uppercase text-gray-400">Notes</dt>
@@ -284,6 +304,31 @@ function copyLink() {
                 <div class="mt-6 flex justify-end gap-3">
                     <SecondaryButton @click="confirmingPaymentLink = false">Cancel</SecondaryButton>
                     <PrimaryButton :disabled="!depositAccountId" @click="generatePaymentLink">Generate</PrimaryButton>
+                </div>
+            </div>
+        </Modal>
+
+        <Modal :show="confirmingEmail" @close="confirmingEmail = false">
+            <div class="p-6">
+                <h2 class="text-lg font-medium text-gray-900">Email this invoice?</h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    Sends a PDF copy of this invoice{{ activePaymentLink ? ', with a link to pay online,' : '' }}
+                    to the address below.
+                </p>
+                <div class="mt-4">
+                    <InputLabel for="recipient_email" value="Recipient Email" />
+                    <TextInput
+                        id="recipient_email"
+                        v-model="emailForm.recipient_email"
+                        type="email"
+                        class="mt-1 block w-full"
+                        required
+                    />
+                    <InputError :message="emailForm.errors.recipient_email" class="mt-2" />
+                </div>
+                <div class="mt-6 flex justify-end gap-3">
+                    <SecondaryButton @click="confirmingEmail = false">Cancel</SecondaryButton>
+                    <PrimaryButton :disabled="!emailForm.recipient_email" @click="sendEmail">Send</PrimaryButton>
                 </div>
             </div>
         </Modal>
