@@ -25,6 +25,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    showDates: {
+        type: Boolean,
+        default: true,
+    },
 });
 
 function addItem() {
@@ -61,7 +65,7 @@ const total = computed(() => subtotal.value - discountTotal.value + taxTotal.val
 </script>
 
 <template>
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+    <div class="grid grid-cols-1 gap-6" :class="showDates ? 'sm:grid-cols-3' : 'sm:grid-cols-2'">
         <div>
             <InputLabel for="customer_id" value="Customer" />
             <select
@@ -94,7 +98,7 @@ const total = computed(() => subtotal.value - discountTotal.value + taxTotal.val
             <InputError :message="form.errors.receivable_account_id" class="mt-2" />
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div v-if="showDates" class="grid grid-cols-2 gap-4">
             <div>
                 <InputLabel for="invoice_date" value="Invoice Date" />
                 <TextInput id="invoice_date" v-model="form.invoice_date" type="date" class="mt-1 block w-full" required />

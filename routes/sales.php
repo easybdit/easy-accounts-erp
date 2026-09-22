@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Sales\InvoiceController;
 use App\Http\Controllers\Sales\PaymentController;
+use App\Http\Controllers\Sales\RecurringInvoiceController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(function () {
@@ -20,6 +21,22 @@ Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(
     });
     Route::middleware('permission:invoices.view')->group(function () {
         Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+        Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
+    });
+
+    // Recurring invoices are templates only (Section 60: manual "Generate
+    // Now" trigger, no scheduler-driven automation). No show route, so
+    // "create" vs "{recurring_invoice}" ordering isn't a concern here.
+    Route::middleware('permission:invoices.view')->group(function () {
+        Route::get('recurring-invoices', [RecurringInvoiceController::class, 'index'])->name('recurring-invoices.index');
+    });
+    Route::middleware('permission:invoices.manage')->group(function () {
+        Route::get('recurring-invoices/create', [RecurringInvoiceController::class, 'create'])->name('recurring-invoices.create');
+        Route::post('recurring-invoices', [RecurringInvoiceController::class, 'store'])->name('recurring-invoices.store');
+        Route::get('recurring-invoices/{recurring_invoice}/edit', [RecurringInvoiceController::class, 'edit'])->name('recurring-invoices.edit');
+        Route::put('recurring-invoices/{recurring_invoice}', [RecurringInvoiceController::class, 'update'])->name('recurring-invoices.update');
+        Route::delete('recurring-invoices/{recurring_invoice}', [RecurringInvoiceController::class, 'destroy'])->name('recurring-invoices.destroy');
+        Route::post('recurring-invoices/{recurring_invoice}/generate', [RecurringInvoiceController::class, 'generate'])->name('recurring-invoices.generate');
     });
 
     // Payments are posted immediately on creation (Section 20): no

@@ -43,6 +43,9 @@ function destroy() {
         <template #header>
             <PageHeader :title="bill.bill_number">
                 <template #actions>
+                    <a :href="route('purchases.bills.pdf', bill.id)">
+                        <SecondaryButton type="button">Download PDF</SecondaryButton>
+                    </a>
                     <template v-if="bill.status === 'draft'">
                         <Link :href="route('purchases.bills.edit', bill.id)">
                             <SecondaryButton type="button">Edit</SecondaryButton>

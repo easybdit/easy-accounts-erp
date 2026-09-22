@@ -184,4 +184,16 @@ class InvoiceTest extends TestCase
 
         (new PostInvoice(new PostJournal))->handle($invoice);
     }
+
+    public function test_a_pdf_can_be_downloaded(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post(route('sales.invoices.store'), $this->payload());
+        $invoice = Invoice::first();
+
+        $response = $this->actingAs($user)->get(route('sales.invoices.pdf', $invoice));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+    }
 }

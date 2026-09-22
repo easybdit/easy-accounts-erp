@@ -43,6 +43,9 @@ function destroy() {
         <template #header>
             <PageHeader :title="invoice.invoice_number">
                 <template #actions>
+                    <a :href="route('sales.invoices.pdf', invoice.id)">
+                        <SecondaryButton type="button">Download PDF</SecondaryButton>
+                    </a>
                     <template v-if="invoice.status === 'draft'">
                         <Link :href="route('sales.invoices.edit', invoice.id)">
                             <SecondaryButton type="button">Edit</SecondaryButton>

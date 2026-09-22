@@ -20,6 +20,7 @@ Route::middleware(['auth', 'verified'])->prefix('purchases')->name('purchases.')
     });
     Route::middleware('permission:bills.view')->group(function () {
         Route::get('bills/{bill}', [BillController::class, 'show'])->name('bills.show');
+        Route::get('bills/{bill}/pdf', [BillController::class, 'pdf'])->name('bills.pdf');
     });
 
     // Vendor payments are posted immediately on creation (Section 20): no

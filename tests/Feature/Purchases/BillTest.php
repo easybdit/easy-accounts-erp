@@ -160,4 +160,16 @@ class BillTest extends TestCase
 
         (new PostBill(new PostJournal))->handle($bill);
     }
+
+    public function test_a_pdf_can_be_downloaded(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post(route('purchases.bills.store'), $this->payload());
+        $bill = Bill::first();
+
+        $response = $this->actingAs($user)->get(route('purchases.bills.pdf', $bill));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+    }
 }

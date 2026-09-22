@@ -10,8 +10,10 @@ use App\Models\Accounting\Account;
 use App\Models\Contacts\Vendor;
 use App\Models\Purchases\Bill;
 use App\Models\Tax\TaxRate;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 use RuntimeException;
@@ -114,6 +116,20 @@ class BillController extends Controller
         $bill->delete();
 
         return redirect()->route('purchases.bills.index')->with('success', 'Bill deleted.');
+    }
+
+    public function pdf(Bill $bill): HttpResponse
+    {
+        $bill->load(['vendor', 'items.account', 'items.taxRate']);
+
+        $pdf = Pdf::loadView('pdfs.bill', [
+            'bill' => $bill,
+            'amountPaid' => $bill->amountPaid(),
+            'amountDue' => $bill->amountDue(),
+            'appName' => config('app.name'),
+        ]);
+
+        return $pdf->download("{$bill->bill_number}.pdf");
     }
 
     public function post(Bill $bill, PostBill $action): RedirectResponse

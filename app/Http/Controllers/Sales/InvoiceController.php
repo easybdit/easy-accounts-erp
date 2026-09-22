@@ -10,8 +10,10 @@ use App\Models\Accounting\Account;
 use App\Models\Contacts\Customer;
 use App\Models\Sales\Invoice;
 use App\Models\Tax\TaxRate;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -113,6 +115,20 @@ class InvoiceController extends Controller
         $invoice->delete();
 
         return redirect()->route('sales.invoices.index')->with('success', 'Invoice deleted.');
+    }
+
+    public function pdf(Invoice $invoice): HttpResponse
+    {
+        $invoice->load(['customer', 'items.account', 'items.taxRate']);
+
+        $pdf = Pdf::loadView('pdfs.invoice', [
+            'invoice' => $invoice,
+            'amountPaid' => $invoice->amountPaid(),
+            'amountDue' => $invoice->amountDue(),
+            'appName' => config('app.name'),
+        ]);
+
+        return $pdf->download("{$invoice->invoice_number}.pdf");
     }
 
     public function post(Invoice $invoice, PostInvoice $action): RedirectResponse
