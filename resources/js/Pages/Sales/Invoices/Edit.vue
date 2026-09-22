@@ -20,6 +20,7 @@ const form = useForm({
     receivable_account_id: props.invoice.receivable_account_id,
     invoice_date: props.invoice.invoice_date,
     due_date: props.invoice.due_date,
+    tax_inclusive: props.invoice.tax_inclusive,
     notes: props.invoice.notes,
     items: props.invoice.items.map((item) => ({
         product_id: item.product_id ?? '',
@@ -59,6 +60,7 @@ function submit() {
                 :income-accounts="incomeAccounts"
                 :products="products"
                 :tax-rates="taxRates"
+                :show-tax-inclusive="true"
             />
 
             <div class="mt-6 flex justify-end gap-3">

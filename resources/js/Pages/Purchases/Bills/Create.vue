@@ -19,6 +19,7 @@ const form = useForm({
     payable_account_id: '',
     bill_date: new Date().toISOString().slice(0, 10),
     due_date: '',
+    tax_inclusive: false,
     notes: '',
     items: [{ product_id: '', account_id: '', tax_rate_id: '', description: '', quantity: 1, unit_price: '', discount: 0 }],
 });
@@ -50,6 +51,7 @@ function submit() {
                 :expense-accounts="expenseAccounts"
                 :products="products"
                 :tax-rates="taxRates"
+                :show-tax-inclusive="true"
             />
 
             <div class="mt-6 flex justify-end gap-3">

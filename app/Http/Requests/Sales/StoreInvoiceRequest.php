@@ -21,6 +21,7 @@ class StoreInvoiceRequest extends FormRequest
             'receivable_account_id' => ['required', 'integer', 'exists:accounts,id'],
             'invoice_date' => ['required', 'date'],
             'due_date' => ['nullable', 'date', 'after_or_equal:invoice_date'],
+            'tax_inclusive' => ['sometimes', 'boolean'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['nullable', 'integer', 'exists:products,id'],

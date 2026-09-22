@@ -55,12 +55,26 @@ class TaxRate extends Model
     }
 
     /**
-     * Exclusive tax only (Section 33): the amount is calculated on top of
-     * the line's net amount, never backed out of a tax-inclusive price.
-     * "Tax Inclusive" pricing is a documented scope limit, not a guess.
+     * Exclusive tax: the amount is calculated on top of the line's net
+     * amount.
      */
     public function calculate(string $netAmount): string
     {
         return bcdiv(bcmul($netAmount, (string) $this->rate, 6), '100', 4);
+    }
+
+    /**
+     * Inverse of calculate(): backs the net amount out of a tax-inclusive
+     * gross amount (Section 33 Tax Inclusive pricing) — net = gross / (1 +
+     * rate/100). Used only at draft-save time to interpret a line's entered
+     * unit price; everywhere downstream (posting, totals) keeps treating
+     * line_total as a plain net, pre-tax amount regardless of which mode
+     * produced it.
+     */
+    public function extractNet(string $grossAmount): string
+    {
+        $divisor = bcadd('100', (string) $this->rate, 6);
+
+        return bcdiv(bcmul($grossAmount, '100', 6), $divisor, 4);
     }
 }

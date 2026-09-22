@@ -20,6 +20,7 @@ const form = useForm({
     payable_account_id: props.bill.payable_account_id,
     bill_date: props.bill.bill_date,
     due_date: props.bill.due_date,
+    tax_inclusive: props.bill.tax_inclusive,
     notes: props.bill.notes,
     items: props.bill.items.map((item) => ({
         product_id: item.product_id ?? '',
@@ -59,6 +60,7 @@ function submit() {
                 :expense-accounts="expenseAccounts"
                 :products="products"
                 :tax-rates="taxRates"
+                :show-tax-inclusive="true"
             />
 
             <div class="mt-6 flex justify-end gap-3">

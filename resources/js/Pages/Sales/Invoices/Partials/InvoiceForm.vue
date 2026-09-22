@@ -49,6 +49,10 @@ const props = defineProps({
         type: String,
         default: 'Due Date',
     },
+    showTaxInclusive: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 function addItem() {
@@ -83,7 +87,7 @@ function onProductChange(item, rawValue) {
     }
 }
 
-function lineTotal(item) {
+function grossAfterDiscount(item) {
     const quantity = parseFloat(item.quantity) || 0;
     const unitPrice = parseFloat(item.unit_price) || 0;
     const discount = parseFloat(item.discount) || 0;
@@ -91,9 +95,31 @@ function lineTotal(item) {
     return quantity * unitPrice - discount;
 }
 
+// Net (pre-tax) amount posted to the item's account. In exclusive mode this
+// is just the entered gross; in inclusive mode the entered gross already
+// contains tax, so the net is backed out of it (mirrors TaxRate::extractNet).
+function lineNet(item) {
+    const gross = grossAfterDiscount(item);
+    const rate = props.taxRates.find((r) => r.id === item.tax_rate_id);
+
+    if (props.form.tax_inclusive && rate) {
+        return gross * (100 / (100 + parseFloat(rate.rate)));
+    }
+
+    return gross;
+}
+
 function lineTax(item) {
     const rate = props.taxRates.find((r) => r.id === item.tax_rate_id);
-    return rate ? (lineTotal(item) * parseFloat(rate.rate)) / 100 : 0;
+    if (!rate) {
+        return 0;
+    }
+
+    if (props.form.tax_inclusive) {
+        return grossAfterDiscount(item) - lineNet(item);
+    }
+
+    return (lineNet(item) * parseFloat(rate.rate)) / 100;
 }
 
 const subtotal = computed(() =>
@@ -103,7 +129,11 @@ const discountTotal = computed(() =>
     props.form.items.reduce((sum, item) => sum + (parseFloat(item.discount) || 0), 0)
 );
 const taxTotal = computed(() => props.form.items.reduce((sum, item) => sum + lineTax(item), 0));
-const total = computed(() => subtotal.value - discountTotal.value + taxTotal.value);
+const netTotal = computed(() => props.form.items.reduce((sum, item) => sum + lineNet(item), 0));
+// netTotal + taxTotal, not subtotal - discountTotal + taxTotal: the two
+// coincide in exclusive mode but only this form stays correct in inclusive
+// mode, where each line's net already excludes tax (mirrors the backend).
+const total = computed(() => netTotal.value + taxTotal.value);
 </script>
 
 <template>
@@ -153,6 +183,15 @@ const total = computed(() => subtotal.value - discountTotal.value + taxTotal.val
             </div>
         </div>
     </div>
+
+    <label v-if="showTaxInclusive" class="mt-4 flex items-center gap-2 text-sm text-gray-700">
+        <input
+            v-model="form.tax_inclusive"
+            type="checkbox"
+            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+        />
+        Prices include tax
+    </label>
 
     <div class="mt-6 overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
@@ -239,7 +278,7 @@ const total = computed(() => subtotal.value - discountTotal.value + taxTotal.val
                         <InputError :message="form.errors[`items.${index}.tax_rate_id`]" class="mt-1" />
                     </td>
                     <td class="whitespace-nowrap px-2 py-2 text-right text-sm text-gray-700">
-                        {{ (lineTotal(item) + lineTax(item)).toFixed(4) }}
+                        {{ (lineNet(item) + lineTax(item)).toFixed(4) }}
                     </td>
                     <td class="px-2 py-2 text-right">
                         <button

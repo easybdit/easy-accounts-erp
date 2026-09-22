@@ -30,6 +30,7 @@ class Invoice extends Model
         'receivable_account_id',
         'invoice_date',
         'due_date',
+        'tax_inclusive',
         'status',
         'subtotal',
         'discount_total',
@@ -43,6 +44,7 @@ class Invoice extends Model
     protected $casts = [
         'invoice_date' => 'date',
         'due_date' => 'date',
+        'tax_inclusive' => 'boolean',
         'subtotal' => 'decimal:4',
         'discount_total' => 'decimal:4',
         'tax_total' => 'decimal:4',

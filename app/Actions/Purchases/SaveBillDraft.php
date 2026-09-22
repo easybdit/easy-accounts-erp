@@ -21,6 +21,7 @@ class SaveBillDraft
         }
 
         $items = $data['items'];
+        $taxInclusive = $data['tax_inclusive'] ?? false;
 
         $subtotal = '0.0000';
         $discountTotal = '0.0000';
@@ -36,10 +37,20 @@ class SaveBillDraft
             $discount = (string) ($item['discount'] ?? 0);
 
             $gross = bcmul($quantity, $unitPrice, 4);
-            $lineTotal = bcsub($gross, $discount, 4);
-
+            $grossAfterDiscount = bcsub($gross, $discount, 4);
             $taxRate = $taxRates->get($item['tax_rate_id'] ?? null);
-            $taxAmount = $taxRate ? $taxRate->calculate($lineTotal) : '0.0000';
+
+            // Tax Inclusive (Section 33): mirrors SaveInvoiceDraft — the
+            // entered unit price already contains tax, so the net
+            // line_total is backed out of the gross instead of the
+            // exclusive default (tax added on top).
+            if ($taxInclusive && $taxRate) {
+                $lineTotal = $taxRate->extractNet($grossAfterDiscount);
+                $taxAmount = bcsub($grossAfterDiscount, $lineTotal, 4);
+            } else {
+                $lineTotal = $grossAfterDiscount;
+                $taxAmount = $taxRate ? $taxRate->calculate($lineTotal) : '0.0000';
+            }
 
             $subtotal = bcadd($subtotal, $gross, 4);
             $discountTotal = bcadd($discountTotal, $discount, 4);
@@ -48,15 +59,16 @@ class SaveBillDraft
             $taxAmounts[] = $taxAmount;
         }
 
-        $total = bcadd(bcsub($subtotal, $discountTotal, 4), $taxTotal, 4);
+        $total = bcadd(array_reduce($lineTotals, fn (string $carry, string $lineTotal) => bcadd($carry, $lineTotal, 4), '0.0000'), $taxTotal, 4);
 
-        return DB::transaction(function () use ($data, $items, $lineTotals, $taxAmounts, $subtotal, $discountTotal, $taxTotal, $total, $bill) {
+        return DB::transaction(function () use ($data, $items, $lineTotals, $taxAmounts, $subtotal, $discountTotal, $taxTotal, $total, $taxInclusive, $bill) {
             $bill = $bill
                 ? tap($bill)->update([
                     'vendor_id' => $data['vendor_id'],
                     'payable_account_id' => $data['payable_account_id'],
                     'bill_date' => $data['bill_date'],
                     'due_date' => $data['due_date'] ?? null,
+                    'tax_inclusive' => $taxInclusive,
                     'notes' => $data['notes'] ?? null,
                     'subtotal' => $subtotal,
                     'discount_total' => $discountTotal,
@@ -69,6 +81,7 @@ class SaveBillDraft
                     'payable_account_id' => $data['payable_account_id'],
                     'bill_date' => $data['bill_date'],
                     'due_date' => $data['due_date'] ?? null,
+                    'tax_inclusive' => $taxInclusive,
                     'notes' => $data['notes'] ?? null,
                     'status' => 'draft',
                     'subtotal' => $subtotal,
