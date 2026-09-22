@@ -3,16 +3,21 @@
 namespace App\Http\Controllers\Expenses;
 
 use App\Actions\Expenses\RecordExpense;
+use App\Actions\Expenses\StoreExpenseAttachments;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Expenses\StoreExpenseRequest;
 use App\Models\Accounting\Account;
 use App\Models\Contacts\Vendor;
 use App\Models\Expenses\Expense;
+use App\Models\Expenses\ExpenseAttachment;
 use App\Models\Expenses\ExpenseCategory;
+use App\Models\Tax\TaxRate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExpenseController extends Controller
 {
@@ -42,23 +47,44 @@ class ExpenseController extends Controller
         return Inertia::render('Expenses/Create', $this->formOptions());
     }
 
-    public function store(StoreExpenseRequest $request, RecordExpense $action): RedirectResponse
+    public function store(StoreExpenseRequest $request, RecordExpense $action, StoreExpenseAttachments $attachmentsAction): RedirectResponse
     {
         $expense = $action->handle([
             ...$request->validated(),
             'created_by' => $request->user()->id,
         ]);
 
+        if ($request->hasFile('attachments')) {
+            $attachmentsAction->handle($expense, $request->file('attachments'), $request->user()->id);
+        }
+
         return redirect()->route('expenses.entries.show', $expense)->with('success', 'Expense recorded.');
     }
 
     public function show(Expense $expense): Response
     {
-        $expense->load(['category:id,name', 'account:id,code,name', 'paymentAccount:id,code,name', 'vendor:id,name', 'journal']);
+        $expense->load(['category:id,name', 'account:id,code,name', 'paymentAccount:id,code,name', 'vendor:id,name', 'taxRate:id,name,rate', 'journal', 'attachments']);
 
         return Inertia::render('Expenses/Show', [
             'expense' => $expense,
+            'totalPaid' => $expense->totalPaid(),
         ]);
+    }
+
+    public function downloadAttachment(Expense $expense, ExpenseAttachment $attachment): StreamedResponse
+    {
+        abort_unless($attachment->expense_id === $expense->id, 404);
+
+        return Storage::disk('local')->download($attachment->stored_path, $attachment->original_filename);
+    }
+
+    public function destroyAttachment(Expense $expense, ExpenseAttachment $attachment, StoreExpenseAttachments $action): RedirectResponse
+    {
+        abort_unless($attachment->expense_id === $expense->id, 404);
+
+        $action->delete($expense, $attachment->id);
+
+        return back()->with('success', 'Attachment deleted.');
     }
 
     private function formOptions(): array
@@ -70,6 +96,7 @@ class ExpenseController extends Controller
             'paymentAccounts' => Account::query()->where('is_active', true)->where('type', 'asset')
                 ->select('id', 'code', 'name')->orderBy('code')->get(),
             'vendors' => Vendor::query()->where('is_active', true)->select('id', 'name')->orderBy('name')->get(),
+            'taxRates' => TaxRate::query()->where('is_active', true)->select('id', 'name', 'rate')->orderBy('name')->get(),
         ];
     }
 }

@@ -10,6 +10,7 @@ import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 
 const props = defineProps({
+    template: Object,
     categories: Array,
     expenseAccounts: Array,
     paymentAccounts: Array,
@@ -18,24 +19,19 @@ const props = defineProps({
 });
 
 const form = useForm({
-    expense_category_id: '',
-    account_id: '',
-    payment_account_id: '',
-    vendor_id: '',
-    payee: '',
-    expense_date: new Date().toISOString().slice(0, 10),
-    amount: '',
-    tax_rate_id: '',
-    reference: '',
-    notes: '',
-    attachments: [],
+    name: props.template.name,
+    expense_category_id: props.template.expense_category_id,
+    account_id: props.template.account_id,
+    payment_account_id: props.template.payment_account_id,
+    vendor_id: props.template.vendor_id ?? '',
+    payee: props.template.payee,
+    amount: props.template.amount,
+    tax_rate_id: props.template.tax_rate_id ?? '',
+    reference: props.template.reference ?? '',
+    notes: props.template.notes ?? '',
+    is_active: props.template.is_active,
 });
 
-function onAttachmentsChange(event) {
-    form.attachments = Array.from(event.target.files ?? []);
-}
-
-// Convenience: selecting a category pre-fills its default account, if any.
 watch(
     () => form.expense_category_id,
     (categoryId) => {
@@ -46,36 +42,26 @@ watch(
     }
 );
 
-// Convenience: selecting a vendor pre-fills the payee name.
-watch(
-    () => form.vendor_id,
-    (vendorId) => {
-        const vendor = props.vendors.find((v) => v.id === vendorId);
-        if (vendor) {
-            form.payee = vendor.name;
-        }
-    }
-);
-
 function submit() {
-    form.post(route('expenses.entries.store'));
+    form.put(route('expenses.recurring.update', props.template.id));
 }
 </script>
 
 <template>
-    <Head title="New Expense" />
+    <Head title="Edit Recurring Expense" />
 
-    <AppLayout
-        :breadcrumbs="[
-            { label: 'Expenses' },
-            { label: 'New' },
-        ]"
-    >
+    <AppLayout :breadcrumbs="[{ label: 'Expenses' }, { label: 'Recurring', href: route('expenses.recurring.index') }, { label: template.name }]">
         <template #header>
-            <PageHeader title="New Expense" />
+            <PageHeader :title="`Edit — ${template.name}`" />
         </template>
 
         <form class="max-w-3xl rounded-lg bg-white p-6 shadow-sm" @submit.prevent="submit">
+            <div class="mb-6">
+                <InputLabel for="name" value="Template Name" />
+                <TextInput id="name" v-model="form.name" type="text" class="mt-1 block w-full" required />
+                <InputError :message="form.errors.name" class="mt-2" />
+            </div>
+
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
                     <InputLabel for="expense_category_id" value="Category" />
@@ -153,12 +139,6 @@ function submit() {
                 </div>
 
                 <div>
-                    <InputLabel for="expense_date" value="Date" />
-                    <TextInput id="expense_date" v-model="form.expense_date" type="date" class="mt-1 block w-full" required />
-                    <InputError :message="form.errors.expense_date" class="mt-2" />
-                </div>
-
-                <div>
                     <InputLabel for="tax_rate_id" value="Tax (optional)" />
                     <select
                         id="tax_rate_id"
@@ -180,6 +160,11 @@ function submit() {
                 </div>
             </div>
 
+            <label class="mt-4 flex items-center gap-2 text-sm text-gray-700">
+                <input v-model="form.is_active" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" />
+                Active
+            </label>
+
             <div class="mt-4">
                 <InputLabel for="notes" value="Notes (optional)" />
                 <textarea
@@ -190,25 +175,11 @@ function submit() {
                 />
             </div>
 
-            <div class="mt-4">
-                <InputLabel for="attachments" value="Receipts / Attachments (optional)" />
-                <input
-                    id="attachments"
-                    type="file"
-                    multiple
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    class="mt-1 block w-full text-sm text-gray-600 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100"
-                    @change="onAttachmentsChange"
-                />
-                <p class="mt-1 text-xs text-gray-400">PDF, JPG or PNG, up to 10MB each, 5 files max.</p>
-                <InputError :message="form.errors.attachments" class="mt-2" />
-            </div>
-
             <div class="mt-6 flex justify-end gap-3">
-                <Link :href="route('expenses.entries.index')">
+                <Link :href="route('expenses.recurring.index')">
                     <SecondaryButton type="button">Cancel</SecondaryButton>
                 </Link>
-                <PrimaryButton :loading="form.processing">Record Expense</PrimaryButton>
+                <PrimaryButton :loading="form.processing">Save Changes</PrimaryButton>
             </div>
         </form>
     </AppLayout>

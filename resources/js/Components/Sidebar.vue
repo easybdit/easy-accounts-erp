@@ -69,6 +69,7 @@ const allNavGroups = [
         permission: 'expenses.view',
         links: [
             { label: 'Expenses', routeName: 'expenses.entries.index' },
+            { label: 'Recurring', routeName: 'expenses.recurring.index' },
             { label: 'Categories', routeName: 'expenses.categories.index' },
         ],
     },

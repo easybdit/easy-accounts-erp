@@ -110,4 +110,21 @@ class ExpenseTest extends TestCase
 
         $this->actingAs($user)->get(route('expenses.entries.show', $expense))->assertOk();
     }
+
+    /**
+     * Regression test: the "{expense}" route wildcard must match the
+     * controller's $expense parameter name so implicit route model binding
+     * actually resolves the requested record. It previously used "{entry}",
+     * which silently bound nothing — Inertia rendered a blank Expense on
+     * every visit rather than erroring, so no prior test caught it.
+     */
+    public function test_show_page_renders_the_requested_expenses_own_data(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post(route('expenses.entries.store'), $this->payload(['payee' => 'Distinctive Payee Name']));
+        $expense = Expense::first();
+
+        $this->actingAs($user)->get(route('expenses.entries.show', $expense))
+            ->assertInertia(fn ($page) => $page->where('expense.payee', 'Distinctive Payee Name'));
+    }
 }

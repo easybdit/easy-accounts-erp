@@ -5,9 +5,11 @@ namespace App\Models\Expenses;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Journal;
 use App\Models\Contacts\Vendor;
+use App\Models\Tax\TaxRate;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
@@ -30,6 +32,8 @@ class Expense extends Model
         'payee',
         'expense_date',
         'amount',
+        'tax_rate_id',
+        'tax_amount',
         'reference',
         'notes',
         'created_by',
@@ -38,6 +42,7 @@ class Expense extends Model
     protected $casts = [
         'expense_date' => 'date',
         'amount' => 'decimal:4',
+        'tax_amount' => 'decimal:4',
     ];
 
     public function category(): BelongsTo
@@ -53,6 +58,16 @@ class Expense extends Model
     public function paymentAccount(): BelongsTo
     {
         return $this->belongsTo(Account::class, 'payment_account_id');
+    }
+
+    public function taxRate(): BelongsTo
+    {
+        return $this->belongsTo(TaxRate::class);
+    }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(ExpenseAttachment::class);
     }
 
     /**
@@ -75,5 +90,14 @@ class Expense extends Model
     public function journal(): MorphOne
     {
         return $this->morphOne(Journal::class, 'source');
+    }
+
+    /**
+     * The actual cash paid out — the expense amount plus any tax on top
+     * (exclusive tax, same convention as Invoices/Bills).
+     */
+    public function totalPaid(): string
+    {
+        return bcadd((string) $this->amount, (string) $this->tax_amount, 4);
     }
 }

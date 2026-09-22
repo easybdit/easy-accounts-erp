@@ -1,11 +1,24 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
+import DangerButton from '@/Components/DangerButton.vue';
+import Modal from '@/Components/Modal.vue';
 
 const props = defineProps({
     expense: Object,
+    totalPaid: String,
 });
+
+const attachmentPendingDelete = ref(null);
+
+function destroyAttachment() {
+    router.delete(route('expenses.entries.attachments.destroy', [props.expense.id, attachmentPendingDelete.value]), {
+        onFinish: () => (attachmentPendingDelete.value = null),
+    });
+}
 </script>
 
 <template>
@@ -44,6 +57,14 @@ const props = defineProps({
                     <dt class="text-xs font-medium uppercase text-gray-400">Amount</dt>
                     <dd class="text-lg font-semibold text-gray-900">{{ expense.amount }}</dd>
                 </div>
+                <div v-if="expense.tax_rate">
+                    <dt class="text-xs font-medium uppercase text-gray-400">Tax</dt>
+                    <dd class="text-sm text-gray-800">{{ expense.tax_rate.name }} ({{ expense.tax_amount }})</dd>
+                </div>
+                <div v-if="expense.tax_rate">
+                    <dt class="text-xs font-medium uppercase text-gray-400">Total Paid</dt>
+                    <dd class="text-sm font-semibold text-gray-800">{{ totalPaid }}</dd>
+                </div>
                 <div>
                     <dt class="text-xs font-medium uppercase text-gray-400">Expense Account</dt>
                     <dd class="text-sm text-gray-800">{{ expense.account.code }} — {{ expense.account.name }}</dd>
@@ -69,6 +90,38 @@ const props = defineProps({
                     <dd class="text-sm text-gray-800">{{ expense.notes }}</dd>
                 </div>
             </dl>
+
+            <div v-if="expense.attachments.length > 0" class="mt-6 border-t border-gray-100 pt-4">
+                <h3 class="text-xs font-medium uppercase text-gray-400">Receipts / Attachments</h3>
+                <ul class="mt-2 divide-y divide-gray-100">
+                    <li v-for="attachment in expense.attachments" :key="attachment.id" class="flex items-center justify-between py-2">
+                        <a
+                            :href="route('expenses.entries.attachments.download', [expense.id, attachment.id])"
+                            class="text-sm text-indigo-600 hover:text-indigo-900"
+                        >
+                            {{ attachment.original_filename }}
+                        </a>
+                        <button
+                            type="button"
+                            class="text-sm text-red-600 hover:text-red-800"
+                            @click="attachmentPendingDelete = attachment.id"
+                        >
+                            Delete
+                        </button>
+                    </li>
+                </ul>
+            </div>
         </div>
+
+        <Modal :show="attachmentPendingDelete !== null" @close="attachmentPendingDelete = null">
+            <div class="p-6">
+                <h2 class="text-lg font-medium text-gray-900">Delete this attachment?</h2>
+                <p class="mt-1 text-sm text-gray-500">This action cannot be undone.</p>
+                <div class="mt-6 flex justify-end gap-3">
+                    <SecondaryButton @click="attachmentPendingDelete = null">Cancel</SecondaryButton>
+                    <DangerButton @click="destroyAttachment">Delete</DangerButton>
+                </div>
+            </div>
+        </Modal>
     </AppLayout>
 </template>

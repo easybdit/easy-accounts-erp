@@ -7,7 +7,7 @@ use App\Models\Tax\TaxRate;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
-class StoreExpenseRequest extends FormRequest
+class StoreRecurringExpenseRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -17,18 +17,17 @@ class StoreExpenseRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'name' => ['required', 'string', 'max:255'],
             'expense_category_id' => ['required', 'integer', 'exists:expense_categories,id'],
             'account_id' => ['required', 'integer', 'exists:accounts,id'],
             'payment_account_id' => ['required', 'integer', 'exists:accounts,id'],
             'vendor_id' => ['nullable', 'integer', 'exists:vendors,id'],
             'payee' => ['required', 'string', 'max:255'],
-            'expense_date' => ['required', 'date'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'tax_rate_id' => ['nullable', 'integer', 'exists:tax_rates,id'],
             'reference' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:1000'],
-            'attachments' => ['nullable', 'array', 'max:5'],
-            'attachments.*' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+            'is_active' => ['boolean'],
         ];
     }
 
