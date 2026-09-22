@@ -25,6 +25,26 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    showDates: {
+        type: Boolean,
+        default: true,
+    },
+    dateField: {
+        type: String,
+        default: 'bill_date',
+    },
+    dateLabel: {
+        type: String,
+        default: 'Bill Date',
+    },
+    dueDateField: {
+        type: String,
+        default: 'due_date',
+    },
+    dueDateLabel: {
+        type: String,
+        default: 'Due Date',
+    },
 });
 
 function addItem() {
@@ -61,7 +81,7 @@ const total = computed(() => subtotal.value - discountTotal.value + taxTotal.val
 </script>
 
 <template>
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+    <div class="grid grid-cols-1 gap-6" :class="showDates ? 'sm:grid-cols-3' : 'sm:grid-cols-2'">
         <div>
             <InputLabel for="vendor_id" value="Vendor" />
             <select
@@ -94,16 +114,16 @@ const total = computed(() => subtotal.value - discountTotal.value + taxTotal.val
             <InputError :message="form.errors.payable_account_id" class="mt-2" />
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div v-if="showDates" class="grid grid-cols-2 gap-4">
             <div>
-                <InputLabel for="bill_date" value="Bill Date" />
-                <TextInput id="bill_date" v-model="form.bill_date" type="date" class="mt-1 block w-full" required />
-                <InputError :message="form.errors.bill_date" class="mt-2" />
+                <InputLabel :for="dateField" :value="dateLabel" />
+                <TextInput :id="dateField" v-model="form[dateField]" type="date" class="mt-1 block w-full" required />
+                <InputError :message="form.errors[dateField]" class="mt-2" />
             </div>
             <div>
-                <InputLabel for="due_date" value="Due Date" />
-                <TextInput id="due_date" v-model="form.due_date" type="date" class="mt-1 block w-full" />
-                <InputError :message="form.errors.due_date" class="mt-2" />
+                <InputLabel :for="dueDateField" :value="dueDateLabel" />
+                <TextInput :id="dueDateField" v-model="form[dueDateField]" type="date" class="mt-1 block w-full" />
+                <InputError :message="form.errors[dueDateField]" class="mt-2" />
             </div>
         </div>
     </div>

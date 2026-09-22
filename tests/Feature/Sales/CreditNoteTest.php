@@ -3,6 +3,7 @@
 namespace Tests\Feature\Sales;
 
 use App\Actions\Accounting\PostJournal;
+use App\Actions\Sales\PostCreditNote;
 use App\Actions\Sales\PostInvoice;
 use App\Models\Accounting\Account;
 use App\Models\Contacts\Customer;
@@ -118,7 +119,7 @@ class CreditNoteTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
 
-        (new \App\Actions\Sales\PostCreditNote(new PostJournal))->handle($creditNote);
+        (new PostCreditNote(new PostJournal))->handle($creditNote);
     }
 
     public function test_a_posted_credit_note_cannot_be_edited_or_deleted(): void
