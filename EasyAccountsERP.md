@@ -2916,6 +2916,37 @@ Not implemented: a categorized Cash Flow Statement, Account Statement as a disti
 
 Not implemented: a permission-change audit trail specifically for Role/Permission edits (covered generically by the Activity log via causer, not by a dedicated diff view), per-field-level audit redaction, log retention/pruning policy (activitylog ships a `CleanActivitylogCommand` but it isn't scheduled).
 
+## Phase 12 — Finalization: Audits Done; Feature Items Awaiting Approval
+
+Per Section 82 ("implement only after approval") and Sections 59/60 (Export Strategy, Automation — both explicitly "do not implement prematurely"), the audit/verification items were run now; the speculative feature items (recurring transactions, notifications, scheduled reports, export) were not started without a scoped decision on what to build.
+
+**Portability audit (Section 75) — done:**
+* No hard-coded URLs, business names, or file paths found in `app/`, `config/`, `database/`, `routes/`, or `resources/js/` (grepped explicitly).
+* Two cosmetic exceptions fixed: `Sidebar.vue` and `AppLayout.vue` had the literal string `"EasyAccountsERP"` hard-coded instead of reading `VITE_APP_NAME` (the same env var `app.js`'s page-title logic already used) — fixed so a downstream fork can rebrand via `.env` alone, no source edit. `APP_NAME` was also left at the Laravel default (`Laravel`) in both `.env` and `.env.example`; corrected to `EasyAccountsERP`.
+* No hard-coded DB-engine assumptions in application code — the existing bcmath/`SUM()` normalization (Section 21) already handles the SQLite-vs-MySQL aggregate-scale difference generically, so the app is not coupled to MariaDB specifically despite that being the local dev engine (Section 49).
+* `composer.json`'s `name`/`description` are still the generic `laravel/laravel` scaffold values. A cosmetic rename was attempted and reverted: it forced a `composer.lock` content-hash update, and re-resolving the lock hit a pre-existing fragility unrelated to this audit — `muradbdinfo/laravelai` (the repo owner's own unrelated package, already in `composer.json` before Phase 1) is pinned to a Git-tag commit that Composer's solver can no longer re-resolve fresh from Packagist. Left as-is rather than risk destabilizing a working `vendor/` install for a purely cosmetic fix; flagged here rather than silently worked around.
+
+**Security audit (Section 55) — done:**
+* Verified programmatically (via `route:list --json`) that every non-auth, non-public route carries `Spatie\Permission\Middleware\PermissionMiddleware` — no route was missed during Phase 11's gating pass.
+* CSRF protection, mass-assignment protection (`$fillable` throughout), and FormRequest validation confirmed unchanged from Laravel defaults — nothing overrides `VerifyCsrfToken`.
+* All 18 `FormRequest::authorize()` methods return `true` unconditionally by design — authorization is enforced once, at the route-permission-middleware layer, not duplicated per-request (avoids two sources of truth on who can do what).
+* No `dd()`/`dump()`/`var_dump()`/`console.log()` debug leftovers found in `app/` or `resources/js/`.
+* `composer audit` reports 35 advisories across 10 packages (`guzzlehttp/guzzle`, `guzzlehttp/psr7`, `laravel/framework`, `league/commonmark`, and five `symfony/*` components) — all pre-existing in the base Laravel 13.0.0 install, none introduced by this project's own code. A scoped `composer update` (limited to just those 10 packages) resolves cleanly without touching `muradbdinfo/laravelai`, but **was not applied**: it upgrades `laravel/framework` v13.0.0 → v13.32.0 and `guzzlehttp/guzzle` **7.10.0 → 8.2.0 (a major version bump)**, which needs its own regression pass and is a call for the repo owner, not something to do silently inside an audit. Command is ready to run on approval: `composer update guzzlehttp/guzzle guzzlehttp/psr7 laravel/framework league/commonmark symfony/http-foundation symfony/http-kernel symfony/mailer symfony/mime symfony/polyfill-intl-idn symfony/routing --with-dependencies`.
+
+**Performance audit (Section 54) — done:**
+* No N+1 queries found in the Security controllers added in Phase 11 (`RoleController`/`UserController`/`AuditLogController` all eager-load or use `withCount`).
+* The vendor-published `permission_tables`/`activity_log` migrations already carry the standard indexes (morph-pair indexes on `subject`/`causer`, `model_has_permissions`/`model_has_roles`).
+
+**Documentation (Section 82) — done:** replaced the default Laravel scaffold `README.md` with project-specific setup instructions, demo logins, and test-running notes; this section.
+
+**Full regression testing — done:** 209/209 tests passing, `./vendor/bin/pint --test` clean, `npm run build` clean, `php artisan migrate:fresh --seed --force` clean.
+
+**Not started — awaiting a scoped decision from the repo owner on each:**
+* Recurring transactions (invoices/expenses) — Section 60 lists this as a "potential future feature," not a confirmed one; needs a decision on cadence model (fixed schedule vs. manual "generate next") before any schema is written.
+* Notifications (payment reminders, overdue, low-stock) — needs a decision on delivery channel (in-app vs. email vs. both) before `notifications` table/mailables are added.
+* Scheduled reports — depends on Notifications existing first (delivery channel) and on which reports are worth scheduling.
+* Export (CSV/Excel/PDF/Print) — Section 59 explicitly says "do not implement every format prematurely"; needs a decision on which single format to start with and which screens need it first.
+
 ## Everything Else
 
 Not implemented. See Section 83 for phase order.

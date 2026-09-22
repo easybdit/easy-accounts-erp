@@ -12,6 +12,7 @@ defineProps({
 });
 
 const sidebarOpen = ref(false);
+const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 </script>
 
 <template>
@@ -32,7 +33,7 @@ const sidebarOpen = ref(false);
             </main>
 
             <footer class="border-t border-gray-200 bg-white px-4 py-3 text-center text-xs text-gray-400 sm:px-6 lg:px-8">
-                EasyAccountsERP &copy; {{ new Date().getFullYear() }}
+                {{ appName }} &copy; {{ new Date().getFullYear() }}
             </footer>
         </div>
     </div>

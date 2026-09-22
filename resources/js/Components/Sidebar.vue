@@ -13,6 +13,7 @@ defineProps({
 const emit = defineEmits(['close']);
 
 const page = usePage();
+const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 function can(permission) {
     return page.props.auth.permissions?.includes(permission) ?? false;
@@ -132,7 +133,7 @@ function isActive(routeName) {
             <div class="flex h-16 items-center gap-2 border-b border-gray-800 px-4">
                 <Link :href="route('dashboard')" class="flex items-center gap-2">
                     <ApplicationLogo class="h-8 w-auto fill-current text-white" />
-                    <span class="text-lg font-semibold">EasyAccountsERP</span>
+                    <span class="text-lg font-semibold">{{ appName }}</span>
                 </Link>
             </div>
 
