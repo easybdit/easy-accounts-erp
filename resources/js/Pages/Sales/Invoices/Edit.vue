@@ -12,6 +12,7 @@ const props = defineProps({
     receivableAccounts: Array,
     incomeAccounts: Array,
     products: Array,
+    liabilityAccounts: Array,
     taxRates: Array,
 });
 
@@ -30,6 +31,9 @@ const form = useForm({
         quantity: item.quantity,
         unit_price: item.unit_price,
         discount: item.discount,
+        is_deferred: item.is_deferred ?? false,
+        deferred_months: item.deferred_months ?? '',
+        deferred_revenue_account_id: item.deferred_revenue_account_id ?? '',
     })),
 });
 
@@ -59,8 +63,10 @@ function submit() {
                 :receivable-accounts="receivableAccounts"
                 :income-accounts="incomeAccounts"
                 :products="products"
+                :liability-accounts="liabilityAccounts"
                 :tax-rates="taxRates"
                 :show-tax-inclusive="true"
+                :show-deferred-revenue="true"
             />
 
             <div class="mt-6 flex justify-end gap-3">

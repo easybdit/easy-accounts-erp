@@ -6,6 +6,7 @@ use App\Actions\Accounting\PostJournal;
 use App\Models\Inventory\StockMovement;
 use App\Models\Sales\Invoice;
 use App\Models\Sales\InvoiceItem;
+use App\Models\Sales\RevenueRecognitionSchedule;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -24,6 +25,15 @@ use RuntimeException;
  * carries a non-zero cost, a companion COGS journal — debit COGS, credit the
  * product's inventory asset account — kept separate from the revenue journal
  * above so both stay independently traceable via their own source_type.
+ *
+ * Deferred Revenue (Section 90): a line marked is_deferred credits its
+ * deferred_revenue_account_id (a liability) instead of its income account —
+ * the revenue simply isn't recognized yet — and gets a
+ * RevenueRecognitionSchedule that RecognizeRevenue walks monthly,
+ * eventually crediting the income account the line "would have" used.
+ * Tax is still credited to the tax account immediately regardless of
+ * deferral — VAT is typically due on the invoice date, not the revenue
+ * recognition date.
  */
 class PostInvoice
 {
@@ -96,7 +106,7 @@ class PostInvoice
 
             foreach ($invoice->items as $item) {
                 $lines[] = [
-                    'account_id' => $item->account_id,
+                    'account_id' => $item->is_deferred ? $item->deferred_revenue_account_id : $item->account_id,
                     'debit' => 0,
                     'credit' => (string) $item->line_total,
                     'description' => $item->description,
@@ -128,10 +138,29 @@ class PostInvoice
                 if ($item->product && $item->product->isInventoryTracked()) {
                     $this->recordSaleStockMovement($invoice, $item);
                 }
+
+                if ($item->is_deferred) {
+                    $this->createRecognitionSchedule($invoice, $item);
+                }
             }
 
             return $invoice->fresh(['items', 'journal']);
         });
+    }
+
+    private function createRecognitionSchedule(Invoice $invoice, InvoiceItem $item): void
+    {
+        RevenueRecognitionSchedule::create([
+            'invoice_item_id' => $item->id,
+            'deferred_revenue_account_id' => $item->deferred_revenue_account_id,
+            'income_account_id' => $item->account_id,
+            'total_amount' => $item->line_total,
+            'months_total' => $item->deferred_months,
+            'months_recognized' => 0,
+            'next_period_date' => $invoice->invoice_date->copy()->startOfMonth(),
+            'status' => 'active',
+            'created_by' => $invoice->created_by,
+        ]);
     }
 
     private function recordSaleStockMovement(Invoice $invoice, InvoiceItem $item): void

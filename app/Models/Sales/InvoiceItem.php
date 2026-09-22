@@ -7,6 +7,7 @@ use App\Models\Inventory\Product;
 use App\Models\Tax\TaxRate;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class InvoiceItem extends Model
 {
@@ -20,6 +21,9 @@ class InvoiceItem extends Model
         'discount',
         'line_total',
         'tax_amount',
+        'is_deferred',
+        'deferred_months',
+        'deferred_revenue_account_id',
     ];
 
     protected $casts = [
@@ -28,6 +32,8 @@ class InvoiceItem extends Model
         'discount' => 'decimal:4',
         'line_total' => 'decimal:4',
         'tax_amount' => 'decimal:4',
+        'is_deferred' => 'boolean',
+        'deferred_months' => 'integer',
     ];
 
     public function invoice(): BelongsTo
@@ -48,5 +54,15 @@ class InvoiceItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function deferredRevenueAccount(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'deferred_revenue_account_id');
+    }
+
+    public function revenueRecognitionSchedule(): HasOne
+    {
+        return $this->hasOne(RevenueRecognitionSchedule::class);
     }
 }

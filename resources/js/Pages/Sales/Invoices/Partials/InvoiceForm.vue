@@ -25,6 +25,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    liabilityAccounts: {
+        type: Array,
+        default: () => [],
+    },
     taxRates: {
         type: Array,
         default: () => [],
@@ -53,10 +57,25 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    showDeferredRevenue: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 function addItem() {
-    props.form.items.push({ product_id: '', account_id: '', tax_rate_id: '', description: '', quantity: 1, unit_price: '', discount: 0 });
+    props.form.items.push({
+        product_id: '',
+        account_id: '',
+        tax_rate_id: '',
+        description: '',
+        quantity: 1,
+        unit_price: '',
+        discount: 0,
+        is_deferred: false,
+        deferred_months: '',
+        deferred_revenue_account_id: '',
+    });
 }
 
 function removeItem(index) {
@@ -289,6 +308,49 @@ const total = computed(() => netTotal.value + taxTotal.value);
                         >
                             Remove
                         </button>
+                    </td>
+                </tr>
+                <tr v-if="showDeferredRevenue">
+                    <td :colspan="products.length > 0 ? 9 : 8" class="bg-gray-50 px-2 py-2">
+                        <label class="flex items-center gap-2 text-xs text-gray-600">
+                            <input
+                                v-model="item.is_deferred"
+                                type="checkbox"
+                                class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                            />
+                            Defer this revenue
+                        </label>
+                        <div v-if="item.is_deferred" class="mt-2 flex flex-wrap items-start gap-3">
+                            <div>
+                                <InputLabel :for="`deferred_months_${index}`" value="Recognize over (months)" class="text-xs" />
+                                <input
+                                    :id="`deferred_months_${index}`"
+                                    v-model="item.deferred_months"
+                                    type="number"
+                                    step="1"
+                                    min="1"
+                                    class="mt-1 block w-32 rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                />
+                                <InputError :message="form.errors[`items.${index}.deferred_months`]" class="mt-1" />
+                            </div>
+                            <div>
+                                <InputLabel :for="`deferred_account_${index}`" value="Deferred Revenue Account" class="text-xs" />
+                                <select
+                                    :id="`deferred_account_${index}`"
+                                    v-model="item.deferred_revenue_account_id"
+                                    class="mt-1 block w-56 rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                >
+                                    <option value="" disabled>Select an account</option>
+                                    <option v-for="account in liabilityAccounts" :key="account.id" :value="account.id">
+                                        {{ account.code }} — {{ account.name }}
+                                    </option>
+                                </select>
+                                <InputError :message="form.errors[`items.${index}.deferred_revenue_account_id`]" class="mt-1" />
+                            </div>
+                        </div>
+                        <p v-else class="mt-1 text-xs text-gray-400">
+                            The income account above is credited immediately when this invoice is posted.
+                        </p>
                     </td>
                 </tr>
             </tbody>

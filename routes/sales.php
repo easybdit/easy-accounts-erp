@@ -5,6 +5,7 @@ use App\Http\Controllers\Sales\EstimateController;
 use App\Http\Controllers\Sales\InvoiceController;
 use App\Http\Controllers\Sales\PaymentController;
 use App\Http\Controllers\Sales\RecurringInvoiceController;
+use App\Http\Controllers\Sales\RevenueRecognitionScheduleController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(function () {
@@ -63,9 +64,9 @@ Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(
         Route::get('credit-notes/{credit_note}', [CreditNoteController::class, 'show'])->name('credit-notes.show');
     });
 
-    // Recurring invoices are templates only (Section 60: manual "Generate
-    // Now" trigger, no scheduler-driven automation). No show route, so
-    // "create" vs "{recurring_invoice}" ordering isn't a concern here.
+    // Recurring invoices are templates, either "Generate Now" or scheduled
+    // via next_generation_date (Section 90). No show route, so "create" vs
+    // "{recurring_invoice}" ordering isn't a concern here.
     Route::middleware('permission:invoices.view')->group(function () {
         Route::get('recurring-invoices', [RecurringInvoiceController::class, 'index'])->name('recurring-invoices.index');
     });
@@ -89,5 +90,17 @@ Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(
     });
     Route::middleware('permission:payments.view')->group(function () {
         Route::get('payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
+    });
+
+    // Deferred Revenue schedules are created only as a side effect of
+    // posting an invoice with a deferred line (Section 90) — no create/
+    // store/edit/destroy here, just viewing and manually triggering a
+    // period's recognition ahead of the monthly schedule.
+    Route::middleware('permission:invoices.view')->group(function () {
+        Route::get('revenue-recognition', [RevenueRecognitionScheduleController::class, 'index'])->name('revenue-recognition.index');
+        Route::get('revenue-recognition/{revenue_recognition_schedule}', [RevenueRecognitionScheduleController::class, 'show'])->name('revenue-recognition.show');
+    });
+    Route::middleware('permission:invoices.manage')->group(function () {
+        Route::post('revenue-recognition/{revenue_recognition_schedule}/recognize', [RevenueRecognitionScheduleController::class, 'recognize'])->name('revenue-recognition.recognize');
     });
 });

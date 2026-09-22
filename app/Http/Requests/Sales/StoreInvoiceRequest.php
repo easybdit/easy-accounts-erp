@@ -31,6 +31,9 @@ class StoreInvoiceRequest extends FormRequest
             'items.*.quantity' => ['required', 'numeric', 'min:0.0001'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
             'items.*.discount' => ['nullable', 'numeric', 'min:0'],
+            'items.*.is_deferred' => ['sometimes', 'boolean'],
+            'items.*.deferred_months' => ['required_if:items.*.is_deferred,true', 'nullable', 'integer', 'min:1'],
+            'items.*.deferred_revenue_account_id' => ['required_if:items.*.is_deferred,true', 'nullable', 'integer', 'exists:accounts,id'],
         ];
     }
 
@@ -80,6 +83,14 @@ class StoreInvoiceRequest extends FormRequest
 
                     if ($taxRate && ! $taxRate->is_active) {
                         $validator->errors()->add("items.{$index}.tax_rate_id", 'This tax rate is inactive.');
+                    }
+                }
+
+                if (! empty($item['is_deferred']) && ! empty($item['deferred_revenue_account_id'])) {
+                    $deferredAccount = Account::find($item['deferred_revenue_account_id']);
+
+                    if ($deferredAccount && $deferredAccount->type !== 'liability') {
+                        $validator->errors()->add("items.{$index}.deferred_revenue_account_id", 'The deferred revenue account must be a liability account.');
                     }
                 }
             }

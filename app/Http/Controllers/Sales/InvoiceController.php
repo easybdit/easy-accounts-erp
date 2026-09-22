@@ -101,6 +101,8 @@ class InvoiceController extends Controller
             'receivableAccount:id,code,name',
             'items.account:id,code,name',
             'items.taxRate:id,name,rate',
+            'items.deferredRevenueAccount:id,code,name',
+            'items.revenueRecognitionSchedule',
             'journal',
             'paymentAllocations.payment:id,payment_number,payment_date',
         ]);
@@ -167,6 +169,8 @@ class InvoiceController extends Controller
             'products' => Product::query()->where('is_active', true)
                 ->select('id', 'sku', 'name', 'type', 'selling_price', 'income_account_id')
                 ->orderBy('name')->get(),
+            'liabilityAccounts' => Account::query()->where('is_active', true)->where('type', 'liability')
+                ->select('id', 'code', 'name')->orderBy('code')->get(),
         ];
     }
 }

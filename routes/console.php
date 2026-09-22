@@ -23,3 +23,7 @@ Schedule::command('assets:post-depreciation')->monthlyOn(1, '01:00');
 // next_generation_date is due. Daily (not monthly) since each template
 // carries its own due date — see GenerateScheduledRecurringInvoices.
 Schedule::command('invoices:generate-recurring')->dailyAt('02:00');
+
+// Deferred Revenue Recognition: monthly on the 1st, same cadence as
+// depreciation. Each schedule tracks its own next_period_date.
+Schedule::command('revenue:recognize')->monthlyOn(1, '01:30');

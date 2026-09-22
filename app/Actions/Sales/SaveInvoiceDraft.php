@@ -109,6 +109,9 @@ class SaveInvoiceDraft
                     'discount' => $item['discount'] ?? 0,
                     'line_total' => $lineTotals[$index],
                     'tax_amount' => $taxAmounts[$index],
+                    'is_deferred' => $item['is_deferred'] ?? false,
+                    'deferred_months' => $item['is_deferred'] ?? false ? $item['deferred_months'] : null,
+                    'deferred_revenue_account_id' => $item['is_deferred'] ?? false ? $item['deferred_revenue_account_id'] : null,
                 ]);
             }
 

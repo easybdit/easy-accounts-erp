@@ -127,8 +127,25 @@ function destroy() {
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     <tr v-for="item in invoice.items" :key="item.id">
-                        <td class="px-2 py-2 text-sm text-gray-700">{{ item.account.code }} — {{ item.account.name }}</td>
-                        <td class="px-2 py-2 text-sm text-gray-500">{{ item.description }}</td>
+                        <td class="px-2 py-2 text-sm text-gray-700">
+                            <template v-if="item.is_deferred && invoice.status === 'posted'">
+                                {{ item.deferred_revenue_account.code }} — {{ item.deferred_revenue_account.name }}
+                            </template>
+                            <template v-else>{{ item.account.code }} — {{ item.account.name }}</template>
+                        </td>
+                        <td class="px-2 py-2 text-sm text-gray-500">
+                            {{ item.description }}
+                            <Link
+                                v-if="item.is_deferred && item.revenue_recognition_schedule"
+                                :href="route('sales.revenue-recognition.show', item.revenue_recognition_schedule.id)"
+                                class="ml-1 text-xs text-indigo-600 hover:text-indigo-900"
+                            >
+                                (Deferred over {{ item.deferred_months }} months — view schedule)
+                            </Link>
+                            <span v-else-if="item.is_deferred" class="ml-1 text-xs text-amber-600">
+                                (Will defer over {{ item.deferred_months }} months once posted)
+                            </span>
+                        </td>
                         <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.quantity }}</td>
                         <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.unit_price }}</td>
                         <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.discount }}</td>

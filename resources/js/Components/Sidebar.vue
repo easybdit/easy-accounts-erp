@@ -50,6 +50,7 @@ const allNavGroups = [
             { label: 'Credit Notes', routeName: 'sales.credit-notes.index' },
             { label: 'Recurring Invoices', routeName: 'sales.recurring-invoices.index' },
             { label: 'Payments', routeName: 'sales.payments.index' },
+            { label: 'Deferred Revenue', routeName: 'sales.revenue-recognition.index' },
         ],
     },
     {

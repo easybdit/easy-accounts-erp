@@ -11,6 +11,7 @@ const props = defineProps({
     receivableAccounts: Array,
     incomeAccounts: Array,
     products: Array,
+    liabilityAccounts: Array,
     taxRates: Array,
 });
 
@@ -21,7 +22,10 @@ const form = useForm({
     due_date: '',
     tax_inclusive: false,
     notes: '',
-    items: [{ product_id: '', account_id: '', tax_rate_id: '', description: '', quantity: 1, unit_price: '', discount: 0 }],
+    items: [{
+        product_id: '', account_id: '', tax_rate_id: '', description: '', quantity: 1, unit_price: '', discount: 0,
+        is_deferred: false, deferred_months: '', deferred_revenue_account_id: '',
+    }],
 });
 
 function submit() {
@@ -50,8 +54,10 @@ function submit() {
                 :receivable-accounts="receivableAccounts"
                 :income-accounts="incomeAccounts"
                 :products="products"
+                :liability-accounts="liabilityAccounts"
                 :tax-rates="taxRates"
                 :show-tax-inclusive="true"
+                :show-deferred-revenue="true"
             />
 
             <div class="mt-6 flex justify-end gap-3">
