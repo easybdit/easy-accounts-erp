@@ -106,7 +106,7 @@ class ProductController extends Controller
     public function destroy(Product $product): RedirectResponse
     {
         if ($product->stockMovements()->exists()) {
-            return back()->withErrors(['product' => 'This product has stock movement history and cannot be deleted.']);
+            return back()->with('error', 'This product has stock movement history and cannot be deleted.');
         }
 
         $product->delete();

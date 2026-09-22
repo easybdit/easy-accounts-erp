@@ -1,8 +1,11 @@
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import Sidebar from '@/Components/Sidebar.vue';
 import Navbar from '@/Components/Navbar.vue';
 import Breadcrumb from '@/Components/Breadcrumb.vue';
+import Toast from '@/Components/Toast.vue';
+import { useToast } from '@/Composables/useToast';
 
 defineProps({
     breadcrumbs: {
@@ -13,10 +16,24 @@ defineProps({
 
 const sidebarOpen = ref(false);
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+const page = usePage();
+const toast = useToast();
+
+onMounted(() => {
+    if (page.props.flash?.success) {
+        toast.success(page.props.flash.success);
+    }
+    if (page.props.flash?.error) {
+        toast.error(page.props.flash.error);
+    }
+});
 </script>
 
 <template>
     <div class="flex min-h-screen bg-gray-100">
+        <Toast />
+
         <Sidebar :open="sidebarOpen" @close="sidebarOpen = false" />
 
         <div class="flex min-h-screen flex-1 flex-col md:pl-0">

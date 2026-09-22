@@ -40,7 +40,7 @@ class UserController extends Controller
         ]);
 
         if ($user->id === $request->user()->id && ! in_array('Administrator', $validated['roles'] ?? [], true) && $user->hasRole('Administrator')) {
-            return back()->withErrors(['roles' => 'You cannot remove your own Administrator role.']);
+            return back()->with('error', 'You cannot remove your own Administrator role.');
         }
 
         $user->syncRoles($validated['roles'] ?? []);

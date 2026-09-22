@@ -3,6 +3,9 @@ import { ref, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
+import Card from '@/Components/Card.vue';
+import Badge from '@/Components/Badge.vue';
+import EmptyState from '@/Components/EmptyState.vue';
 
 const props = defineProps({
     activities: Object,
@@ -21,12 +24,12 @@ watch([subjectType, event], ([subjectTypeValue, eventValue]) => {
     );
 });
 
-function eventBadgeClass(event) {
+function eventBadgeVariant(event) {
     return {
-        created: 'bg-green-100 text-green-700',
-        updated: 'bg-blue-100 text-blue-700',
-        deleted: 'bg-red-100 text-red-700',
-    }[event] ?? 'bg-gray-100 text-gray-600';
+        created: 'success',
+        updated: 'info',
+        deleted: 'danger',
+    }[event] ?? 'neutral';
 }
 </script>
 
@@ -57,7 +60,7 @@ function eventBadgeClass(event) {
             </select>
         </div>
 
-        <div class="overflow-hidden rounded-lg bg-white shadow-sm">
+        <Card>
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -69,12 +72,12 @@ function eventBadgeClass(event) {
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
-                    <tr v-for="activity in activities.data" :key="activity.id">
+                    <tr v-for="activity in activities.data" :key="activity.id" class="hover:bg-gray-50">
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ activity.created_at }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm">
-                            <span class="rounded-full px-2 py-1 text-xs font-medium" :class="eventBadgeClass(activity.event)">
+                            <Badge :variant="eventBadgeVariant(activity.event)">
                                 {{ activity.event ?? activity.description }}
-                            </span>
+                            </Badge>
                         </td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
                             {{ activity.subject_type }}<span v-if="activity.subject_id"> #{{ activity.subject_id }}</span>
@@ -84,14 +87,10 @@ function eventBadgeClass(event) {
                             <pre class="max-w-md whitespace-pre-wrap break-words">{{ JSON.stringify(activity.attribute_changes, null, 2) }}</pre>
                         </td>
                     </tr>
-                    <tr v-if="activities.data.length === 0">
-                        <td colspan="5" class="px-4 py-6 text-center text-sm text-gray-500">
-                            No activity recorded.
-                        </td>
-                    </tr>
                 </tbody>
             </table>
-        </div>
+            <EmptyState v-if="activities.data.length === 0" title="No activity recorded" />
+        </Card>
 
         <div v-if="activities.links?.length > 3" class="mt-4 flex flex-wrap gap-1">
             <Link

@@ -63,7 +63,7 @@ function submit() {
                 <Link :href="route('inventory.products.index')">
                     <SecondaryButton type="button">Cancel</SecondaryButton>
                 </Link>
-                <PrimaryButton :disabled="form.processing">Save Product</PrimaryButton>
+                <PrimaryButton :loading="form.processing">Save Product</PrimaryButton>
             </div>
         </form>
     </AppLayout>

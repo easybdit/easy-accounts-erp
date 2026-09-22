@@ -159,7 +159,7 @@ class JournalTest extends TestCase
 
         $this->actingAs($user)
             ->delete(route('accounting.accounts.destroy', $account))
-            ->assertSessionHasErrors('account');
+            ->assertSessionHas('error');
 
         $this->assertDatabaseHas('accounts', ['id' => $account->id]);
     }

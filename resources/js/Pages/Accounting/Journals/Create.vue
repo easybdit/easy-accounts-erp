@@ -209,7 +209,7 @@ function submit() {
                 <Link :href="route('accounting.journals.index')">
                     <SecondaryButton type="button">Cancel</SecondaryButton>
                 </Link>
-                <PrimaryButton :disabled="form.processing">Post Journal</PrimaryButton>
+                <PrimaryButton :loading="form.processing">Post Journal</PrimaryButton>
             </div>
         </form>
     </AppLayout>

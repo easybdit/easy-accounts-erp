@@ -3,6 +3,8 @@ import { Head, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import Card from '@/Components/Card.vue';
+import EmptyState from '@/Components/EmptyState.vue';
 
 defineProps({
     roles: Array,
@@ -29,20 +31,7 @@ function can(permission) {
             </PageHeader>
         </template>
 
-        <div
-            v-if="page.props.flash?.success"
-            class="mb-4 rounded-md bg-green-50 px-4 py-3 text-sm text-green-700"
-        >
-            {{ page.props.flash.success }}
-        </div>
-        <div
-            v-if="$page.props.errors?.role"
-            class="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700"
-        >
-            {{ $page.props.errors.role }}
-        </div>
-
-        <div class="overflow-hidden rounded-lg bg-white shadow-sm">
+        <Card>
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -53,7 +42,7 @@ function can(permission) {
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
-                    <tr v-for="role in roles" :key="role.id">
+                    <tr v-for="role in roles" :key="role.id" class="hover:bg-gray-50">
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ role.name }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-500">{{ role.permissions_count }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-500">{{ role.users_count }}</td>
@@ -74,13 +63,9 @@ function can(permission) {
                             </template>
                         </td>
                     </tr>
-                    <tr v-if="roles.length === 0">
-                        <td colspan="4" class="px-4 py-6 text-center text-sm text-gray-500">
-                            No roles found.
-                        </td>
-                    </tr>
                 </tbody>
             </table>
-        </div>
+            <EmptyState v-if="roles.length === 0" title="No roles found" description="Create a role to start assigning permissions to users." />
+        </Card>
     </AppLayout>
 </template>

@@ -62,7 +62,7 @@ function submit() {
                 <Link :href="route('purchases.bills.show', bill.id)">
                     <SecondaryButton type="button">Cancel</SecondaryButton>
                 </Link>
-                <PrimaryButton :disabled="form.processing">Save Changes</PrimaryButton>
+                <PrimaryButton :loading="form.processing">Save Changes</PrimaryButton>
             </div>
         </form>
     </AppLayout>

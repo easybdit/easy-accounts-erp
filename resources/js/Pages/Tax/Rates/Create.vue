@@ -78,7 +78,7 @@ function submit() {
                 <Link :href="route('tax.rates.index')">
                     <SecondaryButton type="button">Cancel</SecondaryButton>
                 </Link>
-                <PrimaryButton :disabled="form.processing">Save Tax Rate</PrimaryButton>
+                <PrimaryButton :loading="form.processing">Save Tax Rate</PrimaryButton>
             </div>
         </form>
     </AppLayout>

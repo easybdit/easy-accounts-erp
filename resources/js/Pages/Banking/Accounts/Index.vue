@@ -3,6 +3,8 @@ import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import Card from '@/Components/Card.vue';
+import EmptyState from '@/Components/EmptyState.vue';
 
 const props = defineProps({
     accounts: Array,
@@ -23,7 +25,7 @@ const props = defineProps({
             </PageHeader>
         </template>
 
-        <div class="overflow-hidden rounded-lg bg-white shadow-sm">
+        <Card>
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -34,7 +36,7 @@ const props = defineProps({
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
-                    <tr v-for="account in accounts" :key="account.id">
+                    <tr v-for="account in accounts" :key="account.id" class="hover:bg-gray-50">
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ account.code }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ account.name }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-gray-800">{{ account.balance }}</td>
@@ -47,17 +49,13 @@ const props = defineProps({
                             </Link>
                         </td>
                     </tr>
-                    <tr v-if="accounts.length === 0">
-                        <td colspan="4" class="px-4 py-6 text-center text-sm text-gray-500">
-                            No accounts are marked as Bank/Cash accounts yet. Mark one on the
-                            <Link :href="route('accounting.accounts.index')" class="text-indigo-600 hover:text-indigo-900">
-                                Chart of Accounts
-                            </Link>
-                            page.
-                        </td>
-                    </tr>
                 </tbody>
             </table>
-        </div>
+            <EmptyState v-if="accounts.length === 0" title="No bank accounts yet">
+                Mark an account as Bank/Cash on the
+                <Link :href="route('accounting.accounts.index')" class="text-indigo-600 hover:text-indigo-900">Chart of Accounts</Link>
+                page.
+            </EmptyState>
+        </Card>
     </AppLayout>
 </template>

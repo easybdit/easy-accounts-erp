@@ -60,7 +60,7 @@ class ExpenseCategoryTest extends TestCase
         ]);
 
         $this->actingAs($user)->delete(route('expenses.categories.destroy', $category))
-            ->assertSessionHasErrors('category');
+            ->assertSessionHas('error');
 
         $this->assertDatabaseHas('expense_categories', ['id' => $category->id]);
     }

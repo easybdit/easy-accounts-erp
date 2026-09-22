@@ -120,7 +120,7 @@ class InvoiceController extends Controller
         try {
             $action->handle($invoice);
         } catch (\RuntimeException $e) {
-            return back()->withErrors(['invoice' => $e->getMessage()]);
+            return back()->with('error', $e->getMessage());
         }
 
         return redirect()->route('sales.invoices.show', $invoice)->with('success', 'Invoice posted.');

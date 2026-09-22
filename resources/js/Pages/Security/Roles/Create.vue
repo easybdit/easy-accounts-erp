@@ -85,7 +85,7 @@ function submit() {
                 <Link :href="route('security.roles.index')">
                     <SecondaryButton type="button">Cancel</SecondaryButton>
                 </Link>
-                <PrimaryButton :disabled="form.processing">Save Role</PrimaryButton>
+                <PrimaryButton :loading="form.processing">Save Role</PrimaryButton>
             </div>
         </form>
     </AppLayout>

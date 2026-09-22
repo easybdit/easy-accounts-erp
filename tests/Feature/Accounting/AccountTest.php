@@ -127,7 +127,7 @@ class AccountTest extends TestCase
 
         $this->actingAs($user)
             ->delete(route('accounting.accounts.destroy', $parent))
-            ->assertSessionHasErrors('account');
+            ->assertSessionHas('error');
 
         $this->assertDatabaseHas('accounts', ['id' => $parent->id]);
     }

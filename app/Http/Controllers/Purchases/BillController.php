@@ -121,7 +121,7 @@ class BillController extends Controller
         try {
             $action->handle($bill);
         } catch (RuntimeException $e) {
-            return back()->withErrors(['bill' => $e->getMessage()]);
+            return back()->with('error', $e->getMessage());
         }
 
         return redirect()->route('purchases.bills.show', $bill)->with('success', 'Bill posted.');

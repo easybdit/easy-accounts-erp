@@ -98,7 +98,7 @@ function submit() {
                 <Link :href="route('inventory.stock-movements.index')">
                     <SecondaryButton type="button">Cancel</SecondaryButton>
                 </Link>
-                <PrimaryButton :disabled="form.processing">Save Adjustment</PrimaryButton>
+                <PrimaryButton :loading="form.processing">Save Adjustment</PrimaryButton>
             </div>
         </form>
     </AppLayout>

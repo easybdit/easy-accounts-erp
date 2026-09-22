@@ -172,7 +172,7 @@ function submit() {
                 <Link :href="route('expenses.entries.index')">
                     <SecondaryButton type="button">Cancel</SecondaryButton>
                 </Link>
-                <PrimaryButton :disabled="form.processing">Record Expense</PrimaryButton>
+                <PrimaryButton :loading="form.processing">Record Expense</PrimaryButton>
             </div>
         </form>
     </AppLayout>

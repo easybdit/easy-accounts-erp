@@ -1,9 +1,11 @@
 <script setup>
 import { ref, watch } from 'vue';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import Card from '@/Components/Card.vue';
+import EmptyState from '@/Components/EmptyState.vue';
 
 const props = defineProps({
     movements: Object,
@@ -11,7 +13,6 @@ const props = defineProps({
     products: Array,
 });
 
-const page = usePage();
 const productId = ref(props.filters.product_id ?? '');
 
 watch(productId, (value) => {
@@ -37,13 +38,6 @@ watch(productId, (value) => {
             </PageHeader>
         </template>
 
-        <div
-            v-if="page.props.flash?.success"
-            class="mb-4 rounded-md bg-green-50 px-4 py-3 text-sm text-green-700"
-        >
-            {{ page.props.flash.success }}
-        </div>
-
         <div class="mb-4">
             <select
                 v-model="productId"
@@ -56,7 +50,7 @@ watch(productId, (value) => {
             </select>
         </div>
 
-        <div class="overflow-hidden rounded-lg bg-white shadow-sm">
+        <Card>
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -68,7 +62,7 @@ watch(productId, (value) => {
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
-                    <tr v-for="movement in movements.data" :key="movement.id">
+                    <tr v-for="movement in movements.data" :key="movement.id" class="hover:bg-gray-50">
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ movement.date }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ movement.product.sku }} — {{ movement.product.name }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm capitalize text-gray-500">{{ movement.reason }}</td>
@@ -79,14 +73,10 @@ watch(productId, (value) => {
                             </Link>
                         </td>
                     </tr>
-                    <tr v-if="movements.data.length === 0">
-                        <td colspan="5" class="px-4 py-6 text-center text-sm text-gray-500">
-                            No stock movements found.
-                        </td>
-                    </tr>
                 </tbody>
             </table>
-        </div>
+            <EmptyState v-if="movements.data.length === 0" title="No stock movements found" description="Adjust stock to see movement history here." />
+        </Card>
 
         <div v-if="movements.links?.length > 3" class="mt-4 flex flex-wrap gap-1">
             <Link

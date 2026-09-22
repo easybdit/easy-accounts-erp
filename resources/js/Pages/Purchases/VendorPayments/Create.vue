@@ -193,7 +193,7 @@ function submit() {
                 <Link :href="route('purchases.vendor-payments.index')">
                     <SecondaryButton type="button">Cancel</SecondaryButton>
                 </Link>
-                <PrimaryButton :disabled="form.processing">Make Payment</PrimaryButton>
+                <PrimaryButton :loading="form.processing">Make Payment</PrimaryButton>
             </div>
         </form>
     </AppLayout>

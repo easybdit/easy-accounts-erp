@@ -107,7 +107,7 @@ function submit() {
                 <Link :href="route('banking.transfers.index')">
                     <SecondaryButton type="button">Cancel</SecondaryButton>
                 </Link>
-                <PrimaryButton :disabled="form.processing">Record Transfer</PrimaryButton>
+                <PrimaryButton :loading="form.processing">Record Transfer</PrimaryButton>
             </div>
         </form>
     </AppLayout>

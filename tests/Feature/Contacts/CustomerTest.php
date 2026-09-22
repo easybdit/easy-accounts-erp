@@ -83,7 +83,7 @@ class CustomerTest extends TestCase
         ]);
 
         $this->actingAs($user)->delete(route('customers.destroy', $customer))
-            ->assertSessionHasErrors('customer');
+            ->assertSessionHas('error');
 
         $this->assertDatabaseHas('customers', ['id' => $customer->id]);
     }

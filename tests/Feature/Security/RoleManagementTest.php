@@ -45,7 +45,7 @@ class RoleManagementTest extends TestCase
         $administrator = Role::findByName('Administrator');
 
         $this->actingAs($user)->delete(route('security.roles.destroy', $administrator))
-            ->assertSessionHasErrors('role');
+            ->assertSessionHas('error');
 
         $this->assertDatabaseHas('roles', ['name' => 'Administrator']);
     }
@@ -59,7 +59,7 @@ class RoleManagementTest extends TestCase
         $assignedUser->assignRole($role);
 
         $this->actingAs($admin)->delete(route('security.roles.destroy', $role))
-            ->assertSessionHasErrors('role');
+            ->assertSessionHas('error');
 
         $this->assertDatabaseHas('roles', ['name' => 'Auditor']);
     }

@@ -75,15 +75,11 @@ class AccountController extends Controller
     public function destroy(Account $account): RedirectResponse
     {
         if ($account->children()->exists()) {
-            return back()->withErrors([
-                'account' => 'This account has child accounts and cannot be deleted.',
-            ]);
+            return back()->with('error', 'This account has child accounts and cannot be deleted.');
         }
 
         if ($account->journalEntries()->exists()) {
-            return back()->withErrors([
-                'account' => 'This account has posted journal entries and cannot be deleted.',
-            ]);
+            return back()->with('error', 'This account has posted journal entries and cannot be deleted.');
         }
 
         $account->delete();

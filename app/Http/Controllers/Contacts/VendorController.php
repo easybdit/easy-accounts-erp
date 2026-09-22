@@ -108,9 +108,7 @@ class VendorController extends Controller
     public function destroy(Vendor $vendor): RedirectResponse
     {
         if ($vendor->journalEntries()->exists()) {
-            return back()->withErrors([
-                'vendor' => 'This vendor has transaction history and cannot be deleted.',
-            ]);
+            return back()->with('error', 'This vendor has transaction history and cannot be deleted.');
         }
 
         $vendor->delete();

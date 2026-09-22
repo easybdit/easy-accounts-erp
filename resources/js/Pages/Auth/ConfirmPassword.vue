@@ -45,7 +45,7 @@ const submit = () => {
                 <PrimaryButton
                     class="ms-4"
                     :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
+                    :loading="form.processing"
                 >
                     Confirm
                 </PrimaryButton>

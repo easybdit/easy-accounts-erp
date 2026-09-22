@@ -31,7 +31,7 @@ class UserManagementTest extends TestCase
 
         $this->actingAs($admin)->put(route('security.users.update', $admin), [
             'roles' => ['Viewer'],
-        ])->assertSessionHasErrors('roles');
+        ])->assertSessionHas('error');
 
         $this->assertTrue($admin->fresh()->hasRole('Administrator'));
     }

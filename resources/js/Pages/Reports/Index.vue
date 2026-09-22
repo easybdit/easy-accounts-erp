@@ -2,6 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
+import Card from '@/Components/Card.vue';
 
 const groups = [
     {
@@ -51,7 +52,7 @@ const groups = [
         </template>
 
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div v-for="group in groups" :key="group.label" class="rounded-lg bg-white p-4 shadow-sm">
+            <Card v-for="group in groups" :key="group.label" padded>
                 <h2 class="mb-3 text-sm font-semibold text-gray-700">{{ group.label }}</h2>
                 <ul class="space-y-2">
                     <li v-for="report in group.reports" :key="report.name">
@@ -60,7 +61,7 @@ const groups = [
                         </Link>
                     </li>
                 </ul>
-            </div>
+            </Card>
         </div>
     </AppLayout>
 </template>

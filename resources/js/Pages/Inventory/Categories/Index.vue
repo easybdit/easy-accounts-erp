@@ -1,14 +1,15 @@
 <script setup>
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import Card from '@/Components/Card.vue';
+import Badge from '@/Components/Badge.vue';
+import EmptyState from '@/Components/EmptyState.vue';
 
-const props = defineProps({
+defineProps({
     categories: Array,
 });
-
-const page = usePage();
 </script>
 
 <template>
@@ -25,20 +26,7 @@ const page = usePage();
             </PageHeader>
         </template>
 
-        <div
-            v-if="page.props.flash?.success"
-            class="mb-4 rounded-md bg-green-50 px-4 py-3 text-sm text-green-700"
-        >
-            {{ page.props.flash.success }}
-        </div>
-        <div
-            v-if="$page.props.errors?.category"
-            class="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700"
-        >
-            {{ $page.props.errors.category }}
-        </div>
-
-        <div class="overflow-hidden rounded-lg bg-white shadow-sm">
+        <Card>
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -49,16 +37,13 @@ const page = usePage();
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
-                    <tr v-for="category in categories" :key="category.id">
+                    <tr v-for="category in categories" :key="category.id" class="hover:bg-gray-50">
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ category.name }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-500">{{ category.products_count }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm">
-                            <span
-                                class="rounded-full px-2 py-1 text-xs font-medium"
-                                :class="category.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
-                            >
+                            <Badge :variant="category.is_active ? 'success' : 'neutral'">
                                 {{ category.is_active ? 'Active' : 'Inactive' }}
-                            </span>
+                            </Badge>
                         </td>
                         <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
                             <Link :href="route('inventory.categories.edit', category.id)" class="mr-3 text-indigo-600 hover:text-indigo-900">
@@ -74,13 +59,9 @@ const page = usePage();
                             </Link>
                         </td>
                     </tr>
-                    <tr v-if="categories.length === 0">
-                        <td colspan="4" class="px-4 py-6 text-center text-sm text-gray-500">
-                            No categories found.
-                        </td>
-                    </tr>
                 </tbody>
             </table>
-        </div>
+            <EmptyState v-if="categories.length === 0" title="No categories found" description="Create a category to start grouping products." />
+        </Card>
     </AppLayout>
 </template>

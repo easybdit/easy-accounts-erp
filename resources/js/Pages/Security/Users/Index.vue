@@ -2,6 +2,9 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
+import Card from '@/Components/Card.vue';
+import Badge from '@/Components/Badge.vue';
+import EmptyState from '@/Components/EmptyState.vue';
 
 defineProps({
     users: Array,
@@ -22,14 +25,7 @@ function can(permission) {
             <PageHeader title="Users" />
         </template>
 
-        <div
-            v-if="page.props.flash?.success"
-            class="mb-4 rounded-md bg-green-50 px-4 py-3 text-sm text-green-700"
-        >
-            {{ page.props.flash.success }}
-        </div>
-
-        <div class="overflow-hidden rounded-lg bg-white shadow-sm">
+        <Card>
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -40,18 +36,14 @@ function can(permission) {
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
-                    <tr v-for="user in users" :key="user.id">
+                    <tr v-for="user in users" :key="user.id" class="hover:bg-gray-50">
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ user.name }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ user.email }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
                             <span v-if="user.roles.length === 0" class="text-gray-400">No roles</span>
-                            <span
-                                v-for="role in user.roles"
-                                :key="role.id"
-                                class="mr-1 inline-block rounded-full bg-indigo-100 px-2 py-1 text-xs font-medium text-indigo-700"
-                            >
+                            <Badge v-for="role in user.roles" :key="role.id" variant="info" class="mr-1">
                                 {{ role.name }}
-                            </span>
+                            </Badge>
                         </td>
                         <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
                             <Link v-if="can('users.manage')" :href="route('security.users.edit', user.id)" class="text-indigo-600 hover:text-indigo-900">
@@ -59,13 +51,9 @@ function can(permission) {
                             </Link>
                         </td>
                     </tr>
-                    <tr v-if="users.length === 0">
-                        <td colspan="4" class="px-4 py-6 text-center text-sm text-gray-500">
-                            No users found.
-                        </td>
-                    </tr>
                 </tbody>
             </table>
-        </div>
+            <EmptyState v-if="users.length === 0" title="No users found" />
+        </Card>
     </AppLayout>
 </template>

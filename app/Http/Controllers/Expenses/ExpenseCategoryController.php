@@ -49,7 +49,7 @@ class ExpenseCategoryController extends Controller
     public function destroy(ExpenseCategory $category): RedirectResponse
     {
         if ($category->expenses()->exists()) {
-            return back()->withErrors(['category' => 'This category has expenses recorded against it and cannot be deleted.']);
+            return back()->with('error', 'This category has expenses recorded against it and cannot be deleted.');
         }
 
         $category->delete();

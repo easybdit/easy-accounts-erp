@@ -49,7 +49,7 @@ class TaxRateController extends Controller
     public function destroy(TaxRate $rate): RedirectResponse
     {
         if ($rate->invoiceItems()->exists() || $rate->billItems()->exists()) {
-            return back()->withErrors(['rate' => 'This tax rate has been used on invoices or bills and cannot be deleted.']);
+            return back()->with('error', 'This tax rate has been used on invoices or bills and cannot be deleted.');
         }
 
         $rate->delete();

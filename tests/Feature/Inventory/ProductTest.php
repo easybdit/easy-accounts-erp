@@ -128,7 +128,7 @@ class ProductTest extends TestCase
         $product = Product::first();
 
         $this->actingAs($user)->delete(route('inventory.products.destroy', $product))
-            ->assertSessionHasErrors('product');
+            ->assertSessionHas('error');
 
         $this->assertDatabaseHas('products', ['id' => $product->id]);
     }

@@ -1,16 +1,17 @@
 <script setup>
 import { ref, watch } from 'vue';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import Card from '@/Components/Card.vue';
+import EmptyState from '@/Components/EmptyState.vue';
 
 const props = defineProps({
     journals: Object,
     filters: Object,
 });
 
-const page = usePage();
 const search = ref(props.filters.search ?? '');
 
 watch(search, (value) => {
@@ -36,13 +37,6 @@ watch(search, (value) => {
             </PageHeader>
         </template>
 
-        <div
-            v-if="page.props.flash?.success"
-            class="mb-4 rounded-md bg-green-50 px-4 py-3 text-sm text-green-700"
-        >
-            {{ page.props.flash.success }}
-        </div>
-
         <div class="mb-4">
             <input
                 v-model="search"
@@ -52,7 +46,7 @@ watch(search, (value) => {
             />
         </div>
 
-        <div class="overflow-hidden rounded-lg bg-white shadow-sm">
+        <Card>
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -65,7 +59,7 @@ watch(search, (value) => {
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
-                    <tr v-for="journal in journals.data" :key="journal.id">
+                    <tr v-for="journal in journals.data" :key="journal.id" class="hover:bg-gray-50">
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ journal.date }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ journal.reference ?? '—' }}</td>
                         <td class="px-4 py-3 text-sm text-gray-500">{{ journal.description ?? '—' }}</td>
@@ -77,14 +71,10 @@ watch(search, (value) => {
                             </Link>
                         </td>
                     </tr>
-                    <tr v-if="journals.data.length === 0">
-                        <td colspan="6" class="px-4 py-6 text-center text-sm text-gray-500">
-                            No journal entries found.
-                        </td>
-                    </tr>
                 </tbody>
             </table>
-        </div>
+            <EmptyState v-if="journals.data.length === 0" title="No journal entries found" description="Post your first journal entry to see it here." />
+        </Card>
 
         <div v-if="journals.links?.length > 3" class="mt-4 flex flex-wrap gap-1">
             <Link

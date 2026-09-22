@@ -1,12 +1,14 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import Modal from '@/Components/Modal.vue';
+import Card from '@/Components/Card.vue';
+import Badge from '@/Components/Badge.vue';
 
 const props = defineProps({
     bill: Object,
@@ -14,7 +16,6 @@ const props = defineProps({
     amountDue: String,
 });
 
-const page = usePage();
 const confirmingPost = ref(false);
 const confirmingDelete = ref(false);
 
@@ -56,20 +57,7 @@ function destroy() {
             </PageHeader>
         </template>
 
-        <div
-            v-if="page.props.flash?.success"
-            class="mb-4 rounded-md bg-green-50 px-4 py-3 text-sm text-green-700"
-        >
-            {{ page.props.flash.success }}
-        </div>
-        <div
-            v-if="$page.props.errors?.bill"
-            class="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700"
-        >
-            {{ $page.props.errors.bill }}
-        </div>
-
-        <div class="rounded-lg bg-white p-6 shadow-sm">
+        <Card padded>
             <dl class="grid grid-cols-1 gap-4 sm:grid-cols-4">
                 <div>
                     <dt class="text-xs font-medium uppercase text-gray-400">Vendor</dt>
@@ -90,12 +78,9 @@ function destroy() {
                 <div>
                     <dt class="text-xs font-medium uppercase text-gray-400">Status</dt>
                     <dd>
-                        <span
-                            class="rounded-full px-2 py-1 text-xs font-medium"
-                            :class="bill.status === 'posted' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'"
-                        >
+                        <Badge :variant="bill.status === 'posted' ? 'success' : 'warning'" class="capitalize">
                             {{ bill.status }}
-                        </span>
+                        </Badge>
                     </dd>
                 </div>
                 <div>
@@ -196,7 +181,7 @@ function destroy() {
                     </tbody>
                 </table>
             </div>
-        </div>
+        </Card>
 
         <Modal :show="confirmingPost" @close="confirmingPost = false">
             <div class="p-6">

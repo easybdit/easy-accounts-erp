@@ -1,20 +1,21 @@
 <script setup>
 import { ref, watch } from 'vue';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import Modal from '@/Components/Modal.vue';
+import Card from '@/Components/Card.vue';
+import Badge from '@/Components/Badge.vue';
+import EmptyState from '@/Components/EmptyState.vue';
 
 const props = defineProps({
     accounts: Object,
     filters: Object,
     types: Array,
 });
-
-const page = usePage();
 
 const search = ref(props.filters.search ?? '');
 const type = ref(props.filters.type ?? '');
@@ -53,19 +54,6 @@ function destroy() {
             </PageHeader>
         </template>
 
-        <div
-            v-if="page.props.flash?.success"
-            class="mb-4 rounded-md bg-green-50 px-4 py-3 text-sm text-green-700"
-        >
-            {{ page.props.flash.success }}
-        </div>
-        <div
-            v-if="$page.props.errors?.account"
-            class="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700"
-        >
-            {{ $page.props.errors.account }}
-        </div>
-
         <div class="mb-4 flex flex-col gap-3 sm:flex-row">
             <input
                 v-model="search"
@@ -84,7 +72,7 @@ function destroy() {
             </select>
         </div>
 
-        <div class="overflow-hidden rounded-lg bg-white shadow-sm">
+        <Card>
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -98,7 +86,7 @@ function destroy() {
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
-                    <tr v-for="account in accounts.data" :key="account.id">
+                    <tr v-for="account in accounts.data" :key="account.id" class="hover:bg-gray-50">
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ account.code }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ account.name }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm capitalize text-gray-700">{{ account.type }}</td>
@@ -107,12 +95,9 @@ function destroy() {
                         </td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ account.opening_balance }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm">
-                            <span
-                                class="rounded-full px-2 py-1 text-xs font-medium"
-                                :class="account.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
-                            >
+                            <Badge :variant="account.is_active ? 'success' : 'neutral'">
                                 {{ account.is_active ? 'Active' : 'Inactive' }}
-                            </span>
+                            </Badge>
                         </td>
                         <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
                             <Link
@@ -126,14 +111,10 @@ function destroy() {
                             </button>
                         </td>
                     </tr>
-                    <tr v-if="accounts.data.length === 0">
-                        <td colspan="7" class="px-4 py-6 text-center text-sm text-gray-500">
-                            No accounts found.
-                        </td>
-                    </tr>
                 </tbody>
             </table>
-        </div>
+            <EmptyState v-if="accounts.data.length === 0" title="No accounts found" description="Get started by creating your first account." />
+        </Card>
 
         <div v-if="accounts.links?.length > 3" class="mt-4 flex flex-wrap gap-1">
             <Link

@@ -57,11 +57,11 @@ class RoleController extends Controller
     public function destroy(Role $role): RedirectResponse
     {
         if ($role->name === 'Administrator') {
-            return back()->withErrors(['role' => 'The Administrator role cannot be deleted.']);
+            return back()->with('error', 'The Administrator role cannot be deleted.');
         }
 
         if ($role->users()->exists()) {
-            return back()->withErrors(['role' => 'This role is assigned to users and cannot be deleted.']);
+            return back()->with('error', 'This role is assigned to users and cannot be deleted.');
         }
 
         $role->delete();

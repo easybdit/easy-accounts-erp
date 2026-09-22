@@ -108,9 +108,7 @@ class CustomerController extends Controller
     public function destroy(Customer $customer): RedirectResponse
     {
         if ($customer->journalEntries()->exists()) {
-            return back()->withErrors([
-                'customer' => 'This customer has transaction history and cannot be deleted.',
-            ]);
+            return back()->with('error', 'This customer has transaction history and cannot be deleted.');
         }
 
         $customer->delete();

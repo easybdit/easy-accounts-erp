@@ -71,7 +71,7 @@ class VendorTest extends TestCase
         ]);
 
         $this->actingAs($user)->delete(route('vendors.destroy', $vendor))
-            ->assertSessionHasErrors('vendor');
+            ->assertSessionHas('error');
 
         $this->assertDatabaseHas('vendors', ['id' => $vendor->id]);
     }

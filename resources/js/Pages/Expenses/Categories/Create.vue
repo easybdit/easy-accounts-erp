@@ -70,7 +70,7 @@ function submit() {
                 <Link :href="route('expenses.categories.index')">
                     <SecondaryButton type="button">Cancel</SecondaryButton>
                 </Link>
-                <PrimaryButton :disabled="form.processing">Save Category</PrimaryButton>
+                <PrimaryButton :loading="form.processing">Save Category</PrimaryButton>
             </div>
         </form>
     </AppLayout>
