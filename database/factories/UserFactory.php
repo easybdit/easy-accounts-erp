@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 /**
  * @extends Factory<User>
@@ -31,6 +32,24 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    /**
+     * Every factory-made user defaults to full access (Administrator), since
+     * most existing tests exercise business/domain logic and were written
+     * before permission gating existed — they assume an unrestricted actor.
+     * Tests that specifically exercise the permission matrix should call
+     * ->syncRoles(['SomeOtherRole']) on the created user to override this.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            $administrator = Role::whereName('Administrator')->first();
+
+            if ($administrator !== null) {
+                $user->assignRole($administrator);
+            }
+        });
     }
 
     /**

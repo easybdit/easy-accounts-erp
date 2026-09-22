@@ -3,7 +3,7 @@
 use App\Http\Controllers\Reports\ReportController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified'])->prefix('reports')->name('reports.')->group(function () {
+Route::middleware(['auth', 'verified', 'permission:reports.view'])->prefix('reports')->name('reports.')->group(function () {
     Route::get('/', [ReportController::class, 'index'])->name('index');
     Route::get('profit-and-loss', [ReportController::class, 'profitAndLoss'])->name('profit-and-loss');
     Route::get('balance-sheet', [ReportController::class, 'balanceSheet'])->name('balance-sheet');

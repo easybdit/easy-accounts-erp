@@ -1,5 +1,6 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 
 defineProps({
@@ -11,13 +12,21 @@ defineProps({
 
 const emit = defineEmits(['close']);
 
-const navGroups = [
+const page = usePage();
+
+function can(permission) {
+    return page.props.auth.permissions?.includes(permission) ?? false;
+}
+
+const allNavGroups = [
     {
         label: null,
+        permission: 'dashboard.view',
         links: [{ label: 'Dashboard', routeName: 'dashboard' }],
     },
     {
         label: 'Accounting',
+        permission: 'accounts.view',
         links: [
             { label: 'Chart of Accounts', routeName: 'accounting.accounts.index' },
             { label: 'Journal', routeName: 'accounting.journals.index' },
@@ -27,6 +36,7 @@ const navGroups = [
     },
     {
         label: 'Sales',
+        permission: 'invoices.view',
         links: [
             { label: 'Customers', routeName: 'customers.index' },
             { label: 'Invoices', routeName: 'sales.invoices.index' },
@@ -35,6 +45,7 @@ const navGroups = [
     },
     {
         label: 'Purchases',
+        permission: 'bills.view',
         links: [
             { label: 'Vendors', routeName: 'vendors.index' },
             { label: 'Bills', routeName: 'purchases.bills.index' },
@@ -43,6 +54,7 @@ const navGroups = [
     },
     {
         label: 'Expenses',
+        permission: 'expenses.view',
         links: [
             { label: 'Expenses', routeName: 'expenses.entries.index' },
             { label: 'Categories', routeName: 'expenses.categories.index' },
@@ -50,6 +62,7 @@ const navGroups = [
     },
     {
         label: 'Banking',
+        permission: 'banking.view',
         links: [
             { label: 'Bank Accounts', routeName: 'banking.accounts.index' },
             { label: 'Transfers', routeName: 'banking.transfers.index' },
@@ -57,6 +70,7 @@ const navGroups = [
     },
     {
         label: 'Inventory',
+        permission: 'inventory.view',
         links: [
             { label: 'Products', routeName: 'inventory.products.index' },
             { label: 'Categories', routeName: 'inventory.categories.index' },
@@ -65,6 +79,7 @@ const navGroups = [
     },
     {
         label: 'Tax',
+        permission: 'tax.view',
         links: [
             { label: 'Tax Rates', routeName: 'tax.rates.index' },
             { label: 'Tax Report', routeName: 'tax.report' },
@@ -72,9 +87,29 @@ const navGroups = [
     },
     {
         label: 'Reports',
+        permission: 'reports.view',
         links: [{ label: 'All Reports', routeName: 'reports.index' }],
     },
+    {
+        label: 'Security',
+        permission: 'users.view',
+        links: [
+            { label: 'Users', routeName: 'security.users.index', permission: 'users.view' },
+            { label: 'Roles', routeName: 'security.roles.index', permission: 'roles.view' },
+            { label: 'Audit Log', routeName: 'security.audit-log.index', permission: 'audit.view' },
+        ],
+    },
 ];
+
+const navGroups = computed(() =>
+    allNavGroups
+        .filter((group) => can(group.permission))
+        .map((group) => ({
+            ...group,
+            links: group.links.filter((link) => !link.permission || can(link.permission)),
+        }))
+        .filter((group) => group.links.length > 0)
+);
 
 function isActive(routeName) {
     return route().current(routeName) || route().current(routeName + '.*');

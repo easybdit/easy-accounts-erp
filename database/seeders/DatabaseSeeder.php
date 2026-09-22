@@ -16,6 +16,8 @@ use Database\Seeders\Purchases\BillSeeder;
 use Database\Seeders\Purchases\VendorPaymentSeeder;
 use Database\Seeders\Sales\InvoiceSeeder;
 use Database\Seeders\Sales\PaymentSeeder;
+use Database\Seeders\Security\PermissionSeeder;
+use Database\Seeders\Security\RoleSeeder;
 use Database\Seeders\Tax\TaxDemoInvoiceSeeder;
 use Database\Seeders\Tax\TaxRateSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -32,10 +34,20 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
+        $testUser = User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        $accountantUser = User::factory()->create([
+            'name' => 'Accountant User',
+            'email' => 'accountant@example.com',
+        ]);
+
+        $this->call(PermissionSeeder::class);
+        $this->call(RoleSeeder::class);
+        $testUser->assignRole('Administrator');
+        $accountantUser->assignRole('Accountant');
 
         $this->call(ChartOfAccountsSeeder::class);
         $this->call(TaxRateSeeder::class);
