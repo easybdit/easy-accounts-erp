@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Accounting;
 
 use App\Actions\Accounting\PostJournal;
+use App\Actions\Accounting\VoidJournal;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Accounting\StoreJournalRequest;
 use App\Models\Accounting\Account;
@@ -13,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use RuntimeException;
 
 class JournalController extends Controller
 {
@@ -64,10 +66,22 @@ class JournalController extends Controller
 
     public function show(Journal $journal): Response
     {
-        $journal->load(['entries.account', 'createdBy']);
+        $journal->load(['entries.account', 'createdBy', 'reversalOfJournal:id,reference', 'reversalJournal:id,reference']);
 
         return Inertia::render('Accounting/Journals/Show', [
             'journal' => $journal,
+            'canBeVoided' => $journal->canBeVoided(),
         ]);
+    }
+
+    public function void(Journal $journal, VoidJournal $action): RedirectResponse
+    {
+        try {
+            $action->handle($journal, request()->user()->id);
+        } catch (RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('accounting.journals.show', $journal)->with('success', 'Journal voided — a reversing journal was posted.');
     }
 }

@@ -20,8 +20,10 @@ Route::middleware(['auth', 'verified'])->prefix('accounting')->name('accounting.
         Route::delete('accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy');
     });
 
-    // Posted journals are financially immutable (Section 20): no edit/destroy
-    // routes until an approved void/reversal workflow exists.
+    // Posted journals are financially immutable (Section 20): still no
+    // edit/destroy routes — voiding posts an equal-and-opposite reversing
+    // journal instead (VoidJournal action), never edits or deletes the
+    // original.
     //
     // Route order matters here: the static "journals/create" route must be
     // registered before the wildcard "journals/{journal}" show route, or
@@ -32,6 +34,7 @@ Route::middleware(['auth', 'verified'])->prefix('accounting')->name('accounting.
     Route::middleware('permission:journal.manage')->group(function () {
         Route::get('journals/create', [JournalController::class, 'create'])->name('journals.create');
         Route::post('journals', [JournalController::class, 'store'])->name('journals.store');
+        Route::post('journals/{journal}/void', [JournalController::class, 'void'])->name('journals.void');
     });
     Route::middleware('permission:journal.view')->group(function () {
         Route::get('journals/{journal}', [JournalController::class, 'show'])->name('journals.show');

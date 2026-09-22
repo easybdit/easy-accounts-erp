@@ -1,11 +1,27 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
+import DangerButton from '@/Components/DangerButton.vue';
+import Modal from '@/Components/Modal.vue';
+import Card from '@/Components/Card.vue';
+import Badge from '@/Components/Badge.vue';
 
 const props = defineProps({
     journal: Object,
+    canBeVoided: Boolean,
 });
+
+const confirmingVoid = ref(false);
+
+function voidJournal() {
+    router.post(route('accounting.journals.void', props.journal.id), {}, {
+        onFinish: () => (confirmingVoid.value = false),
+    });
+}
 </script>
 
 <template>
@@ -19,10 +35,31 @@ const props = defineProps({
         ]"
     >
         <template #header>
-            <PageHeader :title="`Journal #${journal.id}`" />
+            <PageHeader :title="`Journal #${journal.id}`">
+                <template #actions>
+                    <DangerButton v-if="canBeVoided" type="button" @click="confirmingVoid = true">Void Journal</DangerButton>
+                </template>
+            </PageHeader>
         </template>
 
-        <div class="rounded-lg bg-white p-6 shadow-sm">
+        <div v-if="journal.voided_at" class="mb-4 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            This journal was voided on {{ journal.voided_at }}.
+            <Link
+                v-if="journal.reversal_journal"
+                :href="route('accounting.journals.show', journal.reversal_journal.id)"
+                class="font-medium underline"
+            >
+                View the reversing journal
+            </Link>
+        </div>
+        <div v-if="journal.reversal_of_journal" class="mb-4 rounded-md bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
+            This is a reversal of
+            <Link :href="route('accounting.journals.show', journal.reversal_of_journal.id)" class="font-medium underline">
+                Journal #{{ journal.reversal_of_journal.id }}
+            </Link>.
+        </div>
+
+        <Card padded>
             <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                     <dt class="text-xs font-medium uppercase text-gray-400">Date</dt>
@@ -33,8 +70,12 @@ const props = defineProps({
                     <dd class="text-sm text-gray-800">{{ journal.reference ?? '—' }}</dd>
                 </div>
                 <div>
-                    <dt class="text-xs font-medium uppercase text-gray-400">Posted At</dt>
-                    <dd class="text-sm text-gray-800">{{ journal.posted_at }}</dd>
+                    <dt class="text-xs font-medium uppercase text-gray-400">Status</dt>
+                    <dd>
+                        <Badge v-if="journal.voided_at" variant="warning">Voided</Badge>
+                        <Badge v-else-if="journal.reversal_of_journal" variant="info">Reversal</Badge>
+                        <Badge v-else variant="success">Posted</Badge>
+                    </dd>
                 </div>
                 <div class="sm:col-span-3">
                     <dt class="text-xs font-medium uppercase text-gray-400">Description</dt>
@@ -66,6 +107,20 @@ const props = defineProps({
                     Back to Journal
                 </Link>
             </div>
-        </div>
+        </Card>
+
+        <Modal :show="confirmingVoid" @close="confirmingVoid = false">
+            <div class="p-6">
+                <h2 class="text-lg font-medium text-gray-900">Void this journal?</h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    This posts a new reversing journal that exactly cancels this one out. The original entries stay in the
+                    ledger for audit purposes — nothing is edited or deleted.
+                </p>
+                <div class="mt-6 flex justify-end gap-3">
+                    <SecondaryButton @click="confirmingVoid = false">Cancel</SecondaryButton>
+                    <DangerButton @click="voidJournal">Void Journal</DangerButton>
+                </div>
+            </div>
+        </Modal>
     </AppLayout>
 </template>

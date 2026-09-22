@@ -180,4 +180,83 @@ class JournalTest extends TestCase
         $this->assertFalse(Route::has('accounting.journals.update'));
         $this->assertFalse(Route::has('accounting.journals.destroy'));
     }
+
+    public function test_voiding_a_journal_posts_an_exact_opposite_reversal_and_nets_the_account_to_zero(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post(route('accounting.journals.store'), $this->payload());
+        $journal = Journal::first();
+        $cashAccount = $journal->entries()->where('debit', '>', 0)->first()->account;
+
+        $this->actingAs($user)->post(route('accounting.journals.void', $journal))
+            ->assertRedirect(route('accounting.journals.show', $journal));
+
+        $journal->refresh();
+        $this->assertNotNull($journal->voided_at);
+        $this->assertDatabaseCount('journals', 2);
+
+        $reversal = Journal::where('reversal_of_journal_id', $journal->id)->first();
+        $this->assertNotNull($reversal);
+        $this->assertTrue($reversal->isBalanced());
+        $this->assertSame('0.0000', $cashAccount->fresh()->balanceAsOf(now()->toDateString()));
+
+        // The original entries are never touched (Section 20 immutability).
+        $this->assertDatabaseCount('journal_entries', 4);
+    }
+
+    public function test_a_voided_journal_cannot_be_voided_again(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post(route('accounting.journals.store'), $this->payload());
+        $journal = Journal::first();
+        $this->actingAs($user)->post(route('accounting.journals.void', $journal));
+
+        $this->actingAs($user)->post(route('accounting.journals.void', $journal->fresh()))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseCount('journals', 2);
+    }
+
+    public function test_a_reversal_journal_itself_cannot_be_voided(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post(route('accounting.journals.store'), $this->payload());
+        $journal = Journal::first();
+        $this->actingAs($user)->post(route('accounting.journals.void', $journal));
+        $reversal = Journal::where('reversal_of_journal_id', $journal->id)->first();
+
+        $this->actingAs($user)->post(route('accounting.journals.void', $reversal))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseCount('journals', 2);
+    }
+
+    public function test_a_journal_generated_behind_an_invoice_cannot_be_voided_here(): void
+    {
+        $user = User::factory()->create();
+        $customer = \App\Models\Contacts\Customer::factory()->create();
+        $receivable = Account::factory()->create(['type' => 'asset']);
+        $income = Account::factory()->create(['type' => 'income']);
+        $invoice = \App\Models\Sales\Invoice::factory()->create([
+            'customer_id' => $customer->id,
+            'receivable_account_id' => $receivable->id,
+            'status' => 'draft',
+            'total' => 0,
+        ]);
+        $invoice->items()->create([
+            'account_id' => $income->id,
+            'description' => 'Line',
+            'quantity' => 1,
+            'unit_price' => 100,
+            'discount' => 0,
+            'line_total' => 100,
+        ]);
+        (new \App\Actions\Sales\PostInvoice(new \App\Actions\Accounting\PostJournal))->handle($invoice->fresh());
+        $journal = $invoice->fresh()->journal;
+
+        $this->actingAs($user)->post(route('accounting.journals.void', $journal))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseCount('journals', 1);
+    }
 }
