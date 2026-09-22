@@ -26,6 +26,9 @@ Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(
         Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
         Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
     });
+    Route::middleware('permission:invoices.manage')->group(function () {
+        Route::post('invoices/{invoice}/payment-link', [InvoiceController::class, 'generatePaymentLink'])->name('invoices.payment-link');
+    });
 
     // Estimates are non-financial (never post to the Journal) until
     // converted to a real draft Invoice (Section 90 Phase 4 open item,

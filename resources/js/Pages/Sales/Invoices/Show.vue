@@ -9,15 +9,21 @@ import DangerButton from '@/Components/DangerButton.vue';
 import Modal from '@/Components/Modal.vue';
 import Card from '@/Components/Card.vue';
 import Badge from '@/Components/Badge.vue';
+import InputLabel from '@/Components/InputLabel.vue';
 
 const props = defineProps({
     invoice: Object,
     amountPaid: String,
     amountDue: String,
+    activePaymentLink: Object,
+    depositAccounts: Array,
 });
 
 const confirmingPost = ref(false);
 const confirmingDelete = ref(false);
+const confirmingPaymentLink = ref(false);
+const depositAccountId = ref('');
+const linkCopied = ref(false);
 
 function post() {
     router.post(route('sales.invoices.post', props.invoice.id), {}, {
@@ -27,6 +33,20 @@ function post() {
 
 function destroy() {
     router.delete(route('sales.invoices.destroy', props.invoice.id));
+}
+
+function generatePaymentLink() {
+    router.post(route('sales.invoices.payment-link', props.invoice.id), {
+        deposit_account_id: depositAccountId.value,
+    }, {
+        onFinish: () => (confirmingPaymentLink.value = false),
+    });
+}
+
+function copyLink() {
+    navigator.clipboard.writeText(props.activePaymentLink.url);
+    linkCopied.value = true;
+    setTimeout(() => (linkCopied.value = false), 2000);
 }
 </script>
 
@@ -53,12 +73,24 @@ function destroy() {
                         <DangerButton type="button" @click="confirmingDelete = true">Delete</DangerButton>
                         <PrimaryButton type="button" @click="confirmingPost = true">Post Invoice</PrimaryButton>
                     </template>
-                    <Link v-else-if="parseFloat(amountDue) > 0" :href="route('sales.payments.create')">
-                        <PrimaryButton type="button">Receive Payment</PrimaryButton>
-                    </Link>
+                    <template v-else-if="parseFloat(amountDue) > 0">
+                        <Link :href="route('sales.payments.create')">
+                            <PrimaryButton type="button">Receive Payment</PrimaryButton>
+                        </Link>
+                        <SecondaryButton type="button" @click="confirmingPaymentLink = true">
+                            {{ activePaymentLink ? 'New Payment Link' : 'Generate Payment Link' }}
+                        </SecondaryButton>
+                    </template>
                 </template>
             </PageHeader>
         </template>
+
+        <div v-if="activePaymentLink" class="mb-4 flex items-center justify-between rounded-md bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
+            <span class="truncate">Payment link: {{ activePaymentLink.url }}</span>
+            <button type="button" class="ml-3 shrink-0 font-medium underline" @click="copyLink">
+                {{ linkCopied ? 'Copied!' : 'Copy' }}
+            </button>
+        </div>
 
         <Card padded>
             <dl class="grid grid-cols-1 gap-4 sm:grid-cols-4">
@@ -224,6 +256,34 @@ function destroy() {
                 <div class="mt-6 flex justify-end gap-3">
                     <SecondaryButton @click="confirmingDelete = false">Cancel</SecondaryButton>
                     <DangerButton @click="destroy">Delete</DangerButton>
+                </div>
+            </div>
+        </Modal>
+
+        <Modal :show="confirmingPaymentLink" @close="confirmingPaymentLink = false">
+            <div class="p-6">
+                <h2 class="text-lg font-medium text-gray-900">Generate a payment link?</h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    Share this link with the customer so they can pay online via SSLCommerz. Generating a new
+                    link deactivates any earlier one for this invoice.
+                </p>
+                <div class="mt-4">
+                    <InputLabel for="deposit_account_id" value="Deposit To" />
+                    <select
+                        id="deposit_account_id"
+                        v-model="depositAccountId"
+                        class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        required
+                    >
+                        <option value="" disabled>Select an account</option>
+                        <option v-for="account in depositAccounts" :key="account.id" :value="account.id">
+                            {{ account.code }} — {{ account.name }}
+                        </option>
+                    </select>
+                </div>
+                <div class="mt-6 flex justify-end gap-3">
+                    <SecondaryButton @click="confirmingPaymentLink = false">Cancel</SecondaryButton>
+                    <PrimaryButton :disabled="!depositAccountId" @click="generatePaymentLink">Generate</PrimaryButton>
                 </div>
             </div>
         </Modal>

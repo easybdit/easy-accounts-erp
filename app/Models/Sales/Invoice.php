@@ -78,6 +78,11 @@ class Invoice extends Model
         return $this->hasMany(PaymentAllocation::class);
     }
 
+    public function paymentLinks(): HasMany
+    {
+        return $this->hasMany(InvoicePaymentLink::class);
+    }
+
     /**
      * Amount paid/due are always computed from real PaymentAllocation rows
      * (never a stored, independently-editable column), so an invoice can

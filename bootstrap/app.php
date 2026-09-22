@@ -26,6 +26,17 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
         ]);
+
+        // SSLCommerz POSTs to these callback URLs itself and cannot send a
+        // Laravel CSRF token (Section 90) — the routes are otherwise
+        // completely unauthenticated already, gated only by tran_id/val_id
+        // lookups and server-to-server validation, not by CSRF.
+        $middleware->validateCsrfTokens(except: [
+            'pay/callback/success',
+            'pay/callback/fail',
+            'pay/callback/cancel',
+            'pay/callback/ipn',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

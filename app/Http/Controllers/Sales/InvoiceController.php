@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Sales;
 
+use App\Actions\Payments\GenerateInvoicePaymentLink;
 use App\Actions\Sales\PostInvoice;
 use App\Actions\Sales\SaveInvoiceDraft;
 use App\Http\Controllers\Concerns\FormatsPlainDates;
@@ -105,6 +106,7 @@ class InvoiceController extends Controller
             'items.revenueRecognitionSchedule',
             'journal',
             'paymentAllocations.payment:id,payment_number,payment_date',
+            'paymentLinks' => fn ($query) => $query->where('is_active', true)->latest()->limit(1),
         ]);
 
         $invoiceData = $this->withPlainDates($invoice, ['invoice_date', 'due_date']);
@@ -120,7 +122,27 @@ class InvoiceController extends Controller
             'invoice' => $invoiceData,
             'amountPaid' => $invoice->amountPaid(),
             'amountDue' => $invoice->amountDue(),
+            'activePaymentLink' => optional($invoice->paymentLinks->first(), fn ($link) => [
+                'url' => route('pay.show', $link->token),
+            ]),
+            'depositAccounts' => Account::query()->where('is_active', true)->where('type', 'asset')
+                ->select('id', 'code', 'name')->orderBy('code')->get(),
         ]);
+    }
+
+    public function generatePaymentLink(Invoice $invoice, Request $request, GenerateInvoicePaymentLink $action): RedirectResponse
+    {
+        $validated = $request->validate([
+            'deposit_account_id' => ['required', 'integer', 'exists:accounts,id'],
+        ]);
+
+        try {
+            $action->handle($invoice, $validated['deposit_account_id'], $request->user()->id);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Payment link generated.');
     }
 
     public function destroy(Invoice $invoice): RedirectResponse
