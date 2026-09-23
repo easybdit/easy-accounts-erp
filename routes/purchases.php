@@ -20,10 +20,15 @@ Route::middleware(['auth', 'verified'])->prefix('purchases')->name('purchases.')
         Route::put('bills/{bill}', [BillController::class, 'update'])->name('bills.update');
         Route::delete('bills/{bill}', [BillController::class, 'destroy'])->name('bills.destroy');
         Route::post('bills/{bill}/post', [BillController::class, 'post'])->name('bills.post');
+        // Unlike Expense attachments (upload only at creation), a Bill has a
+        // real lifecycle, so supporting documents can be added at any time.
+        Route::post('bills/{bill}/attachments', [BillController::class, 'storeAttachments'])->name('bills.attachments.store');
+        Route::delete('bills/{bill}/attachments/{attachment}', [BillController::class, 'destroyAttachment'])->name('bills.attachments.destroy');
     });
     Route::middleware('permission:bills.view')->group(function () {
         Route::get('bills/{bill}', [BillController::class, 'show'])->name('bills.show');
         Route::get('bills/{bill}/pdf', [BillController::class, 'pdf'])->name('bills.pdf');
+        Route::get('bills/{bill}/attachments/{attachment}', [BillController::class, 'downloadAttachment'])->name('bills.attachments.download');
     });
 
     // Purchase Orders are non-financial (never post to the Journal) until

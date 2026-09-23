@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -9,6 +9,8 @@ import DangerButton from '@/Components/DangerButton.vue';
 import Modal from '@/Components/Modal.vue';
 import Card from '@/Components/Card.vue';
 import Badge from '@/Components/Badge.vue';
+import InputLabel from '@/Components/InputLabel.vue';
+import InputError from '@/Components/InputError.vue';
 
 const props = defineProps({
     bill: Object,
@@ -18,6 +20,11 @@ const props = defineProps({
 
 const confirmingPost = ref(false);
 const confirmingDelete = ref(false);
+const attachmentPendingDelete = ref(null);
+
+const attachmentForm = useForm({
+    attachments: [],
+});
 
 function post() {
     router.post(route('purchases.bills.post', props.bill.id), {}, {
@@ -27,6 +34,23 @@ function post() {
 
 function destroy() {
     router.delete(route('purchases.bills.destroy', props.bill.id));
+}
+
+function onAttachmentsChange(event) {
+    attachmentForm.attachments = Array.from(event.target.files ?? []);
+}
+
+function uploadAttachments() {
+    attachmentForm.post(route('purchases.bills.attachments.store', props.bill.id), {
+        forceFormData: true,
+        onSuccess: () => attachmentForm.reset(),
+    });
+}
+
+function destroyAttachment() {
+    router.delete(route('purchases.bills.attachments.destroy', [props.bill.id, attachmentPendingDelete.value]), {
+        onFinish: () => (attachmentPendingDelete.value = null),
+    });
 }
 </script>
 
@@ -184,6 +208,51 @@ function destroy() {
                     </tbody>
                 </table>
             </div>
+
+            <div class="mt-6 border-t border-gray-100 pt-4">
+                <h3 class="text-xs font-medium uppercase text-gray-400">Attachments</h3>
+
+                <ul v-if="bill.attachments.length > 0" class="mt-2 divide-y divide-gray-100">
+                    <li v-for="attachment in bill.attachments" :key="attachment.id" class="flex items-center justify-between py-2">
+                        <a
+                            :href="route('purchases.bills.attachments.download', [bill.id, attachment.id])"
+                            class="text-sm text-indigo-600 hover:text-indigo-900"
+                        >
+                            {{ attachment.original_filename }}
+                        </a>
+                        <button
+                            type="button"
+                            class="text-sm text-red-600 hover:text-red-800"
+                            @click="attachmentPendingDelete = attachment.id"
+                        >
+                            Delete
+                        </button>
+                    </li>
+                </ul>
+                <p v-else class="mt-2 text-sm text-gray-400">No attachments yet — add the vendor's invoice copy or other supporting documents.</p>
+
+                <form class="mt-3 flex items-end gap-3" @submit.prevent="uploadAttachments">
+                    <div class="flex-1">
+                        <InputLabel for="attachments" value="Add Attachment(s)" />
+                        <input
+                            id="attachments"
+                            type="file"
+                            multiple
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            class="mt-1 block w-full text-sm text-gray-600 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100"
+                            @change="onAttachmentsChange"
+                        />
+                        <p class="mt-1 text-xs text-gray-400">PDF, JPG or PNG, up to 10MB each, 5 files max.</p>
+                        <InputError :message="attachmentForm.errors.attachments" class="mt-2" />
+                    </div>
+                    <SecondaryButton
+                        type="submit"
+                        :disabled="attachmentForm.attachments.length === 0 || attachmentForm.processing"
+                    >
+                        Upload
+                    </SecondaryButton>
+                </form>
+            </div>
         </Card>
 
         <Modal :show="confirmingPost" @close="confirmingPost = false">
@@ -206,6 +275,17 @@ function destroy() {
                 <div class="mt-6 flex justify-end gap-3">
                     <SecondaryButton @click="confirmingDelete = false">Cancel</SecondaryButton>
                     <DangerButton @click="destroy">Delete</DangerButton>
+                </div>
+            </div>
+        </Modal>
+
+        <Modal :show="attachmentPendingDelete !== null" @close="attachmentPendingDelete = null">
+            <div class="p-6">
+                <h2 class="text-lg font-medium text-gray-900">Delete this attachment?</h2>
+                <p class="mt-1 text-sm text-gray-500">This action cannot be undone.</p>
+                <div class="mt-6 flex justify-end gap-3">
+                    <SecondaryButton @click="attachmentPendingDelete = null">Cancel</SecondaryButton>
+                    <DangerButton @click="destroyAttachment">Delete</DangerButton>
                 </div>
             </div>
         </Modal>

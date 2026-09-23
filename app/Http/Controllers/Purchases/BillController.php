@@ -4,21 +4,26 @@ namespace App\Http\Controllers\Purchases;
 
 use App\Actions\Purchases\PostBill;
 use App\Actions\Purchases\SaveBillDraft;
+use App\Actions\Purchases\StoreBillAttachments;
 use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Purchases\StoreBillAttachmentsRequest;
 use App\Http\Requests\Purchases\StoreBillRequest;
 use App\Models\Accounting\Account;
 use App\Models\Contacts\Vendor;
 use App\Models\Inventory\Product;
 use App\Models\Purchases\Bill;
+use App\Models\Purchases\BillAttachment;
 use App\Models\Tax\TaxRate;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BillController extends Controller
 {
@@ -104,6 +109,7 @@ class BillController extends Controller
             'items.taxRate:id,name,rate',
             'journal',
             'paymentAllocations.vendorPayment:id,payment_number,payment_date',
+            'attachments',
         ]);
 
         $billData = $this->withPlainDates($bill, ['bill_date', 'due_date']);
@@ -143,6 +149,29 @@ class BillController extends Controller
         ]);
 
         return $pdf->download("{$bill->bill_number}.pdf");
+    }
+
+    public function storeAttachments(Bill $bill, StoreBillAttachmentsRequest $request, StoreBillAttachments $action): RedirectResponse
+    {
+        $action->handle($bill, $request->file('attachments'), $request->user()->id);
+
+        return back()->with('success', 'Attachment(s) uploaded.');
+    }
+
+    public function downloadAttachment(Bill $bill, BillAttachment $attachment): StreamedResponse
+    {
+        abort_unless($attachment->bill_id === $bill->id, 404);
+
+        return Storage::disk('local')->download($attachment->stored_path, $attachment->original_filename);
+    }
+
+    public function destroyAttachment(Bill $bill, BillAttachment $attachment, StoreBillAttachments $action): RedirectResponse
+    {
+        abort_unless($attachment->bill_id === $bill->id, 404);
+
+        $action->delete($bill, $attachment->id);
+
+        return back()->with('success', 'Attachment deleted.');
     }
 
     public function post(Bill $bill, PostBill $action): RedirectResponse

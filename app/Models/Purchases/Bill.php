@@ -78,6 +78,11 @@ class Bill extends Model
         return $this->hasMany(BillItem::class);
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(BillAttachment::class);
+    }
+
     public function paymentAllocations(): HasMany
     {
         return $this->hasMany(VendorPaymentAllocation::class);
