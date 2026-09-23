@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers\Accounting;
 
+use App\Http\Controllers\Concerns\ExportsCsv;
 use App\Http\Controllers\Controller;
 use App\Models\Accounting\Account;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class GeneralLedgerController extends Controller
 {
-    public function index(Request $request): Response
+    use ExportsCsv;
+
+    public function index(Request $request): Response|StreamedResponse
     {
         $accounts = Account::query()
             ->where('is_active', true)
@@ -73,6 +77,14 @@ class GeneralLedgerController extends Controller
                 'ending_balance' => $running,
                 'entries' => $rows,
             ];
+
+            if ($this->wantsCsv()) {
+                return $this->csvResponse("general-ledger-{$account->code}.csv", ['Date', 'Reference', 'Description', 'Debit', 'Credit', 'Balance'], [
+                    ['', '', 'Opening Balance', '', '', $startingBalance],
+                    ...$rows->map(fn (array $r) => [$r['date'], $r['reference'] ?? "#{$r['journal_id']}", $r['description'], $r['debit'], $r['credit'], $r['running_balance']]),
+                    ['', '', 'Closing Balance', '', '', $running],
+                ]);
+            }
         }
 
         return Inertia::render('Accounting/Reports/GeneralLedger', [

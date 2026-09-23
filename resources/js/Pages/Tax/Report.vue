@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
+import ExportCsvButton from '@/Components/ExportCsvButton.vue';
 
 const props = defineProps({
     rows: Array,
@@ -30,7 +31,11 @@ function apply() {
 
     <AppLayout :breadcrumbs="[{ label: 'Tax' }, { label: 'Report' }]">
         <template #header>
-            <PageHeader title="Tax Report" />
+            <PageHeader title="Tax Report">
+                <template #actions>
+                    <ExportCsvButton route-name="tax.report" :params="{ from, to }" />
+                </template>
+            </PageHeader>
         </template>
 
         <div class="mb-4 flex flex-wrap items-end gap-3 rounded-lg bg-white p-4 shadow-sm">

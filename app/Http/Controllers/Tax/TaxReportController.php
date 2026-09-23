@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Tax;
 
+use App\Http\Controllers\Concerns\ExportsCsv;
 use App\Http\Controllers\Controller;
 use App\Models\Purchases\BillItem;
 use App\Models\Sales\InvoiceItem;
@@ -9,6 +10,7 @@ use App\Models\Tax\TaxRate;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Section 33's "Tax Reports" / Phase 9's "Tax Reporting foundation" —
@@ -18,7 +20,9 @@ use Inertia\Response;
  */
 class TaxReportController extends Controller
 {
-    public function index(Request $request): Response
+    use ExportsCsv;
+
+    public function index(Request $request): Response|StreamedResponse
     {
         $from = $request->date('from')?->toDateString();
         $to = $request->date('to')?->toDateString();
@@ -61,11 +65,22 @@ class TaxReportController extends Controller
             ];
         });
 
+        $totalCollected = $rows->reduce(fn (string $carry, array $row) => bcadd($carry, $row['collected'], 4), '0.0000');
+        $totalPaid = $rows->reduce(fn (string $carry, array $row) => bcadd($carry, $row['paid'], 4), '0.0000');
+        $totalNet = $rows->reduce(fn (string $carry, array $row) => bcadd($carry, $row['net'], 4), '0.0000');
+
+        if ($this->wantsCsv()) {
+            return $this->csvResponse('tax-report.csv', ['Tax Rate', 'Rate %', 'Collected', 'Paid', 'Net'], [
+                ...$rows->map(fn (array $r) => [$r['name'], $r['rate'], $r['collected'], $r['paid'], $r['net']]),
+                ['Total', '', $totalCollected, $totalPaid, $totalNet],
+            ]);
+        }
+
         return Inertia::render('Tax/Report', [
             'rows' => $rows,
-            'totalCollected' => $rows->reduce(fn (string $carry, array $row) => bcadd($carry, $row['collected'], 4), '0.0000'),
-            'totalPaid' => $rows->reduce(fn (string $carry, array $row) => bcadd($carry, $row['paid'], 4), '0.0000'),
-            'totalNet' => $rows->reduce(fn (string $carry, array $row) => bcadd($carry, $row['net'], 4), '0.0000'),
+            'totalCollected' => $totalCollected,
+            'totalPaid' => $totalPaid,
+            'totalNet' => $totalNet,
             'from' => $from,
             'to' => $to,
         ]);

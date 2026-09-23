@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
+import ExportCsvButton from '@/Components/ExportCsvButton.vue';
 
 const props = defineProps({
     accounts: Array,
@@ -28,7 +29,11 @@ function apply() {
 
     <AppLayout :breadcrumbs="[{ label: 'Accounting' }, { label: 'Trial Balance' }]">
         <template #header>
-            <PageHeader title="Trial Balance" />
+            <PageHeader title="Trial Balance">
+                <template #actions>
+                    <ExportCsvButton route-name="accounting.trial-balance.index" :params="{ as_of: asOf }" />
+                </template>
+            </PageHeader>
         </template>
 
         <div class="mb-4 flex flex-wrap items-end gap-3 rounded-lg bg-white p-4 shadow-sm">

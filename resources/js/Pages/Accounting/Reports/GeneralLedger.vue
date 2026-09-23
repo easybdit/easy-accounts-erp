@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
+import ExportCsvButton from '@/Components/ExportCsvButton.vue';
 
 const props = defineProps({
     accounts: Array,
@@ -34,7 +35,15 @@ watch(accountId, apply);
 
     <AppLayout :breadcrumbs="[{ label: 'Accounting' }, { label: 'General Ledger' }]">
         <template #header>
-            <PageHeader title="General Ledger" />
+            <PageHeader title="General Ledger">
+                <template #actions>
+                    <ExportCsvButton
+                        v-if="ledger"
+                        route-name="accounting.ledger.index"
+                        :params="{ account_id: accountId, from, to }"
+                    />
+                </template>
+            </PageHeader>
         </template>
 
         <div class="mb-4 flex flex-wrap items-end gap-3 rounded-lg bg-white p-4 shadow-sm">

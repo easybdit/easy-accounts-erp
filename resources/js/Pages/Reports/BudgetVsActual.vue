@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
+import ExportCsvButton from '@/Components/ExportCsvButton.vue';
 
 const props = defineProps({
     budgets: Array,
@@ -41,7 +42,15 @@ function varianceClass(row) {
 
     <AppLayout :breadcrumbs="[{ label: 'Reports', href: route('reports.index') }, { label: 'Budget vs Actual' }]">
         <template #header>
-            <PageHeader title="Budget vs Actual" />
+            <PageHeader title="Budget vs Actual">
+                <template #actions>
+                    <ExportCsvButton
+                        v-if="comparison"
+                        route-name="reports.budget-vs-actual"
+                        :params="{ budget_id: budgetId, from, to }"
+                    />
+                </template>
+            </PageHeader>
         </template>
 
         <div class="mb-4 flex flex-wrap items-end gap-3 rounded-lg bg-white p-4 shadow-sm">

@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers\Accounting;
 
+use App\Http\Controllers\Concerns\ExportsCsv;
 use App\Http\Controllers\Controller;
 use App\Models\Accounting\Account;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TrialBalanceController extends Controller
 {
-    public function index(Request $request): Response
+    use ExportsCsv;
+
+    public function index(Request $request): Response|StreamedResponse
     {
         $asOf = $request->date('as_of')?->toDateString() ?? now()->toDateString();
 
@@ -47,6 +51,13 @@ class TrialBalanceController extends Controller
 
         $totalDebit = $accounts->reduce(fn (string $carry, array $row) => bcadd($carry, $row['debit'], 4), '0.0000');
         $totalCredit = $accounts->reduce(fn (string $carry, array $row) => bcadd($carry, $row['credit'], 4), '0.0000');
+
+        if ($this->wantsCsv()) {
+            return $this->csvResponse('trial-balance.csv', ['Code', 'Account', 'Type', 'Debit', 'Credit'], [
+                ...$accounts->map(fn (array $r) => [$r['code'], $r['name'], $r['type'], $r['debit'], $r['credit']]),
+                ['', '', 'Total', $totalDebit, $totalCredit],
+            ]);
+        }
 
         return Inertia::render('Accounting/Reports/TrialBalance', [
             'accounts' => $accounts->values(),

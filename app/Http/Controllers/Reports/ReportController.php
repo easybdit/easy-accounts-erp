@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Reports;
 
+use App\Http\Controllers\Concerns\ExportsCsv;
 use App\Http\Controllers\Controller;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Budget;
@@ -21,6 +22,7 @@ use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Section 35's "dedicated Reports section" / Phase 10. Every report here is
@@ -31,6 +33,8 @@ use Inertia\Response;
  */
 class ReportController extends Controller
 {
+    use ExportsCsv;
+
     public function index(): Response
     {
         return Inertia::render('Reports/Index');
@@ -39,7 +43,7 @@ class ReportController extends Controller
     /**
      * Profit & Loss (Income Statement): income minus expenses over a period.
      */
-    public function profitAndLoss(Request $request): Response
+    public function profitAndLoss(Request $request): Response|StreamedResponse
     {
         $from = $request->date('from')?->toDateString();
         $to = $request->date('to')?->toDateString() ?? now()->toDateString();
@@ -51,6 +55,16 @@ class ReportController extends Controller
 
         $totalIncome = $income->reduce(fn (string $c, array $r) => bcadd($c, $r['amount'], 4), '0.0000');
         $totalExpense = $expense->reduce(fn (string $c, array $r) => bcadd($c, $r['amount'], 4), '0.0000');
+
+        if ($this->wantsCsv()) {
+            return $this->csvResponse('profit-and-loss.csv', ['Section', 'Code', 'Account', 'Amount'], [
+                ...$income->map(fn (array $r) => ['Income', $r['code'], $r['name'], $r['amount']]),
+                ['Income', '', 'Total Income', $totalIncome],
+                ...$expense->map(fn (array $r) => ['Expense', $r['code'], $r['name'], $r['amount']]),
+                ['Expense', '', 'Total Expense', $totalExpense],
+                ['', '', 'Net Profit', bcsub($totalIncome, $totalExpense, 4)],
+            ]);
+        }
 
         return Inertia::render('Reports/ProfitAndLoss', [
             'income' => $income->values(),
@@ -70,7 +84,7 @@ class ReportController extends Controller
      * — the standard way to keep Assets = Liabilities + Equity true without
      * a closing-entry mechanism.
      */
-    public function balanceSheet(Request $request): Response
+    public function balanceSheet(Request $request): Response|StreamedResponse
     {
         $asOf = $request->date('as_of')?->toDateString() ?? now()->toDateString();
 
@@ -89,6 +103,18 @@ class ReportController extends Controller
         $totalLiabilities = $liabilities->reduce(fn (string $c, array $r) => bcadd($c, $r['balance'], 4), '0.0000');
         $totalEquity = bcadd($equity->reduce(fn (string $c, array $r) => bcadd($c, $r['balance'], 4), '0.0000'), $currentEarnings, 4);
 
+        if ($this->wantsCsv()) {
+            return $this->csvResponse('balance-sheet.csv', ['Section', 'Code', 'Account', 'Balance'], [
+                ...$assets->map(fn (array $r) => ['Assets', $r['code'], $r['name'], $r['balance']]),
+                ['Assets', '', 'Total Assets', $totalAssets],
+                ...$liabilities->map(fn (array $r) => ['Liabilities', $r['code'], $r['name'], $r['balance']]),
+                ['Liabilities', '', 'Total Liabilities', $totalLiabilities],
+                ...$equity->map(fn (array $r) => ['Equity', $r['code'], $r['name'], $r['balance']]),
+                ['Equity', '', 'Current Earnings', $currentEarnings],
+                ['Equity', '', 'Total Equity', $totalEquity],
+            ]);
+        }
+
         return Inertia::render('Reports/BalanceSheet', [
             'assets' => $assets->values(),
             'liabilities' => $liabilities->values(),
@@ -102,7 +128,7 @@ class ReportController extends Controller
         ]);
     }
 
-    public function arAging(Request $request): Response
+    public function arAging(Request $request): Response|StreamedResponse
     {
         $asOf = $request->date('as_of')?->toDateString() ?? now()->toDateString();
 
@@ -115,6 +141,13 @@ class ReportController extends Controller
 
         $rows = $this->buildAging($invoices, $asOf, fn (Invoice $i) => $i->customer_id, fn (Invoice $i) => $i->customer->name, fn (Invoice $i) => ($i->due_date ?? $i->invoice_date)->toDateString());
 
+        if ($this->wantsCsv()) {
+            return $this->csvResponse('ar-aging.csv', ['Customer', 'Current', '1-30 Days', '31-60 Days', '61-90 Days', '90+ Days', 'Total'], [
+                ...collect($rows['rows'])->map(fn (array $r) => [$r['name'], $r['current'], $r['d1_30'], $r['d31_60'], $r['d61_90'], $r['d90_plus'], $r['total']]),
+                ['Total', $rows['totals']['current'], $rows['totals']['d1_30'], $rows['totals']['d31_60'], $rows['totals']['d61_90'], $rows['totals']['d90_plus'], $rows['totals']['total']],
+            ]);
+        }
+
         return Inertia::render('Reports/ArAging', [
             'rows' => $rows['rows'],
             'totals' => $rows['totals'],
@@ -122,7 +155,7 @@ class ReportController extends Controller
         ]);
     }
 
-    public function apAging(Request $request): Response
+    public function apAging(Request $request): Response|StreamedResponse
     {
         $asOf = $request->date('as_of')?->toDateString() ?? now()->toDateString();
 
@@ -134,6 +167,13 @@ class ReportController extends Controller
             ->get();
 
         $rows = $this->buildAging($bills, $asOf, fn (Bill $b) => $b->vendor_id, fn (Bill $b) => $b->vendor->name, fn (Bill $b) => ($b->due_date ?? $b->bill_date)->toDateString());
+
+        if ($this->wantsCsv()) {
+            return $this->csvResponse('ap-aging.csv', ['Vendor', 'Current', '1-30 Days', '31-60 Days', '61-90 Days', '90+ Days', 'Total'], [
+                ...collect($rows['rows'])->map(fn (array $r) => [$r['name'], $r['current'], $r['d1_30'], $r['d31_60'], $r['d61_90'], $r['d90_plus'], $r['total']]),
+                ['Total', $rows['totals']['current'], $rows['totals']['d1_30'], $rows['totals']['d31_60'], $rows['totals']['d61_90'], $rows['totals']['d90_plus'], $rows['totals']['total']],
+            ]);
+        }
 
         return Inertia::render('Reports/ApAging', [
             'rows' => $rows['rows'],
@@ -148,7 +188,7 @@ class ReportController extends Controller
      * account-level reconciliation-style detail; the categorized
      * Operating/Investing/Financing breakdown lives there.
      */
-    public function cashFlow(Request $request): Response
+    public function cashFlow(Request $request): Response|StreamedResponse
     {
         $from = $request->date('from')?->toDateString();
         $to = $request->date('to')?->toDateString() ?? now()->toDateString();
@@ -173,6 +213,13 @@ class ReportController extends Controller
                 ];
             });
 
+        if ($this->wantsCsv()) {
+            return $this->csvResponse('cash-flow.csv', ['Code', 'Account', 'Opening', 'In', 'Out', 'Closing'], [
+                ...$accounts->map(fn (array $r) => [$r['code'], $r['name'], $r['opening'], $r['in'], $r['out'], $r['closing']]),
+                ['', 'Total', $accounts->reduce(fn (string $c, array $r) => bcadd($c, $r['opening'], 4), '0.0000'), $accounts->reduce(fn (string $c, array $r) => bcadd($c, $r['in'], 4), '0.0000'), $accounts->reduce(fn (string $c, array $r) => bcadd($c, $r['out'], 4), '0.0000'), $accounts->reduce(fn (string $c, array $r) => bcadd($c, $r['closing'], 4), '0.0000')],
+            ]);
+        }
+
         return Inertia::render('Reports/CashFlow', [
             'accounts' => $accounts,
             'totalOpening' => $accounts->reduce(fn (string $c, array $r) => bcadd($c, $r['opening'], 4), '0.0000'),
@@ -196,7 +243,7 @@ class ReportController extends Controller
      * an Expense with tax) splits the cash movement across its non-bank
      * contra lines proportionally to their own amounts.
      */
-    public function cashFlowStatement(Request $request): Response
+    public function cashFlowStatement(Request $request): Response|StreamedResponse
     {
         $from = $request->date('from')?->toDateString();
         $to = $request->date('to')?->toDateString() ?? now()->toDateString();
@@ -257,6 +304,20 @@ class ReportController extends Controller
         $closingCash = $bankAccounts->reduce(fn (string $carry, Account $account) => bcadd($carry, $account->balanceAsOf($to), 4), '0.0000');
         $netChange = bcadd(bcadd($totals['operating'], $totals['investing'], 4), $totals['financing'], 4);
 
+        if ($this->wantsCsv()) {
+            return $this->csvResponse('cash-flow-statement.csv', ['Category', 'Code', 'Account', 'Amount'], [
+                ...collect($byCategory['operating'])->map(fn (array $r) => ['Operating', $r['code'], $r['name'], $r['amount']]),
+                ['Operating', '', 'Total Operating', $totals['operating']],
+                ...collect($byCategory['investing'])->map(fn (array $r) => ['Investing', $r['code'], $r['name'], $r['amount']]),
+                ['Investing', '', 'Total Investing', $totals['investing']],
+                ...collect($byCategory['financing'])->map(fn (array $r) => ['Financing', $r['code'], $r['name'], $r['amount']]),
+                ['Financing', '', 'Total Financing', $totals['financing']],
+                ['', '', 'Net Change in Cash', $netChange],
+                ['', '', 'Opening Cash', $openingCash],
+                ['', '', 'Closing Cash', $closingCash],
+            ]);
+        }
+
         return Inertia::render('Reports/CashFlowStatement', [
             'operating' => array_values($byCategory['operating']),
             'investing' => array_values($byCategory['investing']),
@@ -272,7 +333,7 @@ class ReportController extends Controller
         ]);
     }
 
-    public function sales(Request $request): Response
+    public function sales(Request $request): Response|StreamedResponse
     {
         $from = $request->date('from')?->toDateString();
         $to = $request->date('to')?->toDateString();
@@ -291,17 +352,25 @@ class ReportController extends Controller
                 'total' => $group->reduce(fn (string $c, Invoice $i) => bcadd($c, (string) $i->total, 4), '0.0000'),
             ];
         })->sortByDesc('total')->values();
+        $total = $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['total'], 4), '0.0000');
+
+        if ($this->wantsCsv()) {
+            return $this->csvResponse('sales-report.csv', ['Customer', 'Invoice Count', 'Total'], [
+                ...$rows->map(fn (array $r) => [$r['customer'], $r['count'], $r['total']]),
+                ['Total', $invoices->count(), $total],
+            ]);
+        }
 
         return Inertia::render('Reports/SalesReport', [
             'rows' => $rows,
-            'total' => $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['total'], 4), '0.0000'),
+            'total' => $total,
             'count' => $invoices->count(),
             'from' => $from,
             'to' => $to,
         ]);
     }
 
-    public function purchases(Request $request): Response
+    public function purchases(Request $request): Response|StreamedResponse
     {
         $from = $request->date('from')?->toDateString();
         $to = $request->date('to')?->toDateString();
@@ -320,17 +389,25 @@ class ReportController extends Controller
                 'total' => $group->reduce(fn (string $c, Bill $b) => bcadd($c, (string) $b->total, 4), '0.0000'),
             ];
         })->sortByDesc('total')->values();
+        $total = $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['total'], 4), '0.0000');
+
+        if ($this->wantsCsv()) {
+            return $this->csvResponse('purchase-report.csv', ['Vendor', 'Bill Count', 'Total'], [
+                ...$rows->map(fn (array $r) => [$r['vendor'], $r['count'], $r['total']]),
+                ['Total', $bills->count(), $total],
+            ]);
+        }
 
         return Inertia::render('Reports/PurchaseReport', [
             'rows' => $rows,
-            'total' => $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['total'], 4), '0.0000'),
+            'total' => $total,
             'count' => $bills->count(),
             'from' => $from,
             'to' => $to,
         ]);
     }
 
-    public function expenses(Request $request): Response
+    public function expenses(Request $request): Response|StreamedResponse
     {
         $from = $request->date('from')?->toDateString();
         $to = $request->date('to')?->toDateString();
@@ -348,10 +425,18 @@ class ReportController extends Controller
                 'total' => $group->reduce(fn (string $c, Expense $e) => bcadd($c, (string) $e->amount, 4), '0.0000'),
             ];
         })->sortByDesc('total')->values();
+        $total = $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['total'], 4), '0.0000');
+
+        if ($this->wantsCsv()) {
+            return $this->csvResponse('expense-report.csv', ['Category', 'Expense Count', 'Total'], [
+                ...$rows->map(fn (array $r) => [$r['category'], $r['count'], $r['total']]),
+                ['Total', $expenses->count(), $total],
+            ]);
+        }
 
         return Inertia::render('Reports/ExpenseReport', [
             'rows' => $rows,
-            'total' => $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['total'], 4), '0.0000'),
+            'total' => $total,
             'count' => $expenses->count(),
             'from' => $from,
             'to' => $to,
@@ -455,7 +540,7 @@ class ReportController extends Controller
      * with like rather than a full year's budget against a partial year's
      * actual.
      */
-    public function budgetVsActual(Request $request): Response
+    public function budgetVsActual(Request $request): Response|StreamedResponse
     {
         $budgets = Budget::query()->orderByDesc('fiscal_year')->orderBy('name')->get(['id', 'name', 'fiscal_year']);
 
@@ -465,9 +550,18 @@ class ReportController extends Controller
         $from = $request->date('from')?->toDateString() ?? ($budget ? "{$budget->fiscal_year}-01-01" : null);
         $to = $request->date('to')?->toDateString() ?? ($budget ? "{$budget->fiscal_year}-12-31" : null);
 
+        $comparison = $budget ? $this->buildBudgetComparison($budget, $from, $to) : null;
+
+        if ($this->wantsCsv() && $comparison) {
+            return $this->csvResponse('budget-vs-actual.csv', ['Code', 'Account', 'Type', 'Budgeted', 'Actual', 'Variance', 'Variance %'], [
+                ...collect($comparison['rows'])->map(fn (array $r) => [$r['account']['code'], $r['account']['name'], $r['account']['type'], $r['budgeted'], $r['actual'], $r['variance'], $r['variance_percent'] ?? '']),
+                ['', '', 'Total', $comparison['totalBudgeted'], $comparison['totalActual'], '', ''],
+            ]);
+        }
+
         return Inertia::render('Reports/BudgetVsActual', [
             'budgets' => $budgets,
-            'comparison' => $budget ? $this->buildBudgetComparison($budget, $from, $to) : null,
+            'comparison' => $comparison,
             'filters' => [
                 'budget_id' => $budgetId,
                 'from' => $from,
@@ -600,7 +694,7 @@ class ReportController extends Controller
         ];
     }
 
-    public function customerBalances(): Response
+    public function customerBalances(): Response|StreamedResponse
     {
         $rows = Customer::query()
             ->where('is_active', true)
@@ -618,14 +712,22 @@ class ReportController extends Controller
             ])
             ->sortByDesc('balance')
             ->values();
+        $total = $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['balance'], 4), '0.0000');
+
+        if ($this->wantsCsv()) {
+            return $this->csvResponse('customer-balances.csv', ['Customer', 'Balance'], [
+                ...$rows->map(fn (array $r) => [$r['name'], $r['balance']]),
+                ['Total', $total],
+            ]);
+        }
 
         return Inertia::render('Reports/CustomerBalances', [
             'rows' => $rows,
-            'total' => $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['balance'], 4), '0.0000'),
+            'total' => $total,
         ]);
     }
 
-    public function vendorBalances(): Response
+    public function vendorBalances(): Response|StreamedResponse
     {
         $rows = Vendor::query()
             ->where('is_active', true)
@@ -643,14 +745,22 @@ class ReportController extends Controller
             ])
             ->sortByDesc('balance')
             ->values();
+        $total = $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['balance'], 4), '0.0000');
+
+        if ($this->wantsCsv()) {
+            return $this->csvResponse('vendor-balances.csv', ['Vendor', 'Balance'], [
+                ...$rows->map(fn (array $r) => [$r['name'], $r['balance']]),
+                ['Total', $total],
+            ]);
+        }
 
         return Inertia::render('Reports/VendorBalances', [
             'rows' => $rows,
-            'total' => $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['balance'], 4), '0.0000'),
+            'total' => $total,
         ]);
     }
 
-    public function payments(Request $request): Response
+    public function payments(Request $request): Response|StreamedResponse
     {
         $from = $request->date('from')?->toDateString();
         $to = $request->date('to')?->toDateString();
@@ -669,17 +779,29 @@ class ReportController extends Controller
             ->orderByDesc('payment_date')
             ->get();
 
+        $totalReceived = $received->reduce(fn (string $c, Payment $p) => bcadd($c, (string) $p->amount, 4), '0.0000');
+        $totalMade = $made->reduce(fn (string $c, VendorPayment $p) => bcadd($c, (string) $p->amount, 4), '0.0000');
+
+        if ($this->wantsCsv()) {
+            return $this->csvResponse('payments-report.csv', ['Direction', 'Payment #', 'Party', 'Date', 'Method', 'Amount'], [
+                ...$received->map(fn (Payment $p) => ['Received', $p->payment_number, $p->customer->name, $p->payment_date->toDateString(), $p->method, (string) $p->amount]),
+                ...$made->map(fn (VendorPayment $p) => ['Made', $p->payment_number, $p->vendor->name, $p->payment_date->toDateString(), $p->method, (string) $p->amount]),
+                ['Total', '', '', '', 'Received', $totalReceived],
+                ['Total', '', '', '', 'Made', $totalMade],
+            ]);
+        }
+
         return Inertia::render('Reports/PaymentsReport', [
             'received' => $received,
             'made' => $made,
-            'totalReceived' => $received->reduce(fn (string $c, Payment $p) => bcadd($c, (string) $p->amount, 4), '0.0000'),
-            'totalMade' => $made->reduce(fn (string $c, VendorPayment $p) => bcadd($c, (string) $p->amount, 4), '0.0000'),
+            'totalReceived' => $totalReceived,
+            'totalMade' => $totalMade,
             'from' => $from,
             'to' => $to,
         ]);
     }
 
-    public function inventory(): Response
+    public function inventory(): Response|StreamedResponse
     {
         $rows = Product::query()
             ->where('type', 'inventory')
@@ -697,10 +819,18 @@ class ReportController extends Controller
                 'stock_value' => $product->stockValue(),
                 'is_low_stock' => $product->isLowStock(),
             ]);
+        $totalValue = $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['stock_value'], 4), '0.0000');
+
+        if ($this->wantsCsv()) {
+            return $this->csvResponse('inventory-report.csv', ['SKU', 'Product', 'Category', 'Unit', 'Current Stock', 'Purchase Price', 'Stock Value', 'Low Stock'], [
+                ...$rows->map(fn (array $r) => [$r['sku'], $r['name'], $r['category'], $r['unit'], $r['current_stock'], $r['purchase_price'], $r['stock_value'], $r['is_low_stock'] ? 'Yes' : 'No']),
+                ['', '', '', '', '', 'Total', $totalValue, ''],
+            ]);
+        }
 
         return Inertia::render('Reports/InventoryReport', [
             'rows' => $rows,
-            'totalValue' => $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['stock_value'], 4), '0.0000'),
+            'totalValue' => $totalValue,
         ]);
     }
 

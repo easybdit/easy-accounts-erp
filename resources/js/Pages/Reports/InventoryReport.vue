@@ -2,6 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
+import ExportCsvButton from '@/Components/ExportCsvButton.vue';
 
 const props = defineProps({
     rows: Array,
@@ -14,7 +15,11 @@ const props = defineProps({
 
     <AppLayout :breadcrumbs="[{ label: 'Reports', href: route('reports.index') }, { label: 'Inventory Report' }]">
         <template #header>
-            <PageHeader title="Inventory Report" />
+            <PageHeader title="Inventory Report">
+                <template #actions>
+                    <ExportCsvButton route-name="reports.inventory" />
+                </template>
+            </PageHeader>
         </template>
 
         <div class="overflow-hidden rounded-lg bg-white shadow-sm">
