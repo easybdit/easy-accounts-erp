@@ -40,6 +40,7 @@ class Invoice extends Model
         'notes',
         'posted_at',
         'last_emailed_at',
+        'last_reminder_sent_at',
         'created_by',
     ];
 
@@ -53,6 +54,7 @@ class Invoice extends Model
         'total' => 'decimal:4',
         'posted_at' => 'datetime',
         'last_emailed_at' => 'datetime',
+        'last_reminder_sent_at' => 'datetime',
     ];
 
     public function customer(): BelongsTo
@@ -108,6 +110,14 @@ class Invoice extends Model
     public function isFullyPaid(): bool
     {
         return $this->status === 'posted' && bccomp($this->amountDue(), '0', 4) <= 0;
+    }
+
+    public function isOverdue(): bool
+    {
+        return $this->status === 'posted'
+            && $this->due_date !== null
+            && $this->due_date->isPast()
+            && bccomp($this->amountDue(), '0', 4) > 0;
     }
 
     public function createdBy(): BelongsTo

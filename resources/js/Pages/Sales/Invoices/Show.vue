@@ -17,6 +17,7 @@ const props = defineProps({
     invoice: Object,
     amountPaid: String,
     amountDue: String,
+    isOverdue: Boolean,
     activePaymentLink: Object,
     depositAccounts: Array,
 });
@@ -61,6 +62,10 @@ function copyLink() {
     linkCopied.value = true;
     setTimeout(() => (linkCopied.value = false), 2000);
 }
+
+function sendReminder() {
+    router.post(route('sales.invoices.send-reminder', props.invoice.id));
+}
 </script>
 
 <template>
@@ -97,9 +102,19 @@ function copyLink() {
                     <SecondaryButton v-if="invoice.status === 'posted'" type="button" @click="confirmingEmail = true">
                         Email Invoice
                     </SecondaryButton>
+                    <SecondaryButton v-if="isOverdue" type="button" @click="sendReminder">
+                        Send Payment Reminder
+                    </SecondaryButton>
                 </template>
             </PageHeader>
         </template>
+
+        <div v-if="isOverdue" class="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+            This invoice is overdue.
+            <span v-if="invoice.last_reminder_sent_at">
+                Last reminder sent {{ new Date(invoice.last_reminder_sent_at).toLocaleString() }}.
+            </span>
+        </div>
 
         <div v-if="activePaymentLink" class="mb-4 flex items-center justify-between rounded-md bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
             <span class="truncate">Payment link: {{ activePaymentLink.url }}</span>

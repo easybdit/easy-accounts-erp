@@ -36,3 +36,7 @@ Schedule::command('expenses:generate-recurring')->dailyAt('02:15');
 // next_generation_date is due — mirrors invoices:generate-recurring
 // exactly (always a draft, never posted, so no period-lock interaction).
 Schedule::command('bills:generate-recurring')->dailyAt('02:30');
+
+// Overdue invoice payment reminders: daily check, but each invoice is only
+// actually emailed once every 7 days (see SendOverdueInvoiceReminders).
+Schedule::command('invoices:send-overdue-reminders')->dailyAt('08:00');

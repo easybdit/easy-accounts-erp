@@ -29,6 +29,7 @@ Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(
     Route::middleware('permission:invoices.manage')->group(function () {
         Route::post('invoices/{invoice}/payment-link', [InvoiceController::class, 'generatePaymentLink'])->name('invoices.payment-link');
         Route::post('invoices/{invoice}/email', [InvoiceController::class, 'sendEmail'])->name('invoices.email');
+        Route::post('invoices/{invoice}/send-reminder', [InvoiceController::class, 'sendReminder'])->name('invoices.send-reminder');
     });
 
     // Estimates are non-financial (never post to the Journal) until

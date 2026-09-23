@@ -6,6 +6,7 @@ use App\Actions\Payments\GenerateInvoicePaymentLink;
 use App\Actions\Sales\PostInvoice;
 use App\Actions\Sales\SaveInvoiceDraft;
 use App\Actions\Sales\SendInvoiceEmail;
+use App\Actions\Sales\SendOverdueInvoiceReminder;
 use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Sales\StoreInvoiceRequest;
@@ -123,6 +124,7 @@ class InvoiceController extends Controller
             'invoice' => $invoiceData,
             'amountPaid' => $invoice->amountPaid(),
             'amountDue' => $invoice->amountDue(),
+            'isOverdue' => $invoice->isOverdue(),
             'activePaymentLink' => optional($invoice->paymentLinks->first(), fn ($link) => [
                 'url' => route('pay.show', $link->token),
             ]),
@@ -159,6 +161,17 @@ class InvoiceController extends Controller
         }
 
         return back()->with('success', 'Invoice emailed.');
+    }
+
+    public function sendReminder(Invoice $invoice, SendOverdueInvoiceReminder $action): RedirectResponse
+    {
+        try {
+            $action->handle($invoice);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Overdue payment reminder sent.');
     }
 
     public function destroy(Invoice $invoice): RedirectResponse
