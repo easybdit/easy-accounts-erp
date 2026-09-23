@@ -29,6 +29,7 @@ class Account extends Model
         'opening_balance',
         'is_active',
         'is_bank_account',
+        'is_undeposited_funds',
         'cash_flow_category',
     ];
 
@@ -36,6 +37,7 @@ class Account extends Model
         'opening_balance' => 'decimal:4',
         'is_active' => 'boolean',
         'is_bank_account' => 'boolean',
+        'is_undeposited_funds' => 'boolean',
     ];
 
     public const TYPES = ['asset', 'liability', 'equity', 'income', 'expense'];

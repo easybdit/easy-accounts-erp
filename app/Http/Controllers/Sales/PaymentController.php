@@ -71,7 +71,7 @@ class PaymentController extends Controller
 
     public function show(Payment $payment): Response
     {
-        $payment->load(['customer:id,name', 'depositAccount:id,code,name', 'allocations.invoice:id,invoice_number,total', 'journal']);
+        $payment->load(['customer:id,name', 'depositAccount:id,code,name,is_undeposited_funds', 'allocations.invoice:id,invoice_number,total', 'journal', 'bankDeposit:id,deposit_number']);
 
         return Inertia::render('Sales/Payments/Show', [
             'payment' => $this->withPlainDates($payment, ['payment_date']),

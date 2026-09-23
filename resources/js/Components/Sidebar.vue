@@ -82,6 +82,7 @@ const allNavGroups = [
         permission: 'banking.view',
         links: [
             { label: 'Bank Accounts', routeName: 'banking.accounts.index' },
+            { label: 'Deposits', routeName: 'banking.deposits.index' },
             { label: 'Transfers', routeName: 'banking.transfers.index' },
         ],
     },

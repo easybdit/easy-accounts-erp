@@ -30,6 +30,7 @@ class ChartOfAccountsSeeder extends Seeder
                             'parent_id' => $parent->id,
                             'is_active' => true,
                             'is_bank_account' => in_array((string) $childCode, $this->bankAccountCodes(), true),
+                            'is_undeposited_funds' => (string) $childCode === $this->undepositedFundsCode(),
                             'opening_balance' => 0, // শুরুতে সব ব্যালেন্স শূন্য থাকবে
                         ]
                     );
@@ -46,6 +47,18 @@ class ChartOfAccountsSeeder extends Seeder
         return ['1001', '1002', '1003'];
     }
 
+    /**
+     * Undeposited Funds: a holding account for customer payments received
+     * (cash/checks) but not yet physically taken to the bank — cleared out
+     * via a Bank Deposit batch (App\Actions\Banking\MakeBankDeposit), which
+     * mirrors how a real bank statement shows one lump deposit rather than
+     * each payment separately.
+     */
+    private function undepositedFundsCode(): string
+    {
+        return '1008';
+    }
+
     private function tree(): array
     {
         return [
@@ -54,6 +67,7 @@ class ChartOfAccountsSeeder extends Seeder
                 1000 => [
                     'name' => 'Assets (সম্পদ)',
                     'children' => [
+                        1008 => 'Undeposited Funds (জমা না হওয়া টাকা)',
                         1001 => 'Cash (হাতে থাকা ক্যাশ)',
                         1002 => 'Bank Accounts (ব্যাংক অ্যাকাউন্ট)',
                         1003 => 'Mobile Banking (বিকাশ/নগদ)',

@@ -4,6 +4,7 @@ namespace App\Models\Sales;
 
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Journal;
+use App\Models\Banking\BankDeposit;
 use App\Models\Contacts\Customer;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +27,7 @@ class Payment extends Model
         'payment_number',
         'customer_id',
         'deposit_account_id',
+        'bank_deposit_id',
         'payment_date',
         'reference',
         'method',
@@ -47,6 +49,11 @@ class Payment extends Model
     public function depositAccount(): BelongsTo
     {
         return $this->belongsTo(Account::class, 'deposit_account_id');
+    }
+
+    public function bankDeposit(): BelongsTo
+    {
+        return $this->belongsTo(BankDeposit::class);
     }
 
     public function allocations(): HasMany

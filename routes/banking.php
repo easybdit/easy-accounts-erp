@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Banking\BankAccountController;
+use App\Http\Controllers\Banking\BankDepositController;
 use App\Http\Controllers\Banking\ReconciliationController;
 use App\Http\Controllers\Banking\TransferController;
 use Illuminate\Support\Facades\Route;
@@ -26,5 +27,18 @@ Route::middleware(['auth', 'verified'])->prefix('banking')->name('banking.')->gr
     });
     Route::middleware('permission:banking.view')->group(function () {
         Route::get('transfers/{transfer}', [TransferController::class, 'show'])->name('transfers.show');
+    });
+
+    // Bank Deposits batch undeposited customer Payments into one journal
+    // entry against a real bank account — also posted immediately, no
+    // edit/destroy, same as Transfers above.
+    Route::middleware('permission:banking.view')->group(function () {
+        Route::get('deposits', [BankDepositController::class, 'index'])->name('deposits.index');
+    });
+    Route::middleware('permission:banking.manage')->group(function () {
+        Route::post('deposits', [BankDepositController::class, 'store'])->name('deposits.store');
+    });
+    Route::middleware('permission:banking.view')->group(function () {
+        Route::get('deposits/{deposit}', [BankDepositController::class, 'show'])->name('deposits.show');
     });
 });

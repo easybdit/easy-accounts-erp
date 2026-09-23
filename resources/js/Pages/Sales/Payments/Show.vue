@@ -60,6 +60,19 @@ const props = defineProps({
                         </Link>
                     </dd>
                 </div>
+                <div v-if="payment.deposit_account.is_undeposited_funds">
+                    <dt class="text-xs font-medium uppercase text-gray-400">Deposit Status</dt>
+                    <dd class="text-sm text-gray-800">
+                        <Link
+                            v-if="payment.bank_deposit"
+                            :href="route('banking.deposits.show', payment.bank_deposit.id)"
+                            class="text-indigo-600 hover:text-indigo-900"
+                        >
+                            Deposited — {{ payment.bank_deposit.deposit_number }}
+                        </Link>
+                        <span v-else class="text-amber-600">Awaiting deposit</span>
+                    </dd>
+                </div>
                 <div v-if="payment.notes" class="sm:col-span-4">
                     <dt class="text-xs font-medium uppercase text-gray-400">Notes</dt>
                     <dd class="text-sm text-gray-800">{{ payment.notes }}</dd>
