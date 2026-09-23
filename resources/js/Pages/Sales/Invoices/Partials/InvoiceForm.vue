@@ -242,7 +242,8 @@ const total = computed(() => netTotal.value + taxTotal.value);
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-                <tr v-for="(item, index) in form.items" :key="index">
+                <template v-for="(item, index) in form.items" :key="index">
+                <tr>
                     <td v-if="products.length > 0" class="px-2 py-2">
                         <select
                             :value="item.product_id"
@@ -379,6 +380,7 @@ const total = computed(() => netTotal.value + taxTotal.value);
                         </p>
                     </td>
                 </tr>
+                </template>
             </tbody>
         </table>
 
