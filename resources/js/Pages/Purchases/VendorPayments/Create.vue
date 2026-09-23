@@ -13,6 +13,7 @@ const props = defineProps({
     vendors: Array,
     paymentAccounts: Array,
     openBills: Array,
+    withholdingTaxRates: Array,
 });
 
 const form = useForm({
@@ -22,8 +23,20 @@ const form = useForm({
     reference: '',
     method: '',
     amount: '',
+    withholding_tax_rate_id: '',
     notes: '',
     allocations: [],
+});
+
+const withholdingPreview = computed(() => {
+    const rate = props.withholdingTaxRates.find((r) => r.id === form.withholding_tax_rate_id);
+    if (!rate) {
+        return null;
+    }
+    const gross = parseFloat(form.amount) || 0;
+    const withheld = (gross * parseFloat(rate.rate)) / 100;
+
+    return { withheld, net: gross - withheld };
 });
 
 const selected = reactive({});
@@ -105,9 +118,28 @@ function submit() {
                 </div>
 
                 <div>
-                    <InputLabel for="amount" value="Amount Paid" />
+                    <InputLabel for="amount" value="Amount Settled" />
                     <TextInput id="amount" v-model="form.amount" type="number" step="0.0001" class="mt-1 block w-full" required />
+                    <p class="mt-1 text-xs text-gray-400">The full amount clearing the bill(s) below — before any TDS/VDS withheld.</p>
                     <InputError :message="form.errors.amount" class="mt-2" />
+                </div>
+
+                <div>
+                    <InputLabel for="withholding_tax_rate_id" value="Withhold TDS/VDS (optional)" />
+                    <select
+                        id="withholding_tax_rate_id"
+                        v-model="form.withholding_tax_rate_id"
+                        class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    >
+                        <option value="">None</option>
+                        <option v-for="rate in withholdingTaxRates" :key="rate.id" :value="rate.id">
+                            {{ rate.name }} ({{ rate.rate }}%)
+                        </option>
+                    </select>
+                    <p v-if="withholdingPreview" class="mt-1 text-xs text-gray-400">
+                        Withholds {{ withholdingPreview.withheld.toFixed(4) }} — net cash paid: {{ withholdingPreview.net.toFixed(4) }}.
+                    </p>
+                    <InputError :message="form.errors.withholding_tax_rate_id" class="mt-2" />
                 </div>
 
                 <div>

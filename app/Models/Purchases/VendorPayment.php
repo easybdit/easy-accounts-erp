@@ -5,6 +5,7 @@ namespace App\Models\Purchases;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Journal;
 use App\Models\Contacts\Vendor;
+use App\Models\Tax\WithholdingTaxRate;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,6 +31,8 @@ class VendorPayment extends Model
         'reference',
         'method',
         'amount',
+        'withholding_tax_rate_id',
+        'withholding_tax_amount',
         'notes',
         'created_by',
     ];
@@ -37,6 +40,7 @@ class VendorPayment extends Model
     protected $casts = [
         'payment_date' => 'date',
         'amount' => 'decimal:4',
+        'withholding_tax_amount' => 'decimal:4',
     ];
 
     public function vendor(): BelongsTo
@@ -47,6 +51,20 @@ class VendorPayment extends Model
     public function paymentAccount(): BelongsTo
     {
         return $this->belongsTo(Account::class, 'payment_account_id');
+    }
+
+    public function withholdingTaxRate(): BelongsTo
+    {
+        return $this->belongsTo(WithholdingTaxRate::class);
+    }
+
+    /**
+     * The cash/bank amount actually disbursed — the settled amount less
+     * whatever was withheld for TDS/VDS instead of paid to the vendor.
+     */
+    public function netCashPaid(): string
+    {
+        return bcsub((string) $this->amount, (string) $this->withholding_tax_amount, 4);
     }
 
     public function allocations(): HasMany

@@ -104,6 +104,7 @@ const allNavGroups = [
         permission: 'tax.view',
         links: [
             { label: 'Tax Rates', routeName: 'tax.rates.index' },
+            { label: 'Withholding Rates (TDS/VDS)', routeName: 'tax.withholding-rates.index' },
             { label: 'Tax Report', routeName: 'tax.report' },
         ],
     },

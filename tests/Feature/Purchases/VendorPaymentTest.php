@@ -9,6 +9,7 @@ use App\Models\Accounting\Account;
 use App\Models\Contacts\Vendor;
 use App\Models\Purchases\Bill;
 use App\Models\Purchases\VendorPayment;
+use App\Models\Tax\WithholdingTaxRate;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use RuntimeException;
@@ -228,5 +229,95 @@ class VendorPaymentTest extends TestCase
         } finally {
             $this->assertDatabaseCount('vendor_payments', 0);
         }
+    }
+
+    public function test_withholding_tax_reduces_cash_paid_while_still_clearing_the_bill_in_full(): void
+    {
+        $user = User::factory()->create();
+        $bill = $this->postedBill(['total' => 1000]);
+        $cash = Account::factory()->create(['type' => 'asset']);
+        $tdsLiability = Account::factory()->create(['type' => 'liability']);
+        $tds = WithholdingTaxRate::factory()->create(['rate' => 10, 'liability_account_id' => $tdsLiability->id]);
+
+        $response = $this->actingAs($user)->post(route('purchases.vendor-payments.store'), [
+            'vendor_id' => $bill->vendor_id,
+            'payment_account_id' => $cash->id,
+            'payment_date' => '2026-01-20',
+            'amount' => 1000,
+            'withholding_tax_rate_id' => $tds->id,
+            'allocations' => [
+                ['bill_id' => $bill->id, 'amount' => 1000],
+            ],
+        ]);
+
+        $response->assertRedirect();
+
+        // The bill is fully settled even though less cash actually left —
+        // the vendor is credited for the full 1000, 100 of it just went to
+        // the TDS liability instead of their pocket.
+        $this->assertTrue($bill->fresh()->isFullyPaid());
+
+        $payment = VendorPayment::first();
+        $this->assertSame('100.0000', (string) $payment->withholding_tax_amount);
+        $this->assertSame('900.0000', $payment->netCashPaid());
+
+        $journal = $payment->journal;
+        $this->assertTrue($journal->isBalanced());
+        $this->assertSame('1000.0000', $journal->totalDebit());
+
+        $cashLine = $journal->entries->firstWhere('account_id', $cash->id);
+        $this->assertSame('900.0000', $cashLine->credit);
+
+        $tdsLine = $journal->entries->firstWhere('account_id', $tdsLiability->id);
+        $this->assertSame('100.0000', $tdsLine->credit);
+
+        $payableLine = $journal->entries->firstWhere('account_id', $bill->payable_account_id);
+        $this->assertSame('1000.0000', $payableLine->debit);
+    }
+
+    public function test_a_payment_with_no_withholding_rate_behaves_exactly_as_before(): void
+    {
+        $user = User::factory()->create();
+        $bill = $this->postedBill(['total' => 1000]);
+        $cash = Account::factory()->create(['type' => 'asset']);
+
+        $this->actingAs($user)->post(route('purchases.vendor-payments.store'), [
+            'vendor_id' => $bill->vendor_id,
+            'payment_account_id' => $cash->id,
+            'payment_date' => '2026-01-20',
+            'amount' => 1000,
+            'allocations' => [
+                ['bill_id' => $bill->id, 'amount' => 1000],
+            ],
+        ]);
+
+        $payment = VendorPayment::first();
+        $this->assertSame('0.0000', (string) $payment->withholding_tax_amount);
+        $this->assertNull($payment->withholding_tax_rate_id);
+        $this->assertSame('1000.0000', $payment->netCashPaid());
+
+        $cashLine = $payment->journal->entries->firstWhere('account_id', $cash->id);
+        $this->assertSame('1000.0000', $cashLine->credit);
+    }
+
+    public function test_an_invalid_withholding_rate_id_is_rejected_by_validation(): void
+    {
+        $user = User::factory()->create();
+        $bill = $this->postedBill(['total' => 1000]);
+        $cash = Account::factory()->create(['type' => 'asset']);
+
+        $response = $this->actingAs($user)->post(route('purchases.vendor-payments.store'), [
+            'vendor_id' => $bill->vendor_id,
+            'payment_account_id' => $cash->id,
+            'payment_date' => '2026-01-20',
+            'amount' => 1000,
+            'withholding_tax_rate_id' => 999999,
+            'allocations' => [
+                ['bill_id' => $bill->id, 'amount' => 1000],
+            ],
+        ]);
+
+        $response->assertSessionHasErrors('withholding_tax_rate_id');
+        $this->assertDatabaseCount('vendor_payments', 0);
     }
 }

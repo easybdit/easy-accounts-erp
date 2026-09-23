@@ -10,6 +10,7 @@ use App\Models\Accounting\Account;
 use App\Models\Contacts\Vendor;
 use App\Models\Purchases\Bill;
 use App\Models\Purchases\VendorPayment;
+use App\Models\Tax\WithholdingTaxRate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -71,10 +72,13 @@ class VendorPaymentController extends Controller
 
     public function show(VendorPayment $vendorPayment): Response
     {
-        $vendorPayment->load(['vendor:id,name', 'paymentAccount:id,code,name', 'allocations.bill:id,bill_number,total', 'journal']);
+        $vendorPayment->load(['vendor:id,name', 'paymentAccount:id,code,name', 'withholdingTaxRate:id,name,rate', 'allocations.bill:id,bill_number,total', 'journal']);
+
+        $paymentData = $this->withPlainDates($vendorPayment, ['payment_date']);
+        $paymentData['net_cash_paid'] = $vendorPayment->netCashPaid();
 
         return Inertia::render('Purchases/VendorPayments/Show', [
-            'payment' => $this->withPlainDates($vendorPayment, ['payment_date']),
+            'payment' => $paymentData,
         ]);
     }
 
@@ -99,6 +103,8 @@ class VendorPaymentController extends Controller
             'paymentAccounts' => Account::query()->where('is_active', true)->where('type', 'asset')
                 ->select('id', 'code', 'name')->orderBy('code')->get(),
             'openBills' => $openBills,
+            'withholdingTaxRates' => WithholdingTaxRate::query()->where('is_active', true)
+                ->select('id', 'name', 'rate')->orderBy('name')->get(),
         ];
     }
 }

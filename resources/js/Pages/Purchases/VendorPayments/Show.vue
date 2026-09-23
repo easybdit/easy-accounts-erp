@@ -41,8 +41,16 @@ const props = defineProps({
                     <dd class="text-sm text-gray-800">{{ payment.payment_account.code }} — {{ payment.payment_account.name }}</dd>
                 </div>
                 <div>
-                    <dt class="text-xs font-medium uppercase text-gray-400">Amount</dt>
+                    <dt class="text-xs font-medium uppercase text-gray-400">Amount Settled</dt>
                     <dd class="text-lg font-semibold text-gray-900">{{ payment.amount }}</dd>
+                </div>
+                <div v-if="payment.withholding_tax_rate">
+                    <dt class="text-xs font-medium uppercase text-gray-400">Withheld ({{ payment.withholding_tax_rate.name }})</dt>
+                    <dd class="text-sm text-gray-800">{{ payment.withholding_tax_amount }}</dd>
+                </div>
+                <div v-if="payment.withholding_tax_rate">
+                    <dt class="text-xs font-medium uppercase text-gray-400">Net Cash Paid</dt>
+                    <dd class="text-sm font-semibold text-gray-900">{{ payment.net_cash_paid }}</dd>
                 </div>
                 <div>
                     <dt class="text-xs font-medium uppercase text-gray-400">Method</dt>

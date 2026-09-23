@@ -23,6 +23,7 @@ class StoreVendorPaymentRequest extends FormRequest
             'reference' => ['nullable', 'string', 'max:100'],
             'method' => ['nullable', 'string', 'max:100'],
             'amount' => ['required', 'numeric', 'min:0.01'],
+            'withholding_tax_rate_id' => ['nullable', 'integer', 'exists:withholding_tax_rates,id'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'allocations' => ['required', 'array', 'min:1'],
             'allocations.*.bill_id' => ['required', 'integer', 'exists:bills,id'],
