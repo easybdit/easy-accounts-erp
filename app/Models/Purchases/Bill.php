@@ -27,6 +27,7 @@ class Bill extends Model
     protected $fillable = [
         'bill_number',
         'vendor_id',
+        'recurring_bill_id',
         'payable_account_id',
         'bill_date',
         'due_date',
@@ -60,6 +61,11 @@ class Bill extends Model
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class);
+    }
+
+    public function recurringBill(): BelongsTo
+    {
+        return $this->belongsTo(RecurringBill::class);
     }
 
     public function payableAccount(): BelongsTo

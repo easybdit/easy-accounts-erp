@@ -31,3 +31,8 @@ Schedule::command('revenue:recognize')->monthlyOn(1, '01:30');
 // Scheduled Recurring Expenses: daily check for templates whose
 // next_generation_date is due — mirrors invoices:generate-recurring.
 Schedule::command('expenses:generate-recurring')->dailyAt('02:15');
+
+// Scheduled Recurring Bills: daily check for templates whose
+// next_generation_date is due — mirrors invoices:generate-recurring
+// exactly (always a draft, never posted, so no period-lock interaction).
+Schedule::command('bills:generate-recurring')->dailyAt('02:30');

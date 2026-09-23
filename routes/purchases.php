@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Purchases\BillController;
 use App\Http\Controllers\Purchases\PurchaseOrderController;
+use App\Http\Controllers\Purchases\RecurringBillController;
 use App\Http\Controllers\Purchases\VendorCreditController;
 use App\Http\Controllers\Purchases\VendorPaymentController;
 use Illuminate\Support\Facades\Route;
@@ -41,6 +42,21 @@ Route::middleware(['auth', 'verified'])->prefix('purchases')->name('purchases.')
     });
     Route::middleware('permission:bills.view')->group(function () {
         Route::get('purchase-orders/{purchase_order}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
+    });
+
+    // Recurring bills are templates, either "Generate Now" or scheduled via
+    // next_generation_date — mirrors recurring-invoices exactly. No show
+    // route, so "create" vs "{recurring_bill}" ordering isn't a concern.
+    Route::middleware('permission:bills.view')->group(function () {
+        Route::get('recurring-bills', [RecurringBillController::class, 'index'])->name('recurring-bills.index');
+    });
+    Route::middleware('permission:bills.manage')->group(function () {
+        Route::get('recurring-bills/create', [RecurringBillController::class, 'create'])->name('recurring-bills.create');
+        Route::post('recurring-bills', [RecurringBillController::class, 'store'])->name('recurring-bills.store');
+        Route::get('recurring-bills/{recurring_bill}/edit', [RecurringBillController::class, 'edit'])->name('recurring-bills.edit');
+        Route::put('recurring-bills/{recurring_bill}', [RecurringBillController::class, 'update'])->name('recurring-bills.update');
+        Route::delete('recurring-bills/{recurring_bill}', [RecurringBillController::class, 'destroy'])->name('recurring-bills.destroy');
+        Route::post('recurring-bills/{recurring_bill}/generate', [RecurringBillController::class, 'generate'])->name('recurring-bills.generate');
     });
 
     // Vendor Credits are the Purchases-side mirror of Sales Credit Notes
