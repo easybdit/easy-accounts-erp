@@ -78,6 +78,8 @@ class RolePermissionAuditTest extends TestCase
         $target->assignRole('Sales');
 
         $this->actingAs($admin)->put(route('security.users.update', $target), [
+            'name' => $target->name,
+            'email' => $target->email,
             'roles' => ['Auditor'],
         ]);
 

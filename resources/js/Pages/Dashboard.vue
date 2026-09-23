@@ -46,8 +46,9 @@ const isProfit = parseFloat(props.kpis.monthProfit) >= 0;
         <Card padded class="mt-6">
             <h2 class="mb-1 text-sm font-semibold text-gray-700">How the modules connect</h2>
             <p class="mb-4 text-xs text-gray-400">
-                Sales and Purchases both settle through your Bank Accounts, and every transaction posts to the Journal, feeding the
-                Ledger and Reports — click any box to open that module.
+                Sales, Purchases, Expenses, Inventory, Banking, and Fixed Assets all post to the Journal, which feeds the
+                General Ledger, Trial Balance, and Reports. Budgets and Tax connect in their own way, shown below —
+                click any box to open that module.
             </p>
             <ModuleFlowDiagram />
         </Card>

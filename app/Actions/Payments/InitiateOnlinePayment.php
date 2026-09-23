@@ -18,6 +18,10 @@ class InitiateOnlinePayment
      */
     public function handle(InvoicePaymentLink $link): string
     {
+        if (! config('services.sslcommerz.enabled')) {
+            throw new RuntimeException('Online payments are currently disabled. Please contact the business to arrange payment another way.');
+        }
+
         if (! $link->is_active) {
             throw new RuntimeException('This payment link is no longer active.');
         }

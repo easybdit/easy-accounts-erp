@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Accounting\AccountingSettings;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -38,6 +39,21 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
+            ],
+            // Shared (rather than passed per-page) so every page — including
+            // the guest login screen — can brand itself with the uploaded
+            // company logo, falling back to the default mark when unset.
+            'company' => [
+                'logoUrl' => function () {
+                    $path = AccountingSettings::current()->logo_path;
+
+                    // A root-relative path rather than Storage::url()'s
+                    // APP_URL-based absolute one: local dev often runs on a
+                    // port (e.g. :8000) that APP_URL doesn't reflect, which
+                    // would otherwise silently point the browser at the
+                    // wrong port.
+                    return $path ? '/storage/'.$path : null;
+                },
             ],
         ];
     }

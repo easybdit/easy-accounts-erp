@@ -4,6 +4,7 @@ import PageHeader from '@/Components/PageHeader.vue';
 import DeleteUserForm from './Partials/DeleteUserForm.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
+import UpdateProfilePhotoForm from './Partials/UpdateProfilePhotoForm.vue';
 import { Head } from '@inertiajs/vue3';
 
 defineProps({
@@ -25,6 +26,10 @@ defineProps({
         </template>
 
         <div class="space-y-6">
+            <div class="bg-white p-4 shadow sm:rounded-lg sm:p-8">
+                <UpdateProfilePhotoForm class="max-w-xl" />
+            </div>
+
             <div class="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                 <UpdateProfileInformationForm
                     :must-verify-email="mustVerifyEmail"

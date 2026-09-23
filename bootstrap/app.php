@@ -21,6 +21,16 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        // Application-layer flood protection: caps how fast any single
+        // client (by IP) can hit the app at all — 200 requests/minute is
+        // far above normal human+Inertia usage but stops a single abusive
+        // client or a basic scripted flood. This is NOT real DDoS
+        // mitigation: a distributed volumetric attack has to be stopped
+        // upstream, at the host/CDN/WAF level, before traffic ever reaches
+        // PHP. The login route and public payment pages layer a tighter
+        // limit of their own on top of this (see routes/auth.php, pay.php).
+        $middleware->web(append: 'throttle:200,1');
+
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,

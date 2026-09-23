@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Security\AuditLogController;
+use App\Http\Controllers\Security\IpWhitelistController;
+use App\Http\Controllers\Security\LoginHistoryController;
 use App\Http\Controllers\Security\RoleController;
 use App\Http\Controllers\Security\UserController;
 use Illuminate\Support\Facades\Route;
@@ -8,6 +10,14 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'verified'])->prefix('security')->name('security.')->group(function () {
     Route::middleware('permission:audit.view')->group(function () {
         Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+        // Login history reuses audit.view — it's the same "who can review
+        // the security trail" responsibility as the general audit log.
+        Route::get('login-history', [LoginHistoryController::class, 'index'])->name('login-history.index');
+    });
+
+    Route::middleware('permission:settings.manage')->group(function () {
+        Route::post('ip-whitelist', [IpWhitelistController::class, 'store'])->name('ip-whitelist.store');
+        Route::delete('ip-whitelist/{ip_whitelist_entry}', [IpWhitelistController::class, 'destroy'])->name('ip-whitelist.destroy');
     });
 
     Route::middleware('permission:users.view')->group(function () {
@@ -18,6 +28,7 @@ Route::middleware(['auth', 'verified'])->prefix('security')->name('security.')->
         Route::post('users', [UserController::class, 'store'])->name('users.store');
         Route::get('users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
         Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::post('users/{user}/unlock', [UserController::class, 'unlock'])->name('users.unlock');
     });
 
     Route::middleware('permission:roles.view')->group(function () {

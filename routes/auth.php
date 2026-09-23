@@ -18,7 +18,11 @@ Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
 
-    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+    // Layered on top of LoginRequest's own per-email+IP limiter (5/min): this
+    // one is IP-only, so a single IP cycling through many different emails
+    // (credential stuffing) can't dodge the email-scoped limit either.
+    Route::post('login', [AuthenticatedSessionController::class, 'store'])
+        ->middleware('throttle:20,1');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');

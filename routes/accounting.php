@@ -69,6 +69,13 @@ Route::middleware(['auth', 'verified'])->prefix('accounting')->name('accounting.
     });
     Route::middleware('permission:settings.manage')->group(function () {
         Route::put('settings', [AccountingSettingsController::class, 'update'])->name('settings.update');
+        Route::post('settings/logo', [AccountingSettingsController::class, 'updateLogo'])->name('settings.logo.update');
+        Route::delete('settings/logo', [AccountingSettingsController::class, 'destroyLogo'])->name('settings.logo.destroy');
+        Route::put('settings/mail', [AccountingSettingsController::class, 'updateMail'])->name('settings.mail.update');
+        Route::post('settings/mail/test', [AccountingSettingsController::class, 'sendTestMail'])->name('settings.mail.test');
+        Route::put('settings/payment-gateway', [AccountingSettingsController::class, 'updatePaymentGateway'])->name('settings.payment-gateway.update');
+        Route::put('settings/login-security', [AccountingSettingsController::class, 'updateLoginSecurity'])->name('settings.login-security.update');
+        Route::put('settings/ip-whitelist-enabled', [AccountingSettingsController::class, 'updateIpWhitelistEnabled'])->name('settings.ip-whitelist-enabled.update');
     });
 
     // Budgets reuse accounts.* rather than a separate permission pair —

@@ -6,6 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import Card from '@/Components/Card.vue';
 import Badge from '@/Components/Badge.vue';
 import EmptyState from '@/Components/EmptyState.vue';
+import Avatar from '@/Components/Avatar.vue';
 
 defineProps({
     users: Array,
@@ -45,7 +46,12 @@ function can(permission) {
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         <tr v-for="user in users" :key="user.id" class="hover:bg-gray-50">
-                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ user.name }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
+                                <div class="flex items-center gap-3">
+                                    <Avatar :name="user.name" :photo-url="user.profile_photo_url" size="sm" />
+                                    {{ user.name }}
+                                </div>
+                            </td>
                             <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ user.email }}</td>
                             <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
                                 <span v-if="user.roles.length === 0" class="text-gray-400">No roles</span>
@@ -55,7 +61,7 @@ function can(permission) {
                             </td>
                             <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
                                 <Link v-if="can('users.manage')" :href="route('security.users.edit', user.id)" class="text-indigo-600 hover:text-indigo-900">
-                                    Edit Roles
+                                    Edit
                                 </Link>
                             </td>
                         </tr>

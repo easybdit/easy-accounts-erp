@@ -116,6 +116,7 @@ class OnlinePaymentTest extends TestCase
 
     public function test_initiating_payment_redirects_to_the_gateway_url(): void
     {
+        config(['services.sslcommerz.enabled' => true]);
         Http::fake([
             '*/gwprocess/v4/api.php' => Http::response([
                 'status' => 'SUCCESS',
@@ -141,8 +142,26 @@ class OnlinePaymentTest extends TestCase
         $this->assertSame('initiated', $transaction->status);
     }
 
+    public function test_initiating_payment_is_blocked_when_online_payments_are_disabled(): void
+    {
+        config(['services.sslcommerz.enabled' => false]);
+
+        $invoice = $this->postedInvoice('750');
+        $deposit = Account::factory()->create(['type' => 'asset']);
+        $link = InvoicePaymentLink::create([
+            'invoice_id' => $invoice->id, 'token' => 'tok-disabled', 'deposit_account_id' => $deposit->id, 'is_active' => true,
+        ]);
+
+        $this->post(route('pay.initiate', $link->token))
+            ->assertRedirect(route('pay.show', $link->token))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseCount('online_payment_transactions', 0);
+    }
+
     public function test_a_failed_gateway_session_shows_an_error_and_stays_on_the_pay_page(): void
     {
+        config(['services.sslcommerz.enabled' => true]);
         Http::fake([
             '*/gwprocess/v4/api.php' => Http::response(['status' => 'FAILED', 'failedreason' => 'Invalid store credentials']),
         ]);

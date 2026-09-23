@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 // directly (Section 90; this app has no customer login/portal), plus
 // SSLCommerz's own success/fail/cancel/ipn callbacks. The token itself is
 // the only credential; see InvoicePaymentLink's docblock.
-Route::prefix('pay')->name('pay.')->group(function () {
+Route::prefix('pay')->name('pay.')->middleware('throttle:30,1')->group(function () {
     Route::get('{token}', [PublicPaymentController::class, 'show'])->name('show');
     Route::post('{token}/initiate', [PublicPaymentController::class, 'initiate'])->name('initiate');
 

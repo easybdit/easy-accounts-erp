@@ -14,12 +14,21 @@ defineProps({
     status: {
         type: String,
     },
+    captchaEnabled: {
+        type: Boolean,
+        default: false,
+    },
+    captchaQuestion: {
+        type: String,
+        default: null,
+    },
 });
 
 const form = useForm({
     email: '',
     password: '',
     remember: false,
+    captcha_answer: '',
 });
 
 const submit = () => {
@@ -67,6 +76,22 @@ const submit = () => {
                 />
 
                 <InputError class="mt-2" :message="form.errors.password" />
+            </div>
+
+            <div v-if="captchaEnabled" class="mt-4">
+                <InputLabel for="captcha_answer" :value="`Security check: what is ${captchaQuestion}?`" />
+
+                <TextInput
+                    id="captcha_answer"
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    class="mt-1 block w-full"
+                    v-model="form.captcha_answer"
+                    required
+                />
+
+                <InputError class="mt-2" :message="form.errors.captcha_answer" />
             </div>
 
             <div class="mt-4 block">

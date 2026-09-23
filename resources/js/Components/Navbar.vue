@@ -3,6 +3,7 @@ import { usePage } from '@inertiajs/vue3';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NotificationBell from '@/Components/NotificationBell.vue';
+import Avatar from '@/Components/Avatar.vue';
 
 const page = usePage();
 
@@ -13,7 +14,8 @@ defineEmits(['toggle-sidebar']);
     <header class="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4">
         <button
             type="button"
-            class="rounded-md p-2 text-gray-500 hover:bg-gray-100 md:hidden"
+            class="rounded-md p-2 text-gray-500 hover:bg-gray-100"
+            title="Toggle sidebar"
             @click="$emit('toggle-sidebar')"
         >
             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,8 +32,9 @@ defineEmits(['toggle-sidebar']);
                 <template #trigger>
                     <button
                         type="button"
-                        class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-600 transition hover:text-gray-800 focus:outline-none"
+                        class="inline-flex items-center gap-2 rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-600 transition hover:text-gray-800 focus:outline-none"
                     >
+                        <Avatar :name="page.props.auth.user.name" :photo-url="page.props.auth.user.profile_photo_url" size="sm" />
                         {{ page.props.auth.user.name }}
                         <svg class="ms-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                             <path

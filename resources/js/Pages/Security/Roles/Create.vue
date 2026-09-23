@@ -1,5 +1,4 @@
 <script setup>
-import { computed } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
@@ -8,24 +7,15 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
+import PermissionPicker from '@/Components/PermissionPicker.vue';
 
-const props = defineProps({
+defineProps({
     permissions: Array,
 });
 
 const form = useForm({
     name: '',
     permissions: [],
-});
-
-const groupedPermissions = computed(() => {
-    const groups = {};
-    for (const name of props.permissions) {
-        const [module] = name.split('.');
-        groups[module] ??= [];
-        groups[module].push(name);
-    }
-    return groups;
 });
 
 function submit() {
@@ -58,26 +48,7 @@ function submit() {
                 <div>
                     <InputLabel value="Permissions" />
                     <InputError :message="form.errors.permissions" class="mt-2" />
-                    <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <div
-                            v-for="(names, module) in groupedPermissions"
-                            :key="module"
-                            class="rounded-md border border-gray-200 p-3"
-                        >
-                            <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">{{ module }}</p>
-                            <div class="space-y-1">
-                                <label v-for="name in names" :key="name" class="flex items-center gap-2 text-sm text-gray-700">
-                                    <input
-                                        v-model="form.permissions"
-                                        type="checkbox"
-                                        :value="name"
-                                        class="rounded border-gray-300"
-                                    />
-                                    {{ name }}
-                                </label>
-                            </div>
-                        </div>
-                    </div>
+                    <PermissionPicker v-model="form.permissions" :permissions="permissions" class="mt-2" />
                 </div>
             </div>
 

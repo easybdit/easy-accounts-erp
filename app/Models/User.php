@@ -6,6 +6,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -20,12 +21,26 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, LogsActivity, Notifiable;
 
+    // Not attribute-backed (unlike name/email): the photo is set directly by
+    // ProfileController rather than through mass assignment, and the URL is
+    // derived, so both stay out of #[Fillable] and just get appended here.
+    protected $appends = ['profile_photo_url'];
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->logOnly(['name', 'email'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
+    }
+
+    protected function profilePhotoUrl(): Attribute
+    {
+        // Root-relative rather than Storage::url()'s APP_URL-based absolute
+        // URL — see the matching note in HandleInertiaRequests::share().
+        return Attribute::make(
+            get: fn () => $this->profile_photo_path ? '/storage/'.$this->profile_photo_path : null,
+        );
     }
 
     /**
@@ -37,6 +52,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'locked_until' => 'datetime',
             'password' => 'hashed',
         ];
     }

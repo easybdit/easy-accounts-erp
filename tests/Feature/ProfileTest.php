@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -95,5 +97,79 @@ class ProfileTest extends TestCase
             ->assertRedirect('/profile');
 
         $this->assertNotNull($user->fresh());
+    }
+
+    public function test_a_user_can_upload_their_own_profile_photo(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('profile.avatar.update'), [
+            'avatar' => UploadedFile::fake()->image('me.jpg'),
+        ])->assertRedirect(route('profile.edit'));
+
+        $path = $user->fresh()->profile_photo_path;
+        $this->assertNotNull($path);
+        Storage::disk('public')->assertExists($path);
+    }
+
+    public function test_uploading_a_new_photo_replaces_and_deletes_the_old_file(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('profile.avatar.update'), [
+            'avatar' => UploadedFile::fake()->image('first.jpg'),
+        ]);
+        $firstPath = $user->fresh()->profile_photo_path;
+
+        $this->actingAs($user)->post(route('profile.avatar.update'), [
+            'avatar' => UploadedFile::fake()->image('second.jpg'),
+        ]);
+        $secondPath = $user->fresh()->profile_photo_path;
+
+        $this->assertNotSame($firstPath, $secondPath);
+        Storage::disk('public')->assertMissing($firstPath);
+        Storage::disk('public')->assertExists($secondPath);
+    }
+
+    public function test_a_non_image_avatar_is_rejected(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('profile.avatar.update'), [
+            'avatar' => UploadedFile::fake()->create('me.pdf', 100),
+        ])->assertSessionHasErrors('avatar');
+    }
+
+    public function test_a_user_can_remove_their_own_profile_photo(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('profile.avatar.update'), [
+            'avatar' => UploadedFile::fake()->image('me.jpg'),
+        ]);
+        $path = $user->fresh()->profile_photo_path;
+
+        $this->actingAs($user)->delete(route('profile.avatar.destroy'))
+            ->assertRedirect(route('profile.edit'));
+
+        $this->assertNull($user->fresh()->profile_photo_path);
+        Storage::disk('public')->assertMissing($path);
+    }
+
+    public function test_a_user_cannot_upload_a_photo_for_another_user(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+
+        $this->actingAs($user)->post(route('profile.avatar.update'), [
+            'avatar' => UploadedFile::fake()->image('me.jpg'),
+        ]);
+
+        $this->assertNull($other->fresh()->profile_photo_path);
     }
 }

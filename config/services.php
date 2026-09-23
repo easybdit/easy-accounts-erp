@@ -36,6 +36,10 @@ return [
     ],
 
     'sslcommerz' => [
+        // 'enabled' is recomputed on every request by AppServiceProvider
+        // from the Company Settings row; this env fallback only matters
+        // before that provider has run (e.g. very early in boot).
+        'enabled' => env('SSLCOMMERZ_ENABLED', false),
         'store_id' => env('SSLCOMMERZ_STORE_ID'),
         'store_password' => env('SSLCOMMERZ_STORE_PASSWORD'),
         'sandbox' => env('SSLCOMMERZ_SANDBOX', true),
