@@ -13,7 +13,10 @@ use App\Models\Purchases\Bill;
 use App\Models\Purchases\VendorPayment;
 use App\Models\Sales\Invoice;
 use App\Models\Sales\Payment;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -352,6 +355,96 @@ class ReportController extends Controller
             'from' => $from,
             'to' => $to,
         ]);
+    }
+
+    /**
+     * A customer-facing Statement of Account: opening balance carried in
+     * from before "from", every transaction touching this customer's
+     * receivable ledger within the period in order, and a running balance
+     * — mirrors GeneralLedgerController's per-account view exactly, just
+     * scoped to a customer's tagged journal entries instead of one account.
+     */
+    public function customerStatement(Request $request): Response
+    {
+        $customers = Customer::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']);
+
+        $customerId = $request->integer('customer_id') ?: null;
+        $from = $request->date('from')?->toDateString();
+        $to = $request->date('to')?->toDateString() ?? now()->toDateString();
+
+        return Inertia::render('Reports/CustomerStatement', [
+            'customers' => $customers,
+            'statement' => $customerId ? $this->buildCustomerStatement(Customer::findOrFail($customerId), $from, $to) : null,
+            'filters' => [
+                'customer_id' => $customerId,
+                'from' => $from,
+                'to' => $to,
+            ],
+        ]);
+    }
+
+    public function customerStatementPdf(Request $request): HttpResponse
+    {
+        $customer = Customer::findOrFail($request->integer('customer_id'));
+        $from = $request->date('from')?->toDateString();
+        $to = $request->date('to')?->toDateString() ?? now()->toDateString();
+
+        $statement = $this->buildCustomerStatement($customer, $from, $to);
+
+        $pdf = Pdf::loadView('pdfs.customer-statement', [
+            'customer' => $customer,
+            'statement' => $statement,
+            'from' => $from,
+            'to' => $to,
+            'appName' => config('app.name'),
+        ]);
+
+        return $pdf->download("Statement-{$customer->name}.pdf");
+    }
+
+    private function buildCustomerStatement(Customer $customer, ?string $from, ?string $to): array
+    {
+        $startingBalance = $from
+            ? $customer->balanceAsOf(Carbon::parse($from)->subDay()->toDateString())
+            : (string) $customer->opening_balance;
+
+        $entries = $customer->journalEntries()
+            ->with('journal:id,reference,description')
+            ->when($from, fn ($query) => $query->whereDate('date', '>=', $from))
+            ->when($to, fn ($query) => $query->whereDate('date', '<=', $to))
+            ->orderBy('date')
+            ->orderBy('id')
+            ->get();
+
+        $running = $startingBalance;
+
+        // A customer's ledger is debit-normal (an amount owed TO the
+        // business) regardless of which GL account each line used —
+        // mirrors Customer::balanceAsOf's own debit-increases convention.
+        $rows = $entries->map(function (JournalEntry $entry) use (&$running) {
+            $debit = (string) $entry->debit;
+            $credit = (string) $entry->credit;
+
+            $running = bcsub(bcadd($running, $debit, 4), $credit, 4);
+
+            return [
+                'id' => $entry->id,
+                'date' => $entry->date->toDateString(),
+                'reference' => $entry->journal->reference,
+                'description' => $entry->description ?? $entry->journal->description,
+                'debit' => $debit,
+                'credit' => $credit,
+                'running_balance' => $running,
+                'journal_id' => $entry->journal_id,
+            ];
+        });
+
+        return [
+            'customer' => ['id' => $customer->id, 'name' => $customer->name, 'email' => $customer->email],
+            'starting_balance' => $startingBalance,
+            'ending_balance' => $running,
+            'entries' => $rows,
+        ];
     }
 
     public function customerBalances(): Response

@@ -15,6 +15,8 @@ Route::middleware(['auth', 'verified', 'permission:reports.view'])->prefix('repo
     Route::get('purchases', [ReportController::class, 'purchases'])->name('purchases');
     Route::get('expenses', [ReportController::class, 'expenses'])->name('expenses');
     Route::get('customer-balances', [ReportController::class, 'customerBalances'])->name('customer-balances');
+    Route::get('customer-statement', [ReportController::class, 'customerStatement'])->name('customer-statement');
+    Route::get('customer-statement/pdf', [ReportController::class, 'customerStatementPdf'])->name('customer-statement.pdf');
     Route::get('vendor-balances', [ReportController::class, 'vendorBalances'])->name('vendor-balances');
     Route::get('payments', [ReportController::class, 'payments'])->name('payments');
     Route::get('inventory', [ReportController::class, 'inventory'])->name('inventory');

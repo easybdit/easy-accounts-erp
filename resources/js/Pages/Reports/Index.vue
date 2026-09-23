@@ -21,6 +21,7 @@ const groups = [
             { name: 'Accounts Receivable Aging', routeName: 'reports.ar-aging' },
             { name: 'Accounts Payable Aging', routeName: 'reports.ap-aging' },
             { name: 'Customer Balances', routeName: 'reports.customer-balances' },
+            { name: 'Customer Statement', routeName: 'reports.customer-statement' },
             { name: 'Vendor Balances', routeName: 'reports.vendor-balances' },
         ],
     },
