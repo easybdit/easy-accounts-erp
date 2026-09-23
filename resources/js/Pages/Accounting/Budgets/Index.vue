@@ -36,33 +36,35 @@ function destroy(budget) {
         </template>
 
         <Card>
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Fiscal Year</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Accounts</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Total Budgeted</th>
-                        <th class="px-4 py-3" />
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="budget in budgets" :key="budget.id" class="hover:bg-gray-50">
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ budget.name }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ budget.fiscal_year }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-500">{{ budget.lines_count }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ budget.total_amount }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
-                            <Link :href="route('accounting.budgets.edit', budget.id)" class="mr-3 text-indigo-600 hover:text-indigo-900">
-                                Edit
-                            </Link>
-                            <button type="button" class="text-red-600 hover:text-red-900" @click="destroy(budget)">
-                                Delete
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Fiscal Year</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Accounts</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Total Budgeted</th>
+                            <th class="px-4 py-3" />
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="budget in budgets" :key="budget.id" class="hover:bg-gray-50">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ budget.name }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ budget.fiscal_year }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-500">{{ budget.lines_count }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ budget.total_amount }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
+                                <Link :href="route('accounting.budgets.edit', budget.id)" class="mr-3 text-indigo-600 hover:text-indigo-900">
+                                    Edit
+                                </Link>
+                                <button type="button" class="text-red-600 hover:text-red-900" @click="destroy(budget)">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <EmptyState
                 v-if="budgets.length === 0"
                 title="No budgets yet"

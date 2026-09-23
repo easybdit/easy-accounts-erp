@@ -83,24 +83,26 @@ function voidJournal() {
                 </div>
             </dl>
 
-            <table class="mt-6 min-w-full divide-y divide-gray-200">
-                <thead>
-                    <tr>
-                        <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Account</th>
-                        <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
-                        <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Debit</th>
-                        <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Credit</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <tr v-for="entry in journal.entries" :key="entry.id">
-                        <td class="px-2 py-2 text-sm text-gray-700">{{ entry.account.code }} — {{ entry.account.name }}</td>
-                        <td class="px-2 py-2 text-sm text-gray-500">{{ entry.description ?? '—' }}</td>
-                        <td class="px-2 py-2 text-right text-sm text-gray-700">{{ entry.debit }}</td>
-                        <td class="px-2 py-2 text-right text-sm text-gray-700">{{ entry.credit }}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="mt-6 overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Account</th>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
+                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Debit</th>
+                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Credit</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr v-for="entry in journal.entries" :key="entry.id">
+                            <td class="px-2 py-2 text-sm text-gray-700">{{ entry.account.code }} — {{ entry.account.name }}</td>
+                            <td class="px-2 py-2 text-sm text-gray-500">{{ entry.description ?? '—' }}</td>
+                            <td class="px-2 py-2 text-right text-sm text-gray-700">{{ entry.debit }}</td>
+                            <td class="px-2 py-2 text-right text-sm text-gray-700">{{ entry.credit }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
             <div class="mt-4 flex justify-end">
                 <Link :href="route('accounting.journals.index')" class="text-sm text-indigo-600 hover:text-indigo-900">

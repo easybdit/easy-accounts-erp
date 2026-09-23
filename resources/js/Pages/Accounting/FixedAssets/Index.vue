@@ -45,7 +45,9 @@ const statusVariant = {
         </template>
 
         <div class="mb-4">
+            <label for="status" class="sr-only">Filter by status</label>
             <select
+                id="status"
                 v-model="status"
                 class="block rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             >
@@ -57,34 +59,36 @@ const statusVariant = {
         </div>
 
         <Card>
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Purchase Date</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Cost</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Accumulated Dep.</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Book Value</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="asset in assets.data" :key="asset.id" class="hover:bg-gray-50">
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
-                            <Link :href="route('accounting.fixed-assets.show', asset.id)" class="text-indigo-600 hover:text-indigo-900">
-                                {{ asset.name }}
-                            </Link>
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ asset.purchase_date }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ asset.purchase_cost }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ asset.accumulated_depreciation }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-gray-800">{{ asset.book_value }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm">
-                            <Badge :variant="statusVariant[asset.status]" class="capitalize">{{ asset.status.replace('_', ' ') }}</Badge>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Purchase Date</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Cost</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Accumulated Dep.</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Book Value</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="asset in assets.data" :key="asset.id" class="hover:bg-gray-50">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
+                                <Link :href="route('accounting.fixed-assets.show', asset.id)" class="text-indigo-600 hover:text-indigo-900">
+                                    {{ asset.name }}
+                                </Link>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ asset.purchase_date }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ asset.purchase_cost }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ asset.accumulated_depreciation }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-gray-800">{{ asset.book_value }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm">
+                                <Badge :variant="statusVariant[asset.status]" class="capitalize">{{ asset.status.replace('_', ' ') }}</Badge>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <EmptyState v-if="assets.data.length === 0" title="No fixed assets found" description="Add a server or equipment purchase to start tracking depreciation." />
         </Card>
 

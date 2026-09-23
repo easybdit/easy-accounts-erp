@@ -67,50 +67,54 @@ const sections = [
 
         <div class="space-y-4">
             <div v-for="section in sections" :key="section.key" class="overflow-hidden rounded-lg bg-white shadow-sm">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">{{ section.label }}</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        <tr v-for="row in props[section.rowsKey]" :key="row.id">
-                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ row.code }} — {{ row.name }}</td>
-                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm" :class="row.amount.startsWith('-') ? 'text-red-700' : 'text-green-700'">
-                                {{ row.amount }}
-                            </td>
-                        </tr>
-                        <tr v-if="props[section.rowsKey].length === 0">
-                            <td colspan="2" class="px-4 py-4 text-center text-sm text-gray-400">No activity in this period.</td>
-                        </tr>
-                    </tbody>
-                    <tfoot class="bg-gray-50">
-                        <tr class="font-semibold">
-                            <td class="px-4 py-3 text-right text-sm text-gray-700">Net Cash from {{ section.label }}</td>
-                            <td class="px-4 py-3 text-right text-sm text-gray-900">{{ props[section.totalKey] }}</td>
-                        </tr>
-                    </tfoot>
-                </table>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">{{ section.label }}</th>
+                                <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <tr v-for="row in props[section.rowsKey]" :key="row.id">
+                                <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ row.code }} — {{ row.name }}</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-right text-sm" :class="row.amount.startsWith('-') ? 'text-red-700' : 'text-green-700'">
+                                    {{ row.amount }}
+                                </td>
+                            </tr>
+                            <tr v-if="props[section.rowsKey].length === 0">
+                                <td colspan="2" class="px-4 py-4 text-center text-sm text-gray-400">No activity in this period.</td>
+                            </tr>
+                        </tbody>
+                        <tfoot class="bg-gray-50">
+                            <tr class="font-semibold">
+                                <td class="px-4 py-3 text-right text-sm text-gray-700">Net Cash from {{ section.label }}</td>
+                                <td class="px-4 py-3 text-right text-sm text-gray-900">{{ props[section.totalKey] }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
 
             <div class="overflow-hidden rounded-lg bg-white shadow-sm">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <tbody class="divide-y divide-gray-200 text-sm">
-                        <tr class="font-semibold">
-                            <td class="px-4 py-3 text-gray-700">Net Increase / (Decrease) in Cash</td>
-                            <td class="px-4 py-3 text-right text-gray-900">{{ netChange }}</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3 text-gray-700">Cash at Beginning of Period</td>
-                            <td class="px-4 py-3 text-right text-gray-900">{{ openingCash }}</td>
-                        </tr>
-                        <tr class="font-semibold">
-                            <td class="px-4 py-3 text-gray-700">Cash at End of Period</td>
-                            <td class="px-4 py-3 text-right text-gray-900">{{ closingCash }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <tbody class="divide-y divide-gray-200 text-sm">
+                            <tr class="font-semibold">
+                                <td class="px-4 py-3 text-gray-700">Net Increase / (Decrease) in Cash</td>
+                                <td class="px-4 py-3 text-right text-gray-900">{{ netChange }}</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 text-gray-700">Cash at Beginning of Period</td>
+                                <td class="px-4 py-3 text-right text-gray-900">{{ openingCash }}</td>
+                            </tr>
+                            <tr class="font-semibold">
+                                <td class="px-4 py-3 text-gray-700">Cash at End of Period</td>
+                                <td class="px-4 py-3 text-right text-gray-900">{{ closingCash }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </AppLayout>

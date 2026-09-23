@@ -55,64 +55,74 @@ function destroy() {
         </template>
 
         <div class="mb-4 flex flex-col gap-3 sm:flex-row">
-            <input
-                v-model="search"
-                type="text"
-                placeholder="Search by code or name..."
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs"
-            />
-            <select
-                v-model="type"
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs"
-            >
-                <option value="">All types</option>
-                <option v-for="t in types" :key="t" :value="t">
-                    {{ t.charAt(0).toUpperCase() + t.slice(1) }}
-                </option>
-            </select>
+            <div>
+                <label for="search" class="sr-only">Search accounts</label>
+                <input
+                    id="search"
+                    v-model="search"
+                    type="text"
+                    placeholder="Search by code or name..."
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs"
+                />
+            </div>
+            <div>
+                <label for="type" class="sr-only">Filter by type</label>
+                <select
+                    id="type"
+                    v-model="type"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs"
+                >
+                    <option value="">All types</option>
+                    <option v-for="t in types" :key="t" :value="t">
+                        {{ t.charAt(0).toUpperCase() + t.slice(1) }}
+                    </option>
+                </select>
+            </div>
         </div>
 
         <Card>
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Code</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Type</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Parent</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Opening Balance</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                        <th class="px-4 py-3" />
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="account in accounts.data" :key="account.id" class="hover:bg-gray-50">
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ account.code }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ account.name }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm capitalize text-gray-700">{{ account.type }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-                            {{ account.parent ? `${account.parent.code} — ${account.parent.name}` : '—' }}
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ account.opening_balance }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm">
-                            <Badge :variant="account.is_active ? 'success' : 'neutral'">
-                                {{ account.is_active ? 'Active' : 'Inactive' }}
-                            </Badge>
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
-                            <Link
-                                :href="route('accounting.accounts.edit', account.id)"
-                                class="mr-3 text-indigo-600 hover:text-indigo-900"
-                            >
-                                Edit
-                            </Link>
-                            <button class="text-red-600 hover:text-red-900" @click="confirmDelete(account.id)">
-                                Delete
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Code</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Type</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Parent</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Opening Balance</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                            <th class="px-4 py-3" />
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="account in accounts.data" :key="account.id" class="hover:bg-gray-50">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ account.code }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ account.name }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm capitalize text-gray-700">{{ account.type }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                                {{ account.parent ? `${account.parent.code} — ${account.parent.name}` : '—' }}
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ account.opening_balance }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm">
+                                <Badge :variant="account.is_active ? 'success' : 'neutral'">
+                                    {{ account.is_active ? 'Active' : 'Inactive' }}
+                                </Badge>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
+                                <Link
+                                    :href="route('accounting.accounts.edit', account.id)"
+                                    class="mr-3 text-indigo-600 hover:text-indigo-900"
+                                >
+                                    Edit
+                                </Link>
+                                <button class="text-red-600 hover:text-red-900" @click="confirmDelete(account.id)">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <EmptyState v-if="accounts.data.length === 0" title="No accounts found" description="Get started by creating your first account." />
         </Card>
 

@@ -130,23 +130,25 @@ function dispose() {
             </dl>
 
             <h3 class="mt-6 text-xs font-medium uppercase text-gray-400">Depreciation History</h3>
-            <table class="mt-2 min-w-full divide-y divide-gray-200">
-                <thead>
-                    <tr>
-                        <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Period</th>
-                        <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <tr v-for="entry in asset.depreciations" :key="entry.id">
-                        <td class="px-2 py-2 text-sm text-gray-700">{{ entry.period_date }}</td>
-                        <td class="px-2 py-2 text-right text-sm text-gray-700">{{ entry.amount }}</td>
-                    </tr>
-                    <tr v-if="asset.depreciations.length === 0">
-                        <td colspan="2" class="px-2 py-4 text-center text-sm text-gray-400">No depreciation posted yet.</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="mt-2 overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Period</th>
+                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr v-for="entry in asset.depreciations" :key="entry.id">
+                            <td class="px-2 py-2 text-sm text-gray-700">{{ entry.period_date }}</td>
+                            <td class="px-2 py-2 text-right text-sm text-gray-700">{{ entry.amount }}</td>
+                        </tr>
+                        <tr v-if="asset.depreciations.length === 0">
+                            <td colspan="2" class="px-2 py-4 text-center text-sm text-gray-400">No depreciation posted yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </Card>
 
         <Modal :show="confirmingDispose" @close="confirmingDispose = false">

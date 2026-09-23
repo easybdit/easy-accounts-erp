@@ -39,7 +39,9 @@ watch(productId, (value) => {
         </template>
 
         <div class="mb-4">
+            <label for="product_id" class="sr-only">Filter by product</label>
             <select
+                id="product_id"
                 v-model="productId"
                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs"
             >
@@ -51,30 +53,32 @@ watch(productId, (value) => {
         </div>
 
         <Card>
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Product</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Reason</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Quantity</th>
-                        <th class="px-4 py-3" />
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="movement in movements.data" :key="movement.id" class="hover:bg-gray-50">
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ movement.date }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ movement.product.sku }} — {{ movement.product.name }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm capitalize text-gray-500">{{ movement.reason }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ movement.quantity }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
-                            <Link :href="route('inventory.stock-movements.show', movement.id)" class="text-indigo-600 hover:text-indigo-900">
-                                View
-                            </Link>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Product</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Reason</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Quantity</th>
+                            <th class="px-4 py-3" />
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="movement in movements.data" :key="movement.id" class="hover:bg-gray-50">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ movement.date }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ movement.product.sku }} — {{ movement.product.name }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm capitalize text-gray-500">{{ movement.reason }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ movement.quantity }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
+                                <Link :href="route('inventory.stock-movements.show', movement.id)" class="text-indigo-600 hover:text-indigo-900">
+                                    View
+                                </Link>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <EmptyState v-if="movements.data.length === 0" title="No stock movements found" description="Adjust stock to see movement history here." />
         </Card>
 

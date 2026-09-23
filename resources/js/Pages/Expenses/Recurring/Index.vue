@@ -31,56 +31,58 @@ function generate(template) {
         </template>
 
         <Card>
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Category</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Payee</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Next Auto-Generation</th>
-                        <th class="px-4 py-3" />
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="template in templates" :key="template.id" class="hover:bg-gray-50">
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ template.name }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ template.category.name }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ template.payee }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ template.amount }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm">
-                            <Badge :variant="template.is_active ? 'success' : 'neutral'">
-                                {{ template.is_active ? 'Active' : 'Inactive' }}
-                            </Badge>
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-                            <template v-if="template.next_generation_date">{{ template.next_generation_date }} <span class="capitalize">({{ template.frequency }})</span></template>
-                            <template v-else>Manual only</template>
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
-                            <button
-                                type="button"
-                                class="mr-3 font-medium text-indigo-600 hover:text-indigo-900"
-                                @click="generate(template)"
-                            >
-                                Generate Now
-                            </button>
-                            <Link :href="route('expenses.recurring.edit', template.id)" class="mr-3 text-indigo-600 hover:text-indigo-900">
-                                Edit
-                            </Link>
-                            <Link
-                                :href="route('expenses.recurring.destroy', template.id)"
-                                method="delete"
-                                as="button"
-                                class="text-red-600 hover:text-red-900"
-                            >
-                                Delete
-                            </Link>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Category</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Payee</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Next Auto-Generation</th>
+                            <th class="px-4 py-3" />
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="template in templates" :key="template.id" class="hover:bg-gray-50">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ template.name }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ template.category.name }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ template.payee }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ template.amount }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm">
+                                <Badge :variant="template.is_active ? 'success' : 'neutral'">
+                                    {{ template.is_active ? 'Active' : 'Inactive' }}
+                                </Badge>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                                <template v-if="template.next_generation_date">{{ template.next_generation_date }} <span class="capitalize">({{ template.frequency }})</span></template>
+                                <template v-else>Manual only</template>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
+                                <button
+                                    type="button"
+                                    class="mr-3 font-medium text-indigo-600 hover:text-indigo-900"
+                                    @click="generate(template)"
+                                >
+                                    Generate Now
+                                </button>
+                                <Link :href="route('expenses.recurring.edit', template.id)" class="mr-3 text-indigo-600 hover:text-indigo-900">
+                                    Edit
+                                </Link>
+                                <Link
+                                    :href="route('expenses.recurring.destroy', template.id)"
+                                    method="delete"
+                                    as="button"
+                                    class="text-red-600 hover:text-red-900"
+                                >
+                                    Delete
+                                </Link>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <EmptyState
                 v-if="templates.length === 0"
                 title="No recurring expense templates"

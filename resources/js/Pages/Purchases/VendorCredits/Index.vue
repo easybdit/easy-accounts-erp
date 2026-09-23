@@ -40,51 +40,61 @@ watch([search, status], () => {
         </template>
 
         <div class="mb-4 flex flex-wrap gap-3">
-            <input
-                v-model="search"
-                type="text"
-                placeholder="Search by vendor credit # or vendor..."
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs"
-            />
-            <select
-                v-model="status"
-                class="block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            >
-                <option value="">All statuses</option>
-                <option value="draft">Draft</option>
-                <option value="posted">Posted</option>
-            </select>
+            <div>
+                <label for="search" class="sr-only">Search vendor credits</label>
+                <input
+                    id="search"
+                    v-model="search"
+                    type="text"
+                    placeholder="Search by vendor credit # or vendor..."
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs"
+                />
+            </div>
+            <div>
+                <label for="status" class="sr-only">Filter by status</label>
+                <select
+                    id="status"
+                    v-model="status"
+                    class="block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                >
+                    <option value="">All statuses</option>
+                    <option value="draft">Draft</option>
+                    <option value="posted">Posted</option>
+                </select>
+            </div>
         </div>
 
         <Card>
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Vendor Credit #</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Vendor</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Total</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="vendorCredit in vendorCredits.data" :key="vendorCredit.id" class="hover:bg-gray-50">
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
-                            <Link :href="route('purchases.vendor-credits.show', vendorCredit.id)" class="text-indigo-600 hover:text-indigo-900">
-                                {{ vendorCredit.vendor_credit_number }}
-                            </Link>
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ vendorCredit.vendor.name }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ vendorCredit.vendor_credit_date }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ vendorCredit.total }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm">
-                            <Badge :variant="vendorCredit.status === 'posted' ? 'success' : 'warning'" class="capitalize">
-                                {{ vendorCredit.status }}
-                            </Badge>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Vendor Credit #</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Vendor</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Total</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="vendorCredit in vendorCredits.data" :key="vendorCredit.id" class="hover:bg-gray-50">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
+                                <Link :href="route('purchases.vendor-credits.show', vendorCredit.id)" class="text-indigo-600 hover:text-indigo-900">
+                                    {{ vendorCredit.vendor_credit_number }}
+                                </Link>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ vendorCredit.vendor.name }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ vendorCredit.vendor_credit_date }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ vendorCredit.total }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm">
+                                <Badge :variant="vendorCredit.status === 'posted' ? 'success' : 'warning'" class="capitalize">
+                                    {{ vendorCredit.status }}
+                                </Badge>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <EmptyState v-if="vendorCredits.data.length === 0" title="No vendor credits found" description="Record a vendor credit to reduce what you owe a vendor." />
         </Card>
 

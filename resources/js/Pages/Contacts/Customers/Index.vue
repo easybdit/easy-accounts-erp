@@ -39,7 +39,9 @@ watch(search, (value) => {
         </template>
 
         <div class="mb-4">
+            <label for="search" class="sr-only">Search customers</label>
             <input
+                id="search"
                 v-model="search"
                 type="text"
                 placeholder="Search by name or email..."
@@ -48,48 +50,50 @@ watch(search, (value) => {
         </div>
 
         <Card>
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Email</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Phone</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Current Balance</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                        <th class="px-4 py-3" />
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="customer in customers.data" :key="customer.id" class="hover:bg-gray-50">
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
-                            <Link :href="route('customers.show', customer.id)" class="text-indigo-600 hover:text-indigo-900">
-                                {{ customer.name }}
-                            </Link>
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ customer.email ?? '—' }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ customer.phone ?? '—' }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ customer.current_balance }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm">
-                            <Badge :variant="customer.is_active ? 'success' : 'neutral'">
-                                {{ customer.is_active ? 'Active' : 'Inactive' }}
-                            </Badge>
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
-                            <Link :href="route('customers.edit', customer.id)" class="mr-3 text-indigo-600 hover:text-indigo-900">
-                                Edit
-                            </Link>
-                            <Link
-                                :href="route('customers.destroy', customer.id)"
-                                method="delete"
-                                as="button"
-                                class="text-red-600 hover:text-red-900"
-                            >
-                                Delete
-                            </Link>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Email</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Phone</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Current Balance</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                            <th class="px-4 py-3" />
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="customer in customers.data" :key="customer.id" class="hover:bg-gray-50">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
+                                <Link :href="route('customers.show', customer.id)" class="text-indigo-600 hover:text-indigo-900">
+                                    {{ customer.name }}
+                                </Link>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ customer.email ?? '—' }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ customer.phone ?? '—' }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ customer.current_balance }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm">
+                                <Badge :variant="customer.is_active ? 'success' : 'neutral'">
+                                    {{ customer.is_active ? 'Active' : 'Inactive' }}
+                                </Badge>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
+                                <Link :href="route('customers.edit', customer.id)" class="mr-3 text-indigo-600 hover:text-indigo-900">
+                                    Edit
+                                </Link>
+                                <Link
+                                    :href="route('customers.destroy', customer.id)"
+                                    method="delete"
+                                    as="button"
+                                    class="text-red-600 hover:text-red-900"
+                                >
+                                    Delete
+                                </Link>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <EmptyState v-if="customers.data.length === 0" title="No customers found" description="Add a customer to start creating invoices." />
         </Card>
 

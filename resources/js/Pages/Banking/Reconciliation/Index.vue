@@ -96,30 +96,32 @@ function submit() {
                         </div>
                     </div>
 
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-3 py-2" />
-                                <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                                <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Debit</th>
-                                <th class="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Credit</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            <tr v-for="entry in entries" :key="entry.id" class="hover:bg-gray-50">
-                                <td class="px-3 py-2">
-                                    <input v-model="form.entry_ids" type="checkbox" :value="entry.id" class="rounded border-gray-300" />
-                                </td>
-                                <td class="whitespace-nowrap px-3 py-2 text-sm text-gray-700">{{ entry.date }}</td>
-                                <td class="px-3 py-2 text-sm text-gray-500">
-                                    {{ entry.reference ?? entry.description ?? '—' }}
-                                </td>
-                                <td class="whitespace-nowrap px-3 py-2 text-right text-sm text-gray-700">{{ entry.debit }}</td>
-                                <td class="whitespace-nowrap px-3 py-2 text-right text-sm text-gray-700">{{ entry.credit }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 py-2" />
+                                    <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Debit</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Credit</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr v-for="entry in entries" :key="entry.id" class="hover:bg-gray-50">
+                                    <td class="px-3 py-2">
+                                        <input v-model="form.entry_ids" type="checkbox" :value="entry.id" class="rounded border-gray-300" />
+                                    </td>
+                                    <td class="whitespace-nowrap px-3 py-2 text-sm text-gray-700">{{ entry.date }}</td>
+                                    <td class="px-3 py-2 text-sm text-gray-500">
+                                        {{ entry.reference ?? entry.description ?? '—' }}
+                                    </td>
+                                    <td class="whitespace-nowrap px-3 py-2 text-right text-sm text-gray-700">{{ entry.debit }}</td>
+                                    <td class="whitespace-nowrap px-3 py-2 text-right text-sm text-gray-700">{{ entry.credit }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                     <EmptyState
                         v-if="entries.length === 0"
                         title="Nothing to reconcile"
@@ -129,22 +131,24 @@ function submit() {
 
                 <Card v-if="history.length" padded class="mt-6">
                     <h2 class="mb-3 text-sm font-semibold text-gray-700">Reconciliation History</h2>
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead>
-                            <tr>
-                                <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Statement Date</th>
-                                <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Statement Balance</th>
-                                <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Entries</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            <tr v-for="record in history" :key="record.id">
-                                <td class="px-2 py-2 text-sm text-gray-700">{{ record.statement_date }}</td>
-                                <td class="px-2 py-2 text-right text-sm text-gray-700">{{ record.statement_balance }}</td>
-                                <td class="px-2 py-2 text-right text-sm text-gray-500">{{ record.entries_count }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr>
+                                    <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Statement Date</th>
+                                    <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Statement Balance</th>
+                                    <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Entries</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr v-for="record in history" :key="record.id">
+                                    <td class="px-2 py-2 text-sm text-gray-700">{{ record.statement_date }}</td>
+                                    <td class="px-2 py-2 text-right text-sm text-gray-700">{{ record.statement_balance }}</td>
+                                    <td class="px-2 py-2 text-right text-sm text-gray-500">{{ record.entries_count }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </Card>
             </div>
 

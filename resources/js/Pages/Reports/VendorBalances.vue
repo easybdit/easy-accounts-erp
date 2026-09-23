@@ -23,31 +23,33 @@ const props = defineProps({
         </template>
 
         <div class="overflow-hidden rounded-lg bg-white shadow-sm">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Vendor</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Balance</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="row in rows" :key="row.id">
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
-                            <Link :href="route('vendors.show', row.id)" class="text-indigo-600 hover:text-indigo-900">{{ row.name }}</Link>
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-gray-800">{{ row.balance }}</td>
-                    </tr>
-                    <tr v-if="rows.length === 0">
-                        <td colspan="2" class="px-4 py-6 text-center text-sm text-gray-500">No vendors found.</td>
-                    </tr>
-                </tbody>
-                <tfoot class="bg-gray-50">
-                    <tr class="font-semibold">
-                        <td class="px-4 py-3 text-right text-sm text-gray-700">Total</td>
-                        <td class="px-4 py-3 text-right text-sm text-gray-900">{{ total }}</td>
-                    </tr>
-                </tfoot>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Vendor</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="row in rows" :key="row.id">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
+                                <Link :href="route('vendors.show', row.id)" class="text-indigo-600 hover:text-indigo-900">{{ row.name }}</Link>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-gray-800">{{ row.balance }}</td>
+                        </tr>
+                        <tr v-if="rows.length === 0">
+                            <td colspan="2" class="px-4 py-6 text-center text-sm text-gray-500">No vendors found.</td>
+                        </tr>
+                    </tbody>
+                    <tfoot class="bg-gray-50">
+                        <tr class="font-semibold">
+                            <td class="px-4 py-3 text-right text-sm text-gray-700">Total</td>
+                            <td class="px-4 py-3 text-right text-sm text-gray-900">{{ total }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
     </AppLayout>
 </template>

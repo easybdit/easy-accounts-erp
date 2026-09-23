@@ -84,37 +84,39 @@ const props = defineProps({
             <div class="border-b border-gray-100 px-4 py-3">
                 <h2 class="text-sm font-semibold text-gray-700">Stock Movements</h2>
             </div>
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Reason</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Reference</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Quantity</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Balance</th>
-                        <th class="px-4 py-3" />
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="movement in movements" :key="movement.id">
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ movement.date }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm capitalize text-gray-500">{{ movement.reason }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ movement.reference ?? '—' }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ movement.quantity }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-gray-800">{{ movement.running_balance }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
-                            <Link :href="route('inventory.stock-movements.show', movement.id)" class="text-indigo-600 hover:text-indigo-900">
-                                View
-                            </Link>
-                        </td>
-                    </tr>
-                    <tr v-if="movements.length === 0">
-                        <td colspan="6" class="px-4 py-6 text-center text-sm text-gray-500">
-                            No stock movements yet.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Reason</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Reference</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Quantity</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Balance</th>
+                            <th class="px-4 py-3" />
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="movement in movements" :key="movement.id">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ movement.date }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm capitalize text-gray-500">{{ movement.reason }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ movement.reference ?? '—' }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ movement.quantity }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-gray-800">{{ movement.running_balance }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
+                                <Link :href="route('inventory.stock-movements.show', movement.id)" class="text-indigo-600 hover:text-indigo-900">
+                                    View
+                                </Link>
+                            </td>
+                        </tr>
+                        <tr v-if="movements.length === 0">
+                            <td colspan="6" class="px-4 py-6 text-center text-sm text-gray-500">
+                                No stock movements yet.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </AppLayout>
 </template>

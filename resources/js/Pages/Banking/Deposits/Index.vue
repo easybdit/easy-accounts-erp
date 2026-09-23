@@ -62,32 +62,34 @@ function submit() {
         <Card padded class="mb-6">
             <h2 class="mb-3 text-sm font-semibold text-gray-700">Payments Awaiting Deposit</h2>
 
-            <table v-if="undepositedPayments.length" class="min-w-full divide-y divide-gray-200">
-                <thead>
-                    <tr>
-                        <th class="px-2 py-2">
-                            <input type="checkbox" class="rounded border-gray-300" @change="toggleAll" />
-                        </th>
-                        <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Payment #</th>
-                        <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Customer</th>
-                        <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                        <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Method</th>
-                        <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <tr v-for="payment in undepositedPayments" :key="payment.id">
-                        <td class="px-2 py-2">
-                            <input v-model="selected" type="checkbox" :value="payment.id" class="rounded border-gray-300" />
-                        </td>
-                        <td class="px-2 py-2 text-sm text-gray-700">{{ payment.payment_number }}</td>
-                        <td class="px-2 py-2 text-sm text-gray-700">{{ payment.customer.name }}</td>
-                        <td class="px-2 py-2 text-sm text-gray-500">{{ payment.payment_date }}</td>
-                        <td class="px-2 py-2 text-sm text-gray-500">{{ payment.method ?? '—' }}</td>
-                        <td class="px-2 py-2 text-right text-sm text-gray-700">{{ payment.amount }}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div v-if="undepositedPayments.length" class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-2 py-2">
+                                <input type="checkbox" class="rounded border-gray-300" @change="toggleAll" />
+                            </th>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Payment #</th>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Customer</th>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Method</th>
+                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr v-for="payment in undepositedPayments" :key="payment.id">
+                            <td class="px-2 py-2">
+                                <input v-model="selected" type="checkbox" :value="payment.id" class="rounded border-gray-300" />
+                            </td>
+                            <td class="px-2 py-2 text-sm text-gray-700">{{ payment.payment_number }}</td>
+                            <td class="px-2 py-2 text-sm text-gray-700">{{ payment.customer.name }}</td>
+                            <td class="px-2 py-2 text-sm text-gray-500">{{ payment.payment_date }}</td>
+                            <td class="px-2 py-2 text-sm text-gray-500">{{ payment.method ?? '—' }}</td>
+                            <td class="px-2 py-2 text-right text-sm text-gray-700">{{ payment.amount }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <EmptyState
                 v-else
                 title="Nothing to deposit"
@@ -136,30 +138,32 @@ function submit() {
 
         <Card>
             <h2 class="px-4 pt-4 text-sm font-semibold text-gray-700">Recent Deposits</h2>
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Deposit #</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Bank Account</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="deposit in deposits.data" :key="deposit.id" class="hover:bg-gray-50">
-                        <td class="whitespace-nowrap px-4 py-3 text-sm">
-                            <Link :href="route('banking.deposits.show', deposit.id)" class="text-indigo-600 hover:text-indigo-900">
-                                {{ deposit.deposit_number }}
-                            </Link>
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-                            {{ deposit.bank_account.code }} — {{ deposit.bank_account.name }}
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ deposit.deposit_date }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ deposit.amount }}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Deposit #</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Bank Account</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="deposit in deposits.data" :key="deposit.id" class="hover:bg-gray-50">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm">
+                                <Link :href="route('banking.deposits.show', deposit.id)" class="text-indigo-600 hover:text-indigo-900">
+                                    {{ deposit.deposit_number }}
+                                </Link>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                                {{ deposit.bank_account.code }} — {{ deposit.bank_account.name }}
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ deposit.deposit_date }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ deposit.amount }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <EmptyState v-if="deposits.data.length === 0" title="No deposits yet" />
         </Card>
     </AppLayout>

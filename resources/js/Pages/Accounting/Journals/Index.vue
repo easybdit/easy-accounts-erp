@@ -38,7 +38,9 @@ watch(search, (value) => {
         </template>
 
         <div class="mb-4">
+            <label for="search" class="sr-only">Search journal entries</label>
             <input
+                id="search"
                 v-model="search"
                 type="text"
                 placeholder="Search by reference or description..."
@@ -47,32 +49,34 @@ watch(search, (value) => {
         </div>
 
         <Card>
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Reference</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Total Debit</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Total Credit</th>
-                        <th class="px-4 py-3" />
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="journal in journals.data" :key="journal.id" class="hover:bg-gray-50">
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ journal.date }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ journal.reference ?? '—' }}</td>
-                        <td class="px-4 py-3 text-sm text-gray-500">{{ journal.description ?? '—' }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ journal.total_debit }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ journal.total_credit }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
-                            <Link :href="route('accounting.journals.show', journal.id)" class="text-indigo-600 hover:text-indigo-900">
-                                View
-                            </Link>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Reference</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Total Debit</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Total Credit</th>
+                            <th class="px-4 py-3" />
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="journal in journals.data" :key="journal.id" class="hover:bg-gray-50">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ journal.date }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ journal.reference ?? '—' }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-500">{{ journal.description ?? '—' }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ journal.total_debit }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ journal.total_credit }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
+                                <Link :href="route('accounting.journals.show', journal.id)" class="text-indigo-600 hover:text-indigo-900">
+                                    View
+                                </Link>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <EmptyState v-if="journals.data.length === 0" title="No journal entries found" description="Post your first journal entry to see it here." />
         </Card>
 

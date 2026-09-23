@@ -93,45 +93,47 @@ watch(accountId, apply);
                 </span>
             </div>
 
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Reference</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Debit</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Credit</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Balance</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="entry in ledger.entries" :key="entry.id">
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ entry.date }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
-                            <Link :href="route('accounting.journals.show', entry.journal_id)" class="text-indigo-600 hover:text-indigo-900">
-                                {{ entry.reference ?? `#${entry.journal_id}` }}
-                            </Link>
-                        </td>
-                        <td class="px-4 py-3 text-sm text-gray-500">{{ entry.description ?? '—' }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ entry.debit }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ entry.credit }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-gray-800">{{ entry.running_balance }}</td>
-                    </tr>
-                    <tr v-if="ledger.entries.length === 0">
-                        <td colspan="6" class="px-4 py-6 text-center text-sm text-gray-500">
-                            No transactions in this period.
-                        </td>
-                    </tr>
-                </tbody>
-                <tfoot class="bg-gray-50">
-                    <tr>
-                        <td colspan="5" class="px-4 py-3 text-right text-sm font-medium text-gray-700">Ending Balance</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                            {{ ledger.ending_balance }}
-                        </td>
-                    </tr>
-                </tfoot>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Reference</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Debit</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Credit</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="entry in ledger.entries" :key="entry.id">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ entry.date }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
+                                <Link :href="route('accounting.journals.show', entry.journal_id)" class="text-indigo-600 hover:text-indigo-900">
+                                    {{ entry.reference ?? `#${entry.journal_id}` }}
+                                </Link>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-500">{{ entry.description ?? '—' }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ entry.debit }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ entry.credit }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-gray-800">{{ entry.running_balance }}</td>
+                        </tr>
+                        <tr v-if="ledger.entries.length === 0">
+                            <td colspan="6" class="px-4 py-6 text-center text-sm text-gray-500">
+                                No transactions in this period.
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot class="bg-gray-50">
+                        <tr>
+                            <td colspan="5" class="px-4 py-3 text-right text-sm font-medium text-gray-700">Ending Balance</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                                {{ ledger.ending_balance }}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
     </AppLayout>
 </template>

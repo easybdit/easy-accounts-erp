@@ -38,7 +38,9 @@ watch(search, (value) => {
         </template>
 
         <div class="mb-4">
+            <label for="search" class="sr-only">Search products</label>
             <input
+                id="search"
                 v-model="search"
                 type="text"
                 placeholder="Search by SKU or name..."
@@ -47,43 +49,45 @@ watch(search, (value) => {
         </div>
 
         <Card>
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">SKU</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Category</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Type</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Selling Price</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Stock</th>
-                        <th class="px-4 py-3" />
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="product in products.data" :key="product.id" class="hover:bg-gray-50">
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ product.sku }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
-                            <Link :href="route('inventory.products.show', product.id)" class="text-indigo-600 hover:text-indigo-900">
-                                {{ product.name }}
-                            </Link>
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ product.category }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm capitalize text-gray-500">{{ product.type }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ product.selling_price }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
-                            <span v-if="product.current_stock !== null" :class="product.is_low_stock ? 'font-semibold text-red-600' : 'text-gray-700'">
-                                {{ product.current_stock }} {{ product.unit }}
-                            </span>
-                            <span v-else class="text-gray-400">—</span>
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
-                            <Link :href="route('inventory.products.edit', product.id)" class="text-indigo-600 hover:text-indigo-900">
-                                Edit
-                            </Link>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">SKU</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Category</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Type</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Selling Price</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Stock</th>
+                            <th class="px-4 py-3" />
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="product in products.data" :key="product.id" class="hover:bg-gray-50">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ product.sku }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
+                                <Link :href="route('inventory.products.show', product.id)" class="text-indigo-600 hover:text-indigo-900">
+                                    {{ product.name }}
+                                </Link>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ product.category }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm capitalize text-gray-500">{{ product.type }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ product.selling_price }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
+                                <span v-if="product.current_stock !== null" :class="product.is_low_stock ? 'font-semibold text-red-600' : 'text-gray-700'">
+                                    {{ product.current_stock }} {{ product.unit }}
+                                </span>
+                                <span v-else class="text-gray-400">—</span>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
+                                <Link :href="route('inventory.products.edit', product.id)" class="text-indigo-600 hover:text-indigo-900">
+                                    Edit
+                                </Link>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <EmptyState v-if="products.data.length === 0" title="No products found" description="Add a product to start tracking sales and stock." />
         </Card>
 

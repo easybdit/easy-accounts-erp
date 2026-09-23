@@ -137,34 +137,36 @@ function destroyAttachment() {
                 </div>
             </dl>
 
-            <table class="mt-6 min-w-full divide-y divide-gray-200">
-                <thead>
-                    <tr>
-                        <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Account</th>
-                        <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
-                        <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Qty</th>
-                        <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Unit Price</th>
-                        <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Discount</th>
-                        <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tax</th>
-                        <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Line Total</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <tr v-for="item in bill.items" :key="item.id">
-                        <td class="px-2 py-2 text-sm text-gray-700">{{ item.account.code }} — {{ item.account.name }}</td>
-                        <td class="px-2 py-2 text-sm text-gray-500">{{ item.description }}</td>
-                        <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.quantity }}</td>
-                        <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.unit_price }}</td>
-                        <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.discount }}</td>
-                        <td class="px-2 py-2 text-sm text-gray-500">
-                            <span v-if="item.tax_rate">{{ item.tax_rate.name }} ({{ item.tax_amount }})</span>
-                            <span v-else>—</span>
-                            <span v-if="item.tax_rate_2" class="block">{{ item.tax_rate_2.name }} ({{ item.tax_amount_2 }})</span>
-                        </td>
-                        <td class="px-2 py-2 text-right text-sm font-medium text-gray-800">{{ item.line_total }}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="mt-6 overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Account</th>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
+                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Qty</th>
+                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Unit Price</th>
+                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Discount</th>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tax</th>
+                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Line Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr v-for="item in bill.items" :key="item.id">
+                            <td class="px-2 py-2 text-sm text-gray-700">{{ item.account.code }} — {{ item.account.name }}</td>
+                            <td class="px-2 py-2 text-sm text-gray-500">{{ item.description }}</td>
+                            <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.quantity }}</td>
+                            <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.unit_price }}</td>
+                            <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.discount }}</td>
+                            <td class="px-2 py-2 text-sm text-gray-500">
+                                <span v-if="item.tax_rate">{{ item.tax_rate.name }} ({{ item.tax_amount }})</span>
+                                <span v-else>—</span>
+                                <span v-if="item.tax_rate_2" class="block">{{ item.tax_rate_2.name }} ({{ item.tax_amount_2 }})</span>
+                            </td>
+                            <td class="px-2 py-2 text-right text-sm font-medium text-gray-800">{{ item.line_total }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
             <div class="mt-4 flex justify-end">
                 <dl class="w-64 space-y-1 text-sm">

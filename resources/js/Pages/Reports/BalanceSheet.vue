@@ -48,56 +48,62 @@ function apply() {
 
         <div class="rounded-lg bg-white p-6 shadow-sm">
             <h2 class="mb-2 text-sm font-semibold text-gray-700">Assets</h2>
-            <table class="mb-4 min-w-full divide-y divide-gray-100">
-                <tbody class="divide-y divide-gray-100">
-                    <tr v-for="row in assets" :key="row.id">
-                        <td class="py-2 text-sm text-gray-700">{{ row.code }} — {{ row.name }}</td>
-                        <td class="py-2 text-right text-sm text-gray-700">{{ row.balance }}</td>
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <tr class="font-medium">
-                        <td class="py-2 text-sm text-gray-700">Total Assets</td>
-                        <td class="py-2 text-right text-sm text-gray-900">{{ totalAssets }}</td>
-                    </tr>
-                </tfoot>
-            </table>
+            <div class="mb-4 overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-100">
+                    <tbody class="divide-y divide-gray-100">
+                        <tr v-for="row in assets" :key="row.id">
+                            <td class="py-2 text-sm text-gray-700">{{ row.code }} — {{ row.name }}</td>
+                            <td class="py-2 text-right text-sm text-gray-700">{{ row.balance }}</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="font-medium">
+                            <td class="py-2 text-sm text-gray-700">Total Assets</td>
+                            <td class="py-2 text-right text-sm text-gray-900">{{ totalAssets }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
 
             <h2 class="mb-2 text-sm font-semibold text-gray-700">Liabilities</h2>
-            <table class="mb-4 min-w-full divide-y divide-gray-100">
-                <tbody class="divide-y divide-gray-100">
-                    <tr v-for="row in liabilities" :key="row.id">
-                        <td class="py-2 text-sm text-gray-700">{{ row.code }} — {{ row.name }}</td>
-                        <td class="py-2 text-right text-sm text-gray-700">{{ row.balance }}</td>
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <tr class="font-medium">
-                        <td class="py-2 text-sm text-gray-700">Total Liabilities</td>
-                        <td class="py-2 text-right text-sm text-gray-900">{{ totalLiabilities }}</td>
-                    </tr>
-                </tfoot>
-            </table>
+            <div class="mb-4 overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-100">
+                    <tbody class="divide-y divide-gray-100">
+                        <tr v-for="row in liabilities" :key="row.id">
+                            <td class="py-2 text-sm text-gray-700">{{ row.code }} — {{ row.name }}</td>
+                            <td class="py-2 text-right text-sm text-gray-700">{{ row.balance }}</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="font-medium">
+                            <td class="py-2 text-sm text-gray-700">Total Liabilities</td>
+                            <td class="py-2 text-right text-sm text-gray-900">{{ totalLiabilities }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
 
             <h2 class="mb-2 text-sm font-semibold text-gray-700">Equity</h2>
-            <table class="mb-4 min-w-full divide-y divide-gray-100">
-                <tbody class="divide-y divide-gray-100">
-                    <tr v-for="row in equity" :key="row.id">
-                        <td class="py-2 text-sm text-gray-700">{{ row.code }} — {{ row.name }}</td>
-                        <td class="py-2 text-right text-sm text-gray-700">{{ row.balance }}</td>
-                    </tr>
-                    <tr>
-                        <td class="py-2 text-sm italic text-gray-500">Current Period Earnings</td>
-                        <td class="py-2 text-right text-sm italic text-gray-500">{{ currentEarnings }}</td>
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <tr class="font-medium">
-                        <td class="py-2 text-sm text-gray-700">Total Equity</td>
-                        <td class="py-2 text-right text-sm text-gray-900">{{ totalEquity }}</td>
-                    </tr>
-                </tfoot>
-            </table>
+            <div class="mb-4 overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-100">
+                    <tbody class="divide-y divide-gray-100">
+                        <tr v-for="row in equity" :key="row.id">
+                            <td class="py-2 text-sm text-gray-700">{{ row.code }} — {{ row.name }}</td>
+                            <td class="py-2 text-right text-sm text-gray-700">{{ row.balance }}</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 text-sm italic text-gray-500">Current Period Earnings</td>
+                            <td class="py-2 text-right text-sm italic text-gray-500">{{ currentEarnings }}</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="font-medium">
+                            <td class="py-2 text-sm text-gray-700">Total Equity</td>
+                            <td class="py-2 text-right text-sm text-gray-900">{{ totalEquity }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
 
             <div class="flex justify-between border-t border-gray-200 pt-4 text-base font-semibold">
                 <span>Total Liabilities + Equity</span>

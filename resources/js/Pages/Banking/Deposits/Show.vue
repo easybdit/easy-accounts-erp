@@ -56,28 +56,30 @@ defineProps({
             </dl>
 
             <h3 class="mt-6 text-xs font-medium uppercase text-gray-400">Payments in this Deposit</h3>
-            <table class="mt-2 min-w-full divide-y divide-gray-200">
-                <thead>
-                    <tr>
-                        <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Payment #</th>
-                        <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Customer</th>
-                        <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                        <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <tr v-for="payment in deposit.payments" :key="payment.id">
-                        <td class="px-2 py-2 text-sm text-gray-700">
-                            <Link :href="route('sales.payments.show', payment.id)" class="text-indigo-600 hover:text-indigo-900">
-                                {{ payment.payment_number }}
-                            </Link>
-                        </td>
-                        <td class="px-2 py-2 text-sm text-gray-700">{{ payment.customer.name }}</td>
-                        <td class="px-2 py-2 text-sm text-gray-500">{{ payment.payment_date }}</td>
-                        <td class="px-2 py-2 text-right text-sm text-gray-700">{{ payment.amount }}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="mt-2 overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Payment #</th>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Customer</th>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
+                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr v-for="payment in deposit.payments" :key="payment.id">
+                            <td class="px-2 py-2 text-sm text-gray-700">
+                                <Link :href="route('sales.payments.show', payment.id)" class="text-indigo-600 hover:text-indigo-900">
+                                    {{ payment.payment_number }}
+                                </Link>
+                            </td>
+                            <td class="px-2 py-2 text-sm text-gray-700">{{ payment.customer.name }}</td>
+                            <td class="px-2 py-2 text-sm text-gray-500">{{ payment.payment_date }}</td>
+                            <td class="px-2 py-2 text-right text-sm text-gray-700">{{ payment.amount }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </Card>
     </AppLayout>
 </template>

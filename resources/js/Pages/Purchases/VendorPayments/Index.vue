@@ -38,7 +38,9 @@ watch(search, (value) => {
         </template>
 
         <div class="mb-4">
+            <label for="search" class="sr-only">Search vendor payments</label>
             <input
+                id="search"
                 v-model="search"
                 type="text"
                 placeholder="Search by payment #, reference, or vendor..."
@@ -47,30 +49,32 @@ watch(search, (value) => {
         </div>
 
         <Card>
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Payment #</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Vendor</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Method</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="payment in payments.data" :key="payment.id" class="hover:bg-gray-50">
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
-                            <Link :href="route('purchases.vendor-payments.show', payment.id)" class="text-indigo-600 hover:text-indigo-900">
-                                {{ payment.payment_number }}
-                            </Link>
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ payment.vendor.name }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ payment.payment_date }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ payment.method ?? '—' }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ payment.amount }}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Payment #</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Vendor</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Method</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="payment in payments.data" :key="payment.id" class="hover:bg-gray-50">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
+                                <Link :href="route('purchases.vendor-payments.show', payment.id)" class="text-indigo-600 hover:text-indigo-900">
+                                    {{ payment.payment_number }}
+                                </Link>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ payment.vendor.name }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ payment.payment_date }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ payment.method ?? '—' }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ payment.amount }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <EmptyState v-if="payments.data.length === 0" title="No payments found" description="Make a payment to a vendor to see it here." />
         </Card>
 

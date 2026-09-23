@@ -52,42 +52,46 @@ function apply() {
 
         <div class="rounded-lg bg-white p-6 shadow-sm">
             <h2 class="mb-2 text-sm font-semibold text-gray-700">Income</h2>
-            <table class="mb-4 min-w-full divide-y divide-gray-100">
-                <tbody class="divide-y divide-gray-100">
-                    <tr v-for="row in income" :key="row.id">
-                        <td class="py-2 text-sm text-gray-700">{{ row.code }} — {{ row.name }}</td>
-                        <td class="py-2 text-right text-sm text-gray-700">{{ row.amount }}</td>
-                    </tr>
-                    <tr v-if="income.length === 0">
-                        <td colspan="2" class="py-2 text-center text-sm text-gray-400">No income in this period.</td>
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <tr class="font-medium">
-                        <td class="py-2 text-sm text-gray-700">Total Income</td>
-                        <td class="py-2 text-right text-sm text-gray-900">{{ totalIncome }}</td>
-                    </tr>
-                </tfoot>
-            </table>
+            <div class="mb-4 overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-100">
+                    <tbody class="divide-y divide-gray-100">
+                        <tr v-for="row in income" :key="row.id">
+                            <td class="py-2 text-sm text-gray-700">{{ row.code }} — {{ row.name }}</td>
+                            <td class="py-2 text-right text-sm text-gray-700">{{ row.amount }}</td>
+                        </tr>
+                        <tr v-if="income.length === 0">
+                            <td colspan="2" class="py-2 text-center text-sm text-gray-400">No income in this period.</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="font-medium">
+                            <td class="py-2 text-sm text-gray-700">Total Income</td>
+                            <td class="py-2 text-right text-sm text-gray-900">{{ totalIncome }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
 
             <h2 class="mb-2 text-sm font-semibold text-gray-700">Expenses</h2>
-            <table class="mb-4 min-w-full divide-y divide-gray-100">
-                <tbody class="divide-y divide-gray-100">
-                    <tr v-for="row in expense" :key="row.id">
-                        <td class="py-2 text-sm text-gray-700">{{ row.code }} — {{ row.name }}</td>
-                        <td class="py-2 text-right text-sm text-gray-700">{{ row.amount }}</td>
-                    </tr>
-                    <tr v-if="expense.length === 0">
-                        <td colspan="2" class="py-2 text-center text-sm text-gray-400">No expenses in this period.</td>
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <tr class="font-medium">
-                        <td class="py-2 text-sm text-gray-700">Total Expenses</td>
-                        <td class="py-2 text-right text-sm text-gray-900">{{ totalExpense }}</td>
-                    </tr>
-                </tfoot>
-            </table>
+            <div class="mb-4 overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-100">
+                    <tbody class="divide-y divide-gray-100">
+                        <tr v-for="row in expense" :key="row.id">
+                            <td class="py-2 text-sm text-gray-700">{{ row.code }} — {{ row.name }}</td>
+                            <td class="py-2 text-right text-sm text-gray-700">{{ row.amount }}</td>
+                        </tr>
+                        <tr v-if="expense.length === 0">
+                            <td colspan="2" class="py-2 text-center text-sm text-gray-400">No expenses in this period.</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="font-medium">
+                            <td class="py-2 text-sm text-gray-700">Total Expenses</td>
+                            <td class="py-2 text-right text-sm text-gray-900">{{ totalExpense }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
 
             <div class="flex justify-between border-t border-gray-200 pt-4 text-base font-semibold">
                 <span>Net Profit</span>

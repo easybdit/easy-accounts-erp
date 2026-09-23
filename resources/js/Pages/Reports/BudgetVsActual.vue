@@ -96,46 +96,48 @@ function varianceClass(row) {
                 share of the fiscal year.
             </p>
 
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Account</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Budgeted</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actual</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Variance</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Variance %</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="row in comparison.rows" :key="row.account.id">
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
-                            {{ row.account.code }} — {{ row.account.name }}
-                            <span class="text-xs capitalize text-gray-400">({{ row.account.type }})</span>
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ row.budgeted }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ row.actual }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium" :class="varianceClass(row)">
-                            {{ row.variance }}
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium" :class="varianceClass(row)">
-                            {{ row.variance_percent === null ? '—' : `${row.variance_percent}%` }}
-                        </td>
-                    </tr>
-                    <tr v-if="comparison.rows.length === 0">
-                        <td colspan="5" class="px-4 py-6 text-center text-sm text-gray-500">
-                            This budget has no lines.
-                        </td>
-                    </tr>
-                </tbody>
-                <tfoot class="bg-gray-50">
-                    <tr>
-                        <td class="px-4 py-3 text-right text-sm font-medium text-gray-700">Total</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">{{ comparison.totalBudgeted }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">{{ comparison.totalActual }}</td>
-                        <td colspan="2" />
-                    </tr>
-                </tfoot>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Account</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Budgeted</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actual</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Variance</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Variance %</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="row in comparison.rows" :key="row.account.id">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
+                                {{ row.account.code }} — {{ row.account.name }}
+                                <span class="text-xs capitalize text-gray-400">({{ row.account.type }})</span>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ row.budgeted }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ row.actual }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium" :class="varianceClass(row)">
+                                {{ row.variance }}
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium" :class="varianceClass(row)">
+                                {{ row.variance_percent === null ? '—' : `${row.variance_percent}%` }}
+                            </td>
+                        </tr>
+                        <tr v-if="comparison.rows.length === 0">
+                            <td colspan="5" class="px-4 py-6 text-center text-sm text-gray-500">
+                                This budget has no lines.
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot class="bg-gray-50">
+                        <tr>
+                            <td class="px-4 py-3 text-right text-sm font-medium text-gray-700">Total</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">{{ comparison.totalBudgeted }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">{{ comparison.totalActual }}</td>
+                            <td colspan="2" />
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
 
         <p class="mt-4 text-sm">

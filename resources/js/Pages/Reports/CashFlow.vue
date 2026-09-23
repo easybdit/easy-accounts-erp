@@ -56,40 +56,42 @@ function apply() {
         </div>
 
         <div class="overflow-hidden rounded-lg bg-white shadow-sm">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Account</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Opening</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">In</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Out</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Closing</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="account in accounts" :key="account.id">
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ account.code }} — {{ account.name }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ account.opening }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-green-700">{{ account.in }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-red-700">{{ account.out }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-gray-800">{{ account.closing }}</td>
-                    </tr>
-                    <tr v-if="accounts.length === 0">
-                        <td colspan="5" class="px-4 py-6 text-center text-sm text-gray-500">
-                            No accounts are marked as Bank/Cash accounts yet.
-                        </td>
-                    </tr>
-                </tbody>
-                <tfoot class="bg-gray-50">
-                    <tr class="font-semibold">
-                        <td class="px-4 py-3 text-right text-sm text-gray-700">Total</td>
-                        <td class="px-4 py-3 text-right text-sm text-gray-900">{{ totalOpening }}</td>
-                        <td class="px-4 py-3 text-right text-sm text-gray-900">{{ totalIn }}</td>
-                        <td class="px-4 py-3 text-right text-sm text-gray-900">{{ totalOut }}</td>
-                        <td class="px-4 py-3 text-right text-sm text-gray-900">{{ totalClosing }}</td>
-                    </tr>
-                </tfoot>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Account</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Opening</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">In</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Out</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Closing</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="account in accounts" :key="account.id">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ account.code }} — {{ account.name }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ account.opening }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-green-700">{{ account.in }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-red-700">{{ account.out }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-gray-800">{{ account.closing }}</td>
+                        </tr>
+                        <tr v-if="accounts.length === 0">
+                            <td colspan="5" class="px-4 py-6 text-center text-sm text-gray-500">
+                                No accounts are marked as Bank/Cash accounts yet.
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot class="bg-gray-50">
+                        <tr class="font-semibold">
+                            <td class="px-4 py-3 text-right text-sm text-gray-700">Total</td>
+                            <td class="px-4 py-3 text-right text-sm text-gray-900">{{ totalOpening }}</td>
+                            <td class="px-4 py-3 text-right text-sm text-gray-900">{{ totalIn }}</td>
+                            <td class="px-4 py-3 text-right text-sm text-gray-900">{{ totalOut }}</td>
+                            <td class="px-4 py-3 text-right text-sm text-gray-900">{{ totalClosing }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
     </AppLayout>
 </template>
