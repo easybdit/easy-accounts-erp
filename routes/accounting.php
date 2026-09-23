@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Accounting\AccountController;
 use App\Http\Controllers\Accounting\AccountingSettingsController;
+use App\Http\Controllers\Accounting\BudgetController;
 use App\Http\Controllers\Accounting\FixedAssetController;
 use App\Http\Controllers\Accounting\GeneralLedgerController;
 use App\Http\Controllers\Accounting\JournalController;
@@ -68,5 +69,19 @@ Route::middleware(['auth', 'verified'])->prefix('accounting')->name('accounting.
     });
     Route::middleware('permission:settings.manage')->group(function () {
         Route::put('settings', [AccountingSettingsController::class, 'update'])->name('settings.update');
+    });
+
+    // Budgets reuse accounts.* rather than a separate permission pair —
+    // same reasoning as Fixed Assets above. Route order matters: "create"
+    // must be registered before wildcard "{budget}".
+    Route::middleware('permission:accounts.view')->group(function () {
+        Route::get('budgets', [BudgetController::class, 'index'])->name('budgets.index');
+    });
+    Route::middleware('permission:accounts.manage')->group(function () {
+        Route::get('budgets/create', [BudgetController::class, 'create'])->name('budgets.create');
+        Route::post('budgets', [BudgetController::class, 'store'])->name('budgets.store');
+        Route::get('budgets/{budget}/edit', [BudgetController::class, 'edit'])->name('budgets.edit');
+        Route::put('budgets/{budget}', [BudgetController::class, 'update'])->name('budgets.update');
+        Route::delete('budgets/{budget}', [BudgetController::class, 'destroy'])->name('budgets.destroy');
     });
 });

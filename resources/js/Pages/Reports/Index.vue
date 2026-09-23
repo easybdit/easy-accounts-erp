@@ -40,6 +40,7 @@ const groups = [
             { name: 'General Ledger', routeName: 'accounting.ledger.index' },
             { name: 'Tax Report', routeName: 'tax.report' },
             { name: 'Inventory Report', routeName: 'reports.inventory' },
+            { name: 'Budget vs Actual', routeName: 'reports.budget-vs-actual' },
         ],
     },
 ];

@@ -20,4 +20,5 @@ Route::middleware(['auth', 'verified', 'permission:reports.view'])->prefix('repo
     Route::get('vendor-balances', [ReportController::class, 'vendorBalances'])->name('vendor-balances');
     Route::get('payments', [ReportController::class, 'payments'])->name('payments');
     Route::get('inventory', [ReportController::class, 'inventory'])->name('inventory');
+    Route::get('budget-vs-actual', [ReportController::class, 'budgetVsActual'])->name('budget-vs-actual');
 });

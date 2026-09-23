@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
 use App\Models\Accounting\Account;
+use App\Models\Accounting\Budget;
 use App\Models\Accounting\JournalEntry;
 use App\Models\Contacts\Customer;
 use App\Models\Contacts\Vendor;
@@ -444,6 +445,70 @@ class ReportController extends Controller
             'starting_balance' => $startingBalance,
             'ending_balance' => $running,
             'entries' => $rows,
+        ];
+    }
+
+    /**
+     * Compares each budget line's annual amount, prorated to the selected
+     * date range's share of the fiscal year, against the account's actual
+     * activity in that same range — so a mid-year run still compares like
+     * with like rather than a full year's budget against a partial year's
+     * actual.
+     */
+    public function budgetVsActual(Request $request): Response
+    {
+        $budgets = Budget::query()->orderByDesc('fiscal_year')->orderBy('name')->get(['id', 'name', 'fiscal_year']);
+
+        $budgetId = $request->integer('budget_id') ?: null;
+        $budget = $budgetId ? Budget::with('lines.account')->findOrFail($budgetId) : null;
+
+        $from = $request->date('from')?->toDateString() ?? ($budget ? "{$budget->fiscal_year}-01-01" : null);
+        $to = $request->date('to')?->toDateString() ?? ($budget ? "{$budget->fiscal_year}-12-31" : null);
+
+        return Inertia::render('Reports/BudgetVsActual', [
+            'budgets' => $budgets,
+            'comparison' => $budget ? $this->buildBudgetComparison($budget, $from, $to) : null,
+            'filters' => [
+                'budget_id' => $budgetId,
+                'from' => $from,
+                'to' => $to,
+            ],
+        ]);
+    }
+
+    private function buildBudgetComparison(Budget $budget, string $from, string $to): array
+    {
+        $daysInRange = (int) floor((strtotime($to) - strtotime($from)) / 86400) + 1;
+        $daysInFiscalYear = (date('L', mktime(0, 0, 0, 1, 1, $budget->fiscal_year)) ? 366 : 365);
+        $proration = max(0, min(1, $daysInRange / $daysInFiscalYear));
+
+        $accountIds = $budget->lines->pluck('account_id')->all();
+        $actuals = $this->accountAmountsByType(['income', 'expense'], $from, $to)
+            ->whereIn('id', $accountIds)
+            ->keyBy('id');
+
+        $rows = $budget->lines->map(function ($line) use ($proration, $actuals) {
+            $budgeted = bcmul((string) $line->amount, (string) round($proration, 6), 4);
+            $actualRow = $actuals->get($line->account_id);
+            $actual = $actualRow ? $actualRow['amount'] : '0.0000';
+            $variance = bcsub($actual, $budgeted, 4);
+            $variancePercent = bccomp($budgeted, '0', 4) !== 0
+                ? round((float) bcdiv(bcmul($variance, '100', 6), $budgeted, 6), 2)
+                : null;
+
+            return [
+                'account' => ['id' => $line->account->id, 'code' => $line->account->code, 'name' => $line->account->name, 'type' => $line->account->type],
+                'budgeted' => $budgeted,
+                'actual' => $actual,
+                'variance' => $variance,
+                'variance_percent' => $variancePercent,
+            ];
+        })->sortBy('account.code')->values();
+
+        return [
+            'rows' => $rows,
+            'totalBudgeted' => $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['budgeted'], 4), '0.0000'),
+            'totalActual' => $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['actual'], 4), '0.0000'),
         ];
     }
 
