@@ -2,6 +2,16 @@
 
 All notable changes to EasyAccountsERP are recorded here, newest first. This project doesn't cut version numbers yet, so entries are grouped by the date they landed on `main`. See [`EasyAccountsERP.md`](EasyAccountsERP.md) for the design rationale behind any entry.
 
+## 2026-09-24
+
+### Added
+
+- A second, independent tax rate per invoice/bill line (e.g. Bangladesh SD + VAT), calculated on the same net amount rather than compounded on top of the first.
+- Purchase Order partial receiving/billing — a PO can now be converted to a bill more than once, each time for however much of each line has arrived, tracked per line via `billed_quantity`.
+- Weekly/quarterly/yearly frequency options for Recurring Invoices, Expenses, and Bills (previously monthly only).
+- Bill attachments, mirroring Expense attachments — uploadable at any point in a bill's lifecycle, not just at creation.
+- TDS/VDS withholding tax on vendor payments: an optional named rate withholds a percentage of the settled amount, crediting a liability account instead of reducing cash paid, while still clearing the bill in full.
+
 ## 2026-09-23
 
 ### Added
