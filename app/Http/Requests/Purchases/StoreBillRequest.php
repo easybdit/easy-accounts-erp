@@ -28,6 +28,7 @@ class StoreBillRequest extends FormRequest
             'items.*.product_id' => ['nullable', 'integer', 'exists:products,id'],
             'items.*.account_id' => ['required', 'integer', 'exists:accounts,id'],
             'items.*.tax_rate_id' => ['nullable', 'integer', 'exists:tax_rates,id'],
+            'items.*.tax_rate_2_id' => ['nullable', 'integer', 'exists:tax_rates,id'],
             'items.*.description' => ['required', 'string', 'max:255'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.0001'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
@@ -92,6 +93,18 @@ class StoreBillRequest extends FormRequest
 
                     if ($taxRate && ! $taxRate->is_active) {
                         $validator->errors()->add("items.{$index}.tax_rate_id", 'This tax rate is inactive.');
+                    }
+                }
+
+                if (! empty($item['tax_rate_2_id'])) {
+                    $taxRate2 = TaxRate::find($item['tax_rate_2_id']);
+
+                    if ($taxRate2 && ! $taxRate2->is_active) {
+                        $validator->errors()->add("items.{$index}.tax_rate_2_id", 'This tax rate is inactive.');
+                    }
+
+                    if (! empty($item['tax_rate_id']) && (int) $item['tax_rate_id'] === (int) $item['tax_rate_2_id']) {
+                        $validator->errors()->add("items.{$index}.tax_rate_2_id", 'The second tax rate must be different from the first.');
                     }
                 }
             }

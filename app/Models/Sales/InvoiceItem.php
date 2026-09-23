@@ -15,12 +15,14 @@ class InvoiceItem extends Model
         'product_id',
         'account_id',
         'tax_rate_id',
+        'tax_rate_2_id',
         'description',
         'quantity',
         'unit_price',
         'discount',
         'line_total',
         'tax_amount',
+        'tax_amount_2',
         'is_deferred',
         'deferred_months',
         'deferred_revenue_account_id',
@@ -32,6 +34,7 @@ class InvoiceItem extends Model
         'discount' => 'decimal:4',
         'line_total' => 'decimal:4',
         'tax_amount' => 'decimal:4',
+        'tax_amount_2' => 'decimal:4',
         'is_deferred' => 'boolean',
         'deferred_months' => 'integer',
     ];
@@ -49,6 +52,16 @@ class InvoiceItem extends Model
     public function taxRate(): BelongsTo
     {
         return $this->belongsTo(TaxRate::class);
+    }
+
+    /**
+     * An optional second, independent tax rate on the same line (e.g.
+     * Bangladesh SD + VAT) — computed on the same net line_total as the
+     * primary rate, not compounded on top of it (Section 33).
+     */
+    public function taxRate2(): BelongsTo
+    {
+        return $this->belongsTo(TaxRate::class, 'tax_rate_2_id');
     }
 
     public function product(): BelongsTo

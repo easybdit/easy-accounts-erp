@@ -28,8 +28,10 @@ class SaveInvoiceDraft
         $taxTotal = '0.0000';
         $lineTotals = [];
         $taxAmounts = [];
+        $taxAmounts2 = [];
 
-        $taxRates = TaxRate::whereIn('id', array_filter(array_column($items, 'tax_rate_id')))->get()->keyBy('id');
+        $taxRateIds = array_filter(array_merge(array_column($items, 'tax_rate_id'), array_column($items, 'tax_rate_2_id')));
+        $taxRates = TaxRate::whereIn('id', $taxRateIds)->get()->keyBy('id');
 
         foreach ($items as $item) {
             $quantity = (string) $item['quantity'];
@@ -39,25 +41,37 @@ class SaveInvoiceDraft
             $gross = bcmul($quantity, $unitPrice, 4);
             $grossAfterDiscount = bcsub($gross, $discount, 4);
             $taxRate = $taxRates->get($item['tax_rate_id'] ?? null);
+            $taxRate2 = $taxRates->get($item['tax_rate_2_id'] ?? null);
 
             // Tax Inclusive (Section 33): the entered unit price already
             // contains tax, so the net line_total is backed out of the
             // gross rather than the exclusive default (tax added on top).
             // Downstream (posting, totals) always treats line_total as a
             // plain net amount regardless of which branch produced it.
-            if ($taxInclusive && $taxRate) {
-                $lineTotal = $taxRate->extractNet($grossAfterDiscount);
-                $taxAmount = bcsub($grossAfterDiscount, $lineTotal, 4);
+            //
+            // With two independent (non-compounding) tax rates, the net is
+            // backed out using their COMBINED rate — each tax is then just
+            // its own share of that same net, so tax1 + tax2 still equals
+            // gross - net exactly. This collapses to the single-tax formula
+            // above whenever only one rate is set.
+            if ($taxInclusive && ($taxRate || $taxRate2)) {
+                $combinedRate = bcadd((string) ($taxRate->rate ?? '0'), (string) ($taxRate2->rate ?? '0'), 6);
+                $divisor = bcadd('100', $combinedRate, 6);
+                $lineTotal = bcdiv(bcmul($grossAfterDiscount, '100', 6), $divisor, 4);
+                $taxAmount = $taxRate ? $taxRate->calculate($lineTotal) : '0.0000';
+                $taxAmount2 = $taxRate2 ? $taxRate2->calculate($lineTotal) : '0.0000';
             } else {
                 $lineTotal = $grossAfterDiscount;
                 $taxAmount = $taxRate ? $taxRate->calculate($lineTotal) : '0.0000';
+                $taxAmount2 = $taxRate2 ? $taxRate2->calculate($lineTotal) : '0.0000';
             }
 
             $subtotal = bcadd($subtotal, $gross, 4);
             $discountTotal = bcadd($discountTotal, $discount, 4);
-            $taxTotal = bcadd($taxTotal, $taxAmount, 4);
+            $taxTotal = bcadd($taxTotal, bcadd($taxAmount, $taxAmount2, 4), 4);
             $lineTotals[] = $lineTotal;
             $taxAmounts[] = $taxAmount;
+            $taxAmounts2[] = $taxAmount2;
         }
 
         // sum(line_total) + taxTotal, not subtotal - discountTotal + taxTotal:
@@ -65,7 +79,7 @@ class SaveInvoiceDraft
         // in inclusive mode, where line_total already excludes tax.
         $total = bcadd(array_reduce($lineTotals, fn (string $carry, string $lineTotal) => bcadd($carry, $lineTotal, 4), '0.0000'), $taxTotal, 4);
 
-        return DB::transaction(function () use ($data, $items, $lineTotals, $taxAmounts, $subtotal, $discountTotal, $taxTotal, $total, $taxInclusive, $invoice) {
+        return DB::transaction(function () use ($data, $items, $lineTotals, $taxAmounts, $taxAmounts2, $subtotal, $discountTotal, $taxTotal, $total, $taxInclusive, $invoice) {
             $invoice = $invoice
                 ? tap($invoice)->update([
                     'customer_id' => $data['customer_id'],
@@ -103,12 +117,14 @@ class SaveInvoiceDraft
                     'product_id' => $item['product_id'] ?? null,
                     'account_id' => $item['account_id'],
                     'tax_rate_id' => $item['tax_rate_id'] ?? null,
+                    'tax_rate_2_id' => $item['tax_rate_2_id'] ?? null,
                     'description' => $item['description'],
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
                     'discount' => $item['discount'] ?? 0,
                     'line_total' => $lineTotals[$index],
                     'tax_amount' => $taxAmounts[$index],
+                    'tax_amount_2' => $taxAmounts2[$index],
                     'is_deferred' => $item['is_deferred'] ?? false,
                     'deferred_months' => $item['is_deferred'] ?? false ? $item['deferred_months'] : null,
                     'deferred_revenue_account_id' => $item['is_deferred'] ?? false ? $item['deferred_revenue_account_id'] : null,

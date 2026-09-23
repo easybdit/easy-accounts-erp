@@ -157,7 +157,9 @@ function destroyAttachment() {
                         <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.unit_price }}</td>
                         <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.discount }}</td>
                         <td class="px-2 py-2 text-sm text-gray-500">
-                            {{ item.tax_rate ? `${item.tax_rate.name} (${item.tax_amount})` : '—' }}
+                            <span v-if="item.tax_rate">{{ item.tax_rate.name }} ({{ item.tax_amount }})</span>
+                            <span v-else>—</span>
+                            <span v-if="item.tax_rate_2" class="block">{{ item.tax_rate_2.name }} ({{ item.tax_amount_2 }})</span>
                         </td>
                         <td class="px-2 py-2 text-right text-sm font-medium text-gray-800">{{ item.line_total }}</td>
                     </tr>

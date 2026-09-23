@@ -27,6 +27,7 @@ const form = useForm({
         product_id: item.product_id ?? '',
         account_id: item.account_id,
         tax_rate_id: item.tax_rate_id ?? '',
+        tax_rate_2_id: item.tax_rate_2_id ?? '',
         description: item.description,
         quantity: item.quantity,
         unit_price: item.unit_price,
@@ -67,6 +68,7 @@ function submit() {
                 :tax-rates="taxRates"
                 :show-tax-inclusive="true"
                 :show-deferred-revenue="true"
+                :show-second-tax="true"
             />
 
             <div class="mt-6 flex justify-end gap-3">

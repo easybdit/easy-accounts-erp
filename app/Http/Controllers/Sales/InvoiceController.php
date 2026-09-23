@@ -104,6 +104,7 @@ class InvoiceController extends Controller
             'receivableAccount:id,code,name',
             'items.account:id,code,name',
             'items.taxRate:id,name,rate',
+            'items.taxRate2:id,name,rate',
             'items.deferredRevenueAccount:id,code,name',
             'items.revenueRecognitionSchedule',
             'journal',
@@ -185,7 +186,7 @@ class InvoiceController extends Controller
 
     public function pdf(Invoice $invoice): HttpResponse
     {
-        $invoice->load(['customer', 'items.account', 'items.taxRate']);
+        $invoice->load(['customer', 'items.account', 'items.taxRate', 'items.taxRate2']);
 
         $pdf = Pdf::loadView('pdfs.invoice', [
             'invoice' => $invoice,

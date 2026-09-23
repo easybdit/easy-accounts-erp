@@ -45,7 +45,7 @@ class PostInvoice
             throw new RuntimeException('Only a draft invoice can be posted.');
         }
 
-        $invoice->loadMissing('items.taxRate', 'items.product');
+        $invoice->loadMissing('items.taxRate', 'items.taxRate2', 'items.product');
 
         if ($invoice->items->isEmpty()) {
             throw new RuntimeException('An invoice must have at least one item before it can be posted.');
@@ -63,14 +63,22 @@ class PostInvoice
 
                 // Self-healing, same as subtotal/discount/total below: never
                 // trust a cached tax_amount, recompute fresh from the tax
-                // rate at posting time.
+                // rate(s) at posting time. The optional second tax rate is
+                // computed independently on the same net line_total, not
+                // compounded on top of the first (Section 33).
                 $taxAmount = $item->taxRate ? $item->taxRate->calculate((string) $item->line_total) : '0.0000';
-                $item->update(['tax_amount' => $taxAmount]);
-                $taxTotal = bcadd($taxTotal, $taxAmount, 4);
+                $taxAmount2 = $item->taxRate2 ? $item->taxRate2->calculate((string) $item->line_total) : '0.0000';
+                $item->update(['tax_amount' => $taxAmount, 'tax_amount_2' => $taxAmount2]);
+                $taxTotal = bcadd($taxTotal, bcadd($taxAmount, $taxAmount2, 4), 4);
 
                 if ($item->taxRate && bccomp($taxAmount, '0', 4) > 0) {
                     $accountId = $item->taxRate->tax_account_id;
                     $taxByAccount[$accountId] = bcadd($taxByAccount[$accountId] ?? '0.0000', $taxAmount, 4);
+                }
+
+                if ($item->taxRate2 && bccomp($taxAmount2, '0', 4) > 0) {
+                    $accountId = $item->taxRate2->tax_account_id;
+                    $taxByAccount[$accountId] = bcadd($taxByAccount[$accountId] ?? '0.0000', $taxAmount2, 4);
                 }
             }
 

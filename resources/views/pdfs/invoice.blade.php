@@ -78,7 +78,7 @@
                     <td class="num">{{ $item->quantity }}</td>
                     <td class="num">{{ $item->unit_price }}</td>
                     <td class="num">{{ $item->discount }}</td>
-                    <td class="num">{{ $item->tax_amount }}</td>
+                    <td class="num">{{ bcadd($item->tax_amount, $item->tax_amount_2, 4) }}</td>
                     <td class="num">{{ $item->line_total }}</td>
                 </tr>
             @endforeach

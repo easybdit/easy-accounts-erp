@@ -107,6 +107,7 @@ class BillController extends Controller
             'payableAccount:id,code,name',
             'items.account:id,code,name',
             'items.taxRate:id,name,rate',
+            'items.taxRate2:id,name,rate',
             'journal',
             'paymentAllocations.vendorPayment:id,payment_number,payment_date',
             'attachments',
@@ -139,7 +140,7 @@ class BillController extends Controller
 
     public function pdf(Bill $bill): HttpResponse
     {
-        $bill->load(['vendor', 'items.account', 'items.taxRate']);
+        $bill->load(['vendor', 'items.account', 'items.taxRate', 'items.taxRate2']);
 
         $pdf = Pdf::loadView('pdfs.bill', [
             'bill' => $bill,

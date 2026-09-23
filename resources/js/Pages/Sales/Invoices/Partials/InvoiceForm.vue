@@ -61,6 +61,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    showSecondTax: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 function addItem() {
@@ -68,6 +72,7 @@ function addItem() {
         product_id: '',
         account_id: '',
         tax_rate_id: '',
+        tax_rate_2_id: '',
         description: '',
         quantity: 1,
         unit_price: '',
@@ -114,31 +119,39 @@ function grossAfterDiscount(item) {
     return quantity * unitPrice - discount;
 }
 
+function findRate(id) {
+    return props.taxRates.find((r) => r.id === id);
+}
+
 // Net (pre-tax) amount posted to the item's account. In exclusive mode this
 // is just the entered gross; in inclusive mode the entered gross already
-// contains tax, so the net is backed out of it (mirrors TaxRate::extractNet).
+// contains tax, so the net is backed out of it using the COMBINED rate of
+// both taxes (mirrors TaxRate::extractNet, generalized for two independent,
+// non-compounding rates — collapses to the single-tax formula when only one
+// is set).
 function lineNet(item) {
     const gross = grossAfterDiscount(item);
-    const rate = props.taxRates.find((r) => r.id === item.tax_rate_id);
+    const rate = findRate(item.tax_rate_id);
+    const rate2 = findRate(item.tax_rate_2_id);
 
-    if (props.form.tax_inclusive && rate) {
-        return gross * (100 / (100 + parseFloat(rate.rate)));
+    if (props.form.tax_inclusive && (rate || rate2)) {
+        const combinedRate = (rate ? parseFloat(rate.rate) : 0) + (rate2 ? parseFloat(rate2.rate) : 0);
+        return gross * (100 / (100 + combinedRate));
     }
 
     return gross;
 }
 
+// Each tax is calculated independently on the same net line total — not
+// compounded on top of the other (Section 33).
 function lineTax(item) {
-    const rate = props.taxRates.find((r) => r.id === item.tax_rate_id);
-    if (!rate) {
-        return 0;
-    }
+    const net = lineNet(item);
+    const rate = findRate(item.tax_rate_id);
+    const rate2 = findRate(item.tax_rate_2_id);
+    const tax1 = rate ? (net * parseFloat(rate.rate)) / 100 : 0;
+    const tax2 = rate2 ? (net * parseFloat(rate2.rate)) / 100 : 0;
 
-    if (props.form.tax_inclusive) {
-        return grossAfterDiscount(item) - lineNet(item);
-    }
-
-    return (lineNet(item) * parseFloat(rate.rate)) / 100;
+    return tax1 + tax2;
 }
 
 const subtotal = computed(() =>
@@ -223,6 +236,7 @@ const total = computed(() => netTotal.value + taxTotal.value);
                     <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Unit Price</th>
                     <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Discount</th>
                     <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tax</th>
+                    <th v-if="showSecondTax" class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tax 2</th>
                     <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Line Total</th>
                     <th class="px-2 py-2" />
                 </tr>
@@ -296,6 +310,18 @@ const total = computed(() => netTotal.value + taxTotal.value);
                         </select>
                         <InputError :message="form.errors[`items.${index}.tax_rate_id`]" class="mt-1" />
                     </td>
+                    <td v-if="showSecondTax" class="px-2 py-2">
+                        <select
+                            v-model="item.tax_rate_2_id"
+                            class="block w-36 rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        >
+                            <option :value="''">No second tax</option>
+                            <option v-for="rate in taxRates" :key="rate.id" :value="rate.id">
+                                {{ rate.name }} ({{ rate.rate }}%)
+                            </option>
+                        </select>
+                        <InputError :message="form.errors[`items.${index}.tax_rate_2_id`]" class="mt-1" />
+                    </td>
                     <td class="whitespace-nowrap px-2 py-2 text-right text-sm text-gray-700">
                         {{ (lineNet(item) + lineTax(item)).toFixed(4) }}
                     </td>
@@ -311,7 +337,7 @@ const total = computed(() => netTotal.value + taxTotal.value);
                     </td>
                 </tr>
                 <tr v-if="showDeferredRevenue">
-                    <td :colspan="products.length > 0 ? 9 : 8" class="bg-gray-50 px-2 py-2">
+                    <td :colspan="(products.length > 0 ? 9 : 8) + (showSecondTax ? 1 : 0)" class="bg-gray-50 px-2 py-2">
                         <label class="flex items-center gap-2 text-xs text-gray-600">
                             <input
                                 v-model="item.is_deferred"
