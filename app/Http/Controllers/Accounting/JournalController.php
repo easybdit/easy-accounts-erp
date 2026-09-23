@@ -63,10 +63,14 @@ class JournalController extends Controller
 
     public function store(StoreJournalRequest $request, PostJournal $postJournal): RedirectResponse
     {
-        $journal = $postJournal->handle([
-            ...$request->validated(),
-            'created_by' => $request->user()->id,
-        ]);
+        try {
+            $journal = $postJournal->handle([
+                ...$request->validated(),
+                'created_by' => $request->user()->id,
+            ]);
+        } catch (RuntimeException $e) {
+            return back()->with('error', $e->getMessage())->withInput();
+        }
 
         return redirect()->route('accounting.journals.show', $journal)
             ->with('success', 'Journal posted.');

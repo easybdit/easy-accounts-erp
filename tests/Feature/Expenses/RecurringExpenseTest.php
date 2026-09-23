@@ -3,6 +3,7 @@
 namespace Tests\Feature\Expenses;
 
 use App\Models\Accounting\Account;
+use App\Models\Accounting\AccountingSettings;
 use App\Models\Expenses\Expense;
 use App\Models\Expenses\ExpenseCategory;
 use App\Models\Expenses\RecurringExpense;
@@ -143,5 +144,22 @@ class RecurringExpenseTest extends TestCase
         $this->artisan('expenses:generate-recurring')->assertSuccessful();
 
         $this->assertDatabaseCount('expenses', 0);
+    }
+
+    public function test_a_template_due_in_a_locked_period_is_skipped_without_failing_the_whole_run(): void
+    {
+        $user = User::factory()->create();
+        $dueDate = now()->toDateString();
+        AccountingSettings::current()->update(['locked_through_date' => $dueDate]);
+        $this->actingAs($user)->post(route('expenses.recurring.store'), $this->payload([
+            'next_generation_date' => $dueDate,
+        ]));
+        $template = RecurringExpense::first();
+
+        $this->artisan('expenses:generate-recurring')->assertSuccessful();
+
+        $this->assertDatabaseCount('expenses', 0);
+        // Not advanced — it stays due so it will succeed once unlocked.
+        $this->assertSame($dueDate, $template->fresh()->next_generation_date->toDateString());
     }
 }

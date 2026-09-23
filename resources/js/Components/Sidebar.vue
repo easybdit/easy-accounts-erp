@@ -37,6 +37,7 @@ const allNavGroups = [
             { label: 'General Ledger', routeName: 'accounting.ledger.index' },
             { label: 'Trial Balance', routeName: 'accounting.trial-balance.index' },
             { label: 'Fixed Assets', routeName: 'accounting.fixed-assets.index' },
+            { label: 'Period Lock', routeName: 'accounting.settings.edit', permission: 'settings.view' },
         ],
     },
     {

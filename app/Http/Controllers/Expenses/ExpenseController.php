@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExpenseController extends Controller
@@ -60,10 +61,14 @@ class ExpenseController extends Controller
 
     public function store(StoreExpenseRequest $request, RecordExpense $action, StoreExpenseAttachments $attachmentsAction): RedirectResponse
     {
-        $expense = $action->handle([
-            ...$request->validated(),
-            'created_by' => $request->user()->id,
-        ]);
+        try {
+            $expense = $action->handle([
+                ...$request->validated(),
+                'created_by' => $request->user()->id,
+            ]);
+        } catch (RuntimeException $e) {
+            return back()->with('error', $e->getMessage())->withInput();
+        }
 
         if ($request->hasFile('attachments')) {
             $attachmentsAction->handle($expense, $request->file('attachments'), $request->user()->id);

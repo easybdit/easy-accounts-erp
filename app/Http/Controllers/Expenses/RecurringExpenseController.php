@@ -15,6 +15,7 @@ use App\Models\Tax\TaxRate;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
+use RuntimeException;
 
 class RecurringExpenseController extends Controller
 {
@@ -80,7 +81,11 @@ class RecurringExpenseController extends Controller
 
     public function generate(RecurringExpense $recurringExpense, GenerateExpenseFromRecurring $action): RedirectResponse
     {
-        $expense = $action->handle($recurringExpense, auth()->id());
+        try {
+            $expense = $action->handle($recurringExpense, auth()->id());
+        } catch (RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('expenses.entries.show', $expense)
             ->with('success', "Expense {$expense->expense_number} recorded from \"{$recurringExpense->name}\".");

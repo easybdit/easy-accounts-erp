@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Accounting\AccountController;
+use App\Http\Controllers\Accounting\AccountingSettingsController;
 use App\Http\Controllers\Accounting\FixedAssetController;
 use App\Http\Controllers\Accounting\GeneralLedgerController;
 use App\Http\Controllers\Accounting\JournalController;
@@ -57,5 +58,15 @@ Route::middleware(['auth', 'verified'])->prefix('accounting')->name('accounting.
     });
     Route::middleware('permission:accounts.view')->group(function () {
         Route::get('fixed-assets/{fixed_asset}', [FixedAssetController::class, 'show'])->name('fixed-assets.show');
+    });
+
+    // Period Lock: a singleton settings row, gated by its own settings.*
+    // permission rather than accounts.* — closing the books is a distinct
+    // responsibility from day-to-day chart-of-accounts maintenance.
+    Route::middleware('permission:settings.view')->group(function () {
+        Route::get('settings', [AccountingSettingsController::class, 'edit'])->name('settings.edit');
+    });
+    Route::middleware('permission:settings.manage')->group(function () {
+        Route::put('settings', [AccountingSettingsController::class, 'update'])->name('settings.update');
     });
 });

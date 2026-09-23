@@ -34,6 +34,7 @@ class RoleSeeder extends Seeder
             'expenses.view', 'expenses.manage',
             'banking.view', 'banking.manage',
             'tax.view', 'tax.manage',
+            'settings.view', 'settings.manage',
         ]);
 
         Role::findOrCreate('Sales')->syncPermissions([

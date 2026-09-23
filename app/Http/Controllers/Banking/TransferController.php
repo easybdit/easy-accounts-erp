@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use RuntimeException;
 
 class TransferController extends Controller
 {
@@ -48,10 +49,14 @@ class TransferController extends Controller
 
     public function store(StoreTransferRequest $request, RecordTransfer $action): RedirectResponse
     {
-        $transfer = $action->handle([
-            ...$request->validated(),
-            'created_by' => $request->user()->id,
-        ]);
+        try {
+            $transfer = $action->handle([
+                ...$request->validated(),
+                'created_by' => $request->user()->id,
+            ]);
+        } catch (RuntimeException $e) {
+            return back()->with('error', $e->getMessage())->withInput();
+        }
 
         return redirect()->route('banking.transfers.show', $transfer)->with('success', 'Transfer recorded.');
     }

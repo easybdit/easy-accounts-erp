@@ -2,6 +2,7 @@
 
 namespace App\Actions\Accounting;
 
+use App\Models\Accounting\AccountingSettings;
 use App\Models\Accounting\Journal;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -12,7 +13,10 @@ use RuntimeException;
  * Every financial transaction (manual journal, and later invoices, bills,
  * payments, expenses per the spec's posting diagrams) must post through
  * this action so that "debit = credit" and atomicity (Section 19) are
- * enforced in exactly one place.
+ * enforced in exactly one place. The Period Lock check below piggybacks on
+ * that same guarantee: every source of a journal is blocked from posting
+ * into a closed period without needing to duplicate the check anywhere
+ * else.
  */
 class PostJournal
 {
@@ -21,6 +25,14 @@ class PostJournal
      */
     public function handle(array $data): Journal
     {
+        $lockedThroughDate = AccountingSettings::current()->locked_through_date;
+
+        if ($lockedThroughDate !== null && $lockedThroughDate->toDateString() >= $data['date']) {
+            throw new RuntimeException(
+                "This date falls within a locked accounting period (locked through {$lockedThroughDate->toDateString()}) and cannot be posted to."
+            );
+        }
+
         $lines = $data['lines'];
 
         $totalDebit = '0.0000';
