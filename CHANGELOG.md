@@ -4,6 +4,10 @@ All notable changes to EasyAccountsERP are recorded here, newest first. This pro
 
 ## 2026-09-24
 
+### Changed
+
+- UI polish across every module: data tables now scroll inside their own container instead of breaking the page layout on small screens, and search/filter inputs that relied on placeholder text alone got proper (visually hidden) labels for screen readers.
+
 ### Added
 
 - A second, independent tax rate per invoice/bill line (e.g. Bangladesh SD + VAT), calculated on the same net amount rather than compounded on top of the first.
