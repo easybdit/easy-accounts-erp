@@ -23,6 +23,7 @@ const groups = [
             { name: 'Customer Balances', routeName: 'reports.customer-balances' },
             { name: 'Customer Statement', routeName: 'reports.customer-statement' },
             { name: 'Vendor Balances', routeName: 'reports.vendor-balances' },
+            { name: 'Vendor Statement', routeName: 'reports.vendor-statement' },
         ],
     },
     {

@@ -25,6 +25,9 @@ const props = defineProps({
         <template #header>
             <PageHeader :title="vendor.name">
                 <template #actions>
+                    <Link :href="route('reports.vendor-statement', { vendor_id: vendor.id })">
+                        <SecondaryButton type="button">Statement</SecondaryButton>
+                    </Link>
                     <Link :href="route('vendors.edit', vendor.id)">
                         <SecondaryButton type="button">Edit</SecondaryButton>
                     </Link>

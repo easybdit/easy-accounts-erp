@@ -512,6 +512,94 @@ class ReportController extends Controller
         ];
     }
 
+    /**
+     * A vendor-facing Statement of Account — mirrors customerStatement()
+     * exactly, just scoped to a vendor's tagged journal entries (which are
+     * credit-normal, the opposite of a customer's debit-normal balance).
+     */
+    public function vendorStatement(Request $request): Response
+    {
+        $vendors = Vendor::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']);
+
+        $vendorId = $request->integer('vendor_id') ?: null;
+        $from = $request->date('from')?->toDateString();
+        $to = $request->date('to')?->toDateString() ?? now()->toDateString();
+
+        return Inertia::render('Reports/VendorStatement', [
+            'vendors' => $vendors,
+            'statement' => $vendorId ? $this->buildVendorStatement(Vendor::findOrFail($vendorId), $from, $to) : null,
+            'filters' => [
+                'vendor_id' => $vendorId,
+                'from' => $from,
+                'to' => $to,
+            ],
+        ]);
+    }
+
+    public function vendorStatementPdf(Request $request): HttpResponse
+    {
+        $vendor = Vendor::findOrFail($request->integer('vendor_id'));
+        $from = $request->date('from')?->toDateString();
+        $to = $request->date('to')?->toDateString() ?? now()->toDateString();
+
+        $statement = $this->buildVendorStatement($vendor, $from, $to);
+
+        $pdf = Pdf::loadView('pdfs.vendor-statement', [
+            'vendor' => $vendor,
+            'statement' => $statement,
+            'from' => $from,
+            'to' => $to,
+            'appName' => config('app.name'),
+        ]);
+
+        return $pdf->download("Statement-{$vendor->name}.pdf");
+    }
+
+    private function buildVendorStatement(Vendor $vendor, ?string $from, ?string $to): array
+    {
+        $startingBalance = $from
+            ? $vendor->balanceAsOf(Carbon::parse($from)->subDay()->toDateString())
+            : (string) $vendor->opening_balance;
+
+        $entries = $vendor->journalEntries()
+            ->with('journal:id,reference,description')
+            ->when($from, fn ($query) => $query->whereDate('date', '>=', $from))
+            ->when($to, fn ($query) => $query->whereDate('date', '<=', $to))
+            ->orderBy('date')
+            ->orderBy('id')
+            ->get();
+
+        $running = $startingBalance;
+
+        // A vendor's ledger is credit-normal (an amount owed BY the
+        // business) regardless of which GL account each line used —
+        // mirrors Vendor::balanceAsOf's own credit-increases convention.
+        $rows = $entries->map(function (JournalEntry $entry) use (&$running) {
+            $debit = (string) $entry->debit;
+            $credit = (string) $entry->credit;
+
+            $running = bcsub(bcadd($running, $credit, 4), $debit, 4);
+
+            return [
+                'id' => $entry->id,
+                'date' => $entry->date->toDateString(),
+                'reference' => $entry->journal->reference,
+                'description' => $entry->description ?? $entry->journal->description,
+                'debit' => $debit,
+                'credit' => $credit,
+                'running_balance' => $running,
+                'journal_id' => $entry->journal_id,
+            ];
+        });
+
+        return [
+            'vendor' => ['id' => $vendor->id, 'name' => $vendor->name, 'email' => $vendor->email],
+            'starting_balance' => $startingBalance,
+            'ending_balance' => $running,
+            'entries' => $rows,
+        ];
+    }
+
     public function customerBalances(): Response
     {
         $rows = Customer::query()

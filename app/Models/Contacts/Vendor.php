@@ -50,7 +50,18 @@ class Vendor extends Model
      */
     public function currentBalance(): string
     {
+        return $this->balanceAsOf();
+    }
+
+    /**
+     * Mirrors Account::balanceAsOf / Customer::balanceAsOf — the running
+     * balance for a Vendor Statement's opening line is just this called
+     * with the day before the statement's "from" date.
+     */
+    public function balanceAsOf(?string $asOf = null): string
+    {
         $row = $this->journalEntries()
+            ->when($asOf, fn ($query) => $query->whereDate('date', '<=', $asOf))
             ->selectRaw('COALESCE(SUM(debit), 0) as debit, COALESCE(SUM(credit), 0) as credit')
             ->first();
 
