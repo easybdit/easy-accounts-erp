@@ -180,51 +180,53 @@ function sendReminder() {
                 </div>
             </dl>
 
-            <table class="mt-6 min-w-full divide-y divide-gray-200">
-                <thead>
-                    <tr>
-                        <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Account</th>
-                        <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
-                        <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Qty</th>
-                        <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Unit Price</th>
-                        <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Discount</th>
-                        <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tax</th>
-                        <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Line Total</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <tr v-for="item in invoice.items" :key="item.id">
-                        <td class="px-2 py-2 text-sm text-gray-700">
-                            <template v-if="item.is_deferred && invoice.status === 'posted'">
-                                {{ item.deferred_revenue_account.code }} — {{ item.deferred_revenue_account.name }}
-                            </template>
-                            <template v-else>{{ item.account.code }} — {{ item.account.name }}</template>
-                        </td>
-                        <td class="px-2 py-2 text-sm text-gray-500">
-                            {{ item.description }}
-                            <Link
-                                v-if="item.is_deferred && item.revenue_recognition_schedule"
-                                :href="route('sales.revenue-recognition.show', item.revenue_recognition_schedule.id)"
-                                class="ml-1 text-xs text-indigo-600 hover:text-indigo-900"
-                            >
-                                (Deferred over {{ item.deferred_months }} months — view schedule)
-                            </Link>
-                            <span v-else-if="item.is_deferred" class="ml-1 text-xs text-amber-600">
-                                (Will defer over {{ item.deferred_months }} months once posted)
-                            </span>
-                        </td>
-                        <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.quantity }}</td>
-                        <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.unit_price }}</td>
-                        <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.discount }}</td>
-                        <td class="px-2 py-2 text-sm text-gray-500">
-                            <span v-if="item.tax_rate">{{ item.tax_rate.name }} ({{ item.tax_amount }})</span>
-                            <span v-else>—</span>
-                            <span v-if="item.tax_rate_2" class="block">{{ item.tax_rate_2.name }} ({{ item.tax_amount_2 }})</span>
-                        </td>
-                        <td class="px-2 py-2 text-right text-sm font-medium text-gray-800">{{ item.line_total }}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="mt-6 overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Account</th>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
+                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Qty</th>
+                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Unit Price</th>
+                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Discount</th>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tax</th>
+                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Line Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr v-for="item in invoice.items" :key="item.id">
+                            <td class="px-2 py-2 text-sm text-gray-700">
+                                <template v-if="item.is_deferred && invoice.status === 'posted'">
+                                    {{ item.deferred_revenue_account.code }} — {{ item.deferred_revenue_account.name }}
+                                </template>
+                                <template v-else>{{ item.account.code }} — {{ item.account.name }}</template>
+                            </td>
+                            <td class="px-2 py-2 text-sm text-gray-500">
+                                {{ item.description }}
+                                <Link
+                                    v-if="item.is_deferred && item.revenue_recognition_schedule"
+                                    :href="route('sales.revenue-recognition.show', item.revenue_recognition_schedule.id)"
+                                    class="ml-1 text-xs text-indigo-600 hover:text-indigo-900"
+                                >
+                                    (Deferred over {{ item.deferred_months }} months — view schedule)
+                                </Link>
+                                <span v-else-if="item.is_deferred" class="ml-1 text-xs text-amber-600">
+                                    (Will defer over {{ item.deferred_months }} months once posted)
+                                </span>
+                            </td>
+                            <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.quantity }}</td>
+                            <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.unit_price }}</td>
+                            <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.discount }}</td>
+                            <td class="px-2 py-2 text-sm text-gray-500">
+                                <span v-if="item.tax_rate">{{ item.tax_rate.name }} ({{ item.tax_amount }})</span>
+                                <span v-else>—</span>
+                                <span v-if="item.tax_rate_2" class="block">{{ item.tax_rate_2.name }} ({{ item.tax_amount_2 }})</span>
+                            </td>
+                            <td class="px-2 py-2 text-right text-sm font-medium text-gray-800">{{ item.line_total }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
             <div class="mt-4 flex justify-end">
                 <dl class="w-64 space-y-1 text-sm">
@@ -249,26 +251,28 @@ function sendReminder() {
 
             <div v-if="invoice.payment_allocations?.length" class="mt-6 border-t border-gray-100 pt-4">
                 <h2 class="mb-2 text-sm font-semibold text-gray-700">Payment History</h2>
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead>
-                        <tr>
-                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Payment #</th>
-                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Applied Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        <tr v-for="allocation in invoice.payment_allocations" :key="allocation.id">
-                            <td class="px-2 py-2 text-sm text-gray-700">
-                                <Link :href="route('sales.payments.show', allocation.payment.id)" class="text-indigo-600 hover:text-indigo-900">
-                                    {{ allocation.payment.payment_number }}
-                                </Link>
-                            </td>
-                            <td class="px-2 py-2 text-sm text-gray-500">{{ allocation.payment.payment_date }}</td>
-                            <td class="px-2 py-2 text-right text-sm text-gray-700">{{ allocation.amount }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Payment #</th>
+                                <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
+                                <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Applied Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr v-for="allocation in invoice.payment_allocations" :key="allocation.id">
+                                <td class="px-2 py-2 text-sm text-gray-700">
+                                    <Link :href="route('sales.payments.show', allocation.payment.id)" class="text-indigo-600 hover:text-indigo-900">
+                                        {{ allocation.payment.payment_number }}
+                                    </Link>
+                                </td>
+                                <td class="px-2 py-2 text-sm text-gray-500">{{ allocation.payment.payment_date }}</td>
+                                <td class="px-2 py-2 text-right text-sm text-gray-700">{{ allocation.amount }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </Card>
 

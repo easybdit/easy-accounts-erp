@@ -42,57 +42,67 @@ watch([search, status], apply);
         </template>
 
         <div class="mb-4 flex flex-wrap gap-3">
-            <input
-                v-model="search"
-                type="text"
-                placeholder="Search by invoice # or customer..."
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs"
-            />
-            <select
-                v-model="status"
-                class="block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            >
-                <option value="">All statuses</option>
-                <option value="draft">Draft</option>
-                <option value="posted">Posted</option>
-            </select>
+            <div>
+                <label for="search" class="sr-only">Search invoices</label>
+                <input
+                    id="search"
+                    v-model="search"
+                    type="text"
+                    placeholder="Search by invoice # or customer..."
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs"
+                />
+            </div>
+            <div>
+                <label for="status" class="sr-only">Filter by status</label>
+                <select
+                    id="status"
+                    v-model="status"
+                    class="block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                >
+                    <option value="">All statuses</option>
+                    <option value="draft">Draft</option>
+                    <option value="posted">Posted</option>
+                </select>
+            </div>
         </div>
 
         <Card>
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Invoice #</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Customer</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Total</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                        <th class="px-4 py-3" />
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="invoice in invoices.data" :key="invoice.id" class="hover:bg-gray-50">
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
-                            <Link :href="route('sales.invoices.show', invoice.id)" class="text-indigo-600 hover:text-indigo-900">
-                                {{ invoice.invoice_number }}
-                            </Link>
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ invoice.customer.name }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ invoice.invoice_date }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ invoice.total }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm">
-                            <Badge :variant="invoice.status === 'posted' ? 'success' : 'warning'" class="capitalize">
-                                {{ invoice.status }}
-                            </Badge>
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
-                            <Link v-if="invoice.status === 'draft'" :href="route('sales.invoices.edit', invoice.id)" class="text-indigo-600 hover:text-indigo-900">
-                                Edit
-                            </Link>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Invoice #</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Customer</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Total</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                            <th class="px-4 py-3" />
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="invoice in invoices.data" :key="invoice.id" class="hover:bg-gray-50">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
+                                <Link :href="route('sales.invoices.show', invoice.id)" class="text-indigo-600 hover:text-indigo-900">
+                                    {{ invoice.invoice_number }}
+                                </Link>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ invoice.customer.name }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ invoice.invoice_date }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ invoice.total }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm">
+                                <Badge :variant="invoice.status === 'posted' ? 'success' : 'warning'" class="capitalize">
+                                    {{ invoice.status }}
+                                </Badge>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
+                                <Link v-if="invoice.status === 'draft'" :href="route('sales.invoices.edit', invoice.id)" class="text-indigo-600 hover:text-indigo-900">
+                                    Edit
+                                </Link>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <EmptyState v-if="invoices.data.length === 0" title="No invoices found" description="Create an invoice to start billing customers." />
         </Card>
 

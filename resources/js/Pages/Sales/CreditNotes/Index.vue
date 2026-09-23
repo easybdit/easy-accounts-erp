@@ -40,51 +40,61 @@ watch([search, status], () => {
         </template>
 
         <div class="mb-4 flex flex-wrap gap-3">
-            <input
-                v-model="search"
-                type="text"
-                placeholder="Search by credit note # or customer..."
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs"
-            />
-            <select
-                v-model="status"
-                class="block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            >
-                <option value="">All statuses</option>
-                <option value="draft">Draft</option>
-                <option value="posted">Posted</option>
-            </select>
+            <div>
+                <label for="search" class="sr-only">Search credit notes</label>
+                <input
+                    id="search"
+                    v-model="search"
+                    type="text"
+                    placeholder="Search by credit note # or customer..."
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs"
+                />
+            </div>
+            <div>
+                <label for="status" class="sr-only">Filter by status</label>
+                <select
+                    id="status"
+                    v-model="status"
+                    class="block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                >
+                    <option value="">All statuses</option>
+                    <option value="draft">Draft</option>
+                    <option value="posted">Posted</option>
+                </select>
+            </div>
         </div>
 
         <Card>
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Credit Note #</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Customer</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Total</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <tr v-for="creditNote in creditNotes.data" :key="creditNote.id" class="hover:bg-gray-50">
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
-                            <Link :href="route('sales.credit-notes.show', creditNote.id)" class="text-indigo-600 hover:text-indigo-900">
-                                {{ creditNote.credit_note_number }}
-                            </Link>
-                        </td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ creditNote.customer.name }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ creditNote.credit_note_date }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ creditNote.total }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm">
-                            <Badge :variant="creditNote.status === 'posted' ? 'success' : 'warning'" class="capitalize">
-                                {{ creditNote.status }}
-                            </Badge>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Credit Note #</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Customer</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Total</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr v-for="creditNote in creditNotes.data" :key="creditNote.id" class="hover:bg-gray-50">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
+                                <Link :href="route('sales.credit-notes.show', creditNote.id)" class="text-indigo-600 hover:text-indigo-900">
+                                    {{ creditNote.credit_note_number }}
+                                </Link>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ creditNote.customer.name }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ creditNote.credit_note_date }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ creditNote.total }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm">
+                                <Badge :variant="creditNote.status === 'posted' ? 'success' : 'warning'" class="capitalize">
+                                    {{ creditNote.status }}
+                                </Badge>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <EmptyState v-if="creditNotes.data.length === 0" title="No credit notes found" description="Issue a credit note to reduce a customer's balance." />
         </Card>
 

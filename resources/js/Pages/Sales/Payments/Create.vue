@@ -138,41 +138,43 @@ function submit() {
                     This customer has no open (posted, unpaid) invoices.
                 </p>
 
-                <table v-else class="mt-3 min-w-full divide-y divide-gray-200">
-                    <thead>
-                        <tr>
-                            <th class="px-2 py-2" />
-                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Invoice #</th>
-                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Total</th>
-                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount Due</th>
-                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Apply Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        <tr v-for="invoice in customerInvoices" :key="invoice.id">
-                            <td class="px-2 py-2">
-                                <input
-                                    type="checkbox"
-                                    :checked="invoice.id in selected"
-                                    class="rounded border-gray-300"
-                                    @change="toggle(invoice)"
-                                />
-                            </td>
-                            <td class="px-2 py-2 text-sm text-gray-700">{{ invoice.invoice_number }}</td>
-                            <td class="px-2 py-2 text-right text-sm text-gray-700">{{ invoice.total }}</td>
-                            <td class="px-2 py-2 text-right text-sm text-gray-700">{{ invoice.amount_due }}</td>
-                            <td class="px-2 py-2 text-right">
-                                <input
-                                    v-if="invoice.id in selected"
-                                    v-model="selected[invoice.id]"
-                                    type="number"
-                                    step="0.0001"
-                                    class="block w-32 rounded-md border-gray-300 text-right text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                />
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div v-else class="mt-3 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-2 py-2" />
+                                <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Invoice #</th>
+                                <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Total</th>
+                                <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount Due</th>
+                                <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Apply Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr v-for="invoice in customerInvoices" :key="invoice.id">
+                                <td class="px-2 py-2">
+                                    <input
+                                        type="checkbox"
+                                        :checked="invoice.id in selected"
+                                        class="rounded border-gray-300"
+                                        @change="toggle(invoice)"
+                                    />
+                                </td>
+                                <td class="px-2 py-2 text-sm text-gray-700">{{ invoice.invoice_number }}</td>
+                                <td class="px-2 py-2 text-right text-sm text-gray-700">{{ invoice.total }}</td>
+                                <td class="px-2 py-2 text-right text-sm text-gray-700">{{ invoice.amount_due }}</td>
+                                <td class="px-2 py-2 text-right">
+                                    <input
+                                        v-if="invoice.id in selected"
+                                        v-model="selected[invoice.id]"
+                                        type="number"
+                                        step="0.0001"
+                                        class="block w-32 rounded-md border-gray-300 text-right text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 <InputError :message="form.errors.allocations" class="mt-2" />
                 <p v-if="form.amount" class="mt-2 text-sm" :class="remaining === 0 ? 'text-green-600' : 'text-red-600'">

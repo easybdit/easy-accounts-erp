@@ -79,26 +79,28 @@ const props = defineProps({
                 </div>
             </dl>
 
-            <table class="mt-6 min-w-full divide-y divide-gray-200">
-                <thead>
-                    <tr>
-                        <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Invoice</th>
-                        <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Invoice Total</th>
-                        <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Applied Amount</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <tr v-for="allocation in payment.allocations" :key="allocation.id">
-                        <td class="px-2 py-2 text-sm text-gray-700">
-                            <Link :href="route('sales.invoices.show', allocation.invoice.id)" class="text-indigo-600 hover:text-indigo-900">
-                                {{ allocation.invoice.invoice_number }}
-                            </Link>
-                        </td>
-                        <td class="px-2 py-2 text-right text-sm text-gray-700">{{ allocation.invoice.total }}</td>
-                        <td class="px-2 py-2 text-right text-sm font-medium text-gray-800">{{ allocation.amount }}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="mt-6 overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Invoice</th>
+                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Invoice Total</th>
+                            <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Applied Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr v-for="allocation in payment.allocations" :key="allocation.id">
+                            <td class="px-2 py-2 text-sm text-gray-700">
+                                <Link :href="route('sales.invoices.show', allocation.invoice.id)" class="text-indigo-600 hover:text-indigo-900">
+                                    {{ allocation.invoice.invoice_number }}
+                                </Link>
+                            </td>
+                            <td class="px-2 py-2 text-right text-sm text-gray-700">{{ allocation.invoice.total }}</td>
+                            <td class="px-2 py-2 text-right text-sm font-medium text-gray-800">{{ allocation.amount }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </AppLayout>
 </template>
