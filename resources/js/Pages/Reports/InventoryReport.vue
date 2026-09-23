@@ -1,13 +1,21 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
 import ExportCsvButton from '@/Components/ExportCsvButton.vue';
 
 const props = defineProps({
     rows: Array,
     totalValue: String,
 });
+
+const hasLowStock = computed(() => props.rows.some((row) => row.is_low_stock));
+
+function sendAlert() {
+    router.post(route('inventory.low-stock-alert.store'));
+}
 </script>
 
 <template>
@@ -17,6 +25,9 @@ const props = defineProps({
         <template #header>
             <PageHeader title="Inventory Report">
                 <template #actions>
+                    <PrimaryButton v-if="hasLowStock" type="button" @click="sendAlert">
+                        Send Low Stock Alert Now
+                    </PrimaryButton>
                     <ExportCsvButton route-name="reports.inventory" />
                 </template>
             </PageHeader>

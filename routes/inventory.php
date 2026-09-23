@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Inventory\LowStockAlertController;
 use App\Http\Controllers\Inventory\ProductCategoryController;
 use App\Http\Controllers\Inventory\ProductController;
 use App\Http\Controllers\Inventory\StockMovementController;
@@ -44,5 +45,9 @@ Route::middleware(['auth', 'verified'])->prefix('inventory')->name('inventory.')
     });
     Route::middleware('permission:inventory.view')->group(function () {
         Route::get('stock-movements/{stock_movement}', [StockMovementController::class, 'show'])->name('stock-movements.show');
+    });
+
+    Route::middleware('permission:inventory.manage')->group(function () {
+        Route::post('low-stock-alert', [LowStockAlertController::class, 'store'])->name('low-stock-alert.store');
     });
 });

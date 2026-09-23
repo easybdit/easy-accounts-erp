@@ -40,3 +40,7 @@ Schedule::command('bills:generate-recurring')->dailyAt('02:30');
 // Overdue invoice payment reminders: daily check, but each invoice is only
 // actually emailed once every 7 days (see SendOverdueInvoiceReminders).
 Schedule::command('invoices:send-overdue-reminders')->dailyAt('08:00');
+
+// Low Stock Alert: daily digest to inventory managers, silent when nothing
+// is low (see SendLowStockAlert).
+Schedule::command('inventory:send-low-stock-alerts')->dailyAt('08:15');
