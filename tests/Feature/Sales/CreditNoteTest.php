@@ -3,6 +3,7 @@
 namespace Tests\Feature\Sales;
 
 use App\Actions\Accounting\PostJournal;
+use App\Actions\Inventory\RecordInventorySaleMovement;
 use App\Actions\Sales\PostCreditNote;
 use App\Actions\Sales\PostInvoice;
 use App\Models\Accounting\Account;
@@ -82,7 +83,7 @@ class CreditNoteTest extends TestCase
             'discount' => 0,
             'line_total' => 500,
         ]);
-        (new PostInvoice(new PostJournal))->handle($invoice->fresh());
+        (new PostInvoice(new PostJournal, new RecordInventorySaleMovement(new PostJournal)))->handle($invoice->fresh());
 
         $this->actingAs($user)->post(route('sales.credit-notes.store'), $this->payload([
             'customer_id' => $customer->id,

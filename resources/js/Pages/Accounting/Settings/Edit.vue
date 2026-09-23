@@ -29,6 +29,7 @@ const tabs = [
     { key: 'security', label: 'Login Security' },
     { key: 'ip-whitelist', label: 'IP Whitelist' },
     { key: 'period-lock', label: 'Period Lock' },
+    { key: 'numbering', label: 'Document Numbering' },
 ];
 const activeTab = ref('logo');
 
@@ -180,6 +181,33 @@ function submitLock() {
 function removeLock() {
     lockForm.locked_through_date = '';
     lockForm.put(route('accounting.settings.update'), { preserveState: true, preserveScroll: true });
+}
+
+// --- Document numbering --------------------------------------------------
+
+// Defaults mirror GenerateDocumentNumber::DEFAULTS — shown as placeholders
+// so an empty field visibly means "use this," not "blank."
+const documentTypes = [
+    { key: 'invoice', label: 'Invoice', default: 'INV' },
+    { key: 'estimate', label: 'Estimate', default: 'EST' },
+    { key: 'credit_note', label: 'Credit Note', default: 'CN' },
+    { key: 'payment', label: 'Customer Payment', default: 'PAY' },
+    { key: 'sales_receipt', label: 'Sales Receipt', default: 'SR' },
+    { key: 'bill', label: 'Bill', default: 'BILL' },
+    { key: 'purchase_order', label: 'Purchase Order', default: 'PO' },
+    { key: 'vendor_credit', label: 'Vendor Credit', default: 'VC' },
+    { key: 'vendor_payment', label: 'Vendor Payment', default: 'VPAY' },
+    { key: 'expense', label: 'Expense', default: 'EXP' },
+    { key: 'bank_deposit', label: 'Bank Deposit', default: 'DEP' },
+    { key: 'transfer', label: 'Transfer', default: 'TRF' },
+];
+
+const numberingForm = useForm(
+    Object.fromEntries(documentTypes.map((type) => [type.key, props.settings.document_number_prefixes?.[type.key] ?? '']))
+);
+
+function submitNumbering() {
+    numberingForm.put(route('accounting.settings.document-numbering.update'), { preserveState: true, preserveScroll: true });
 }
 </script>
 
@@ -494,6 +522,35 @@ function removeLock() {
                         <SecondaryButton v-if="settings.locked_through_date" type="button" @click="removeLock">
                             Remove Lock
                         </SecondaryButton>
+                    </div>
+                </form>
+            </Card>
+
+            <!-- Document Numbering -->
+            <Card v-show="activeTab === 'numbering'" padded>
+                <h2 class="text-sm font-semibold text-gray-700">Document Numbering</h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    Each number is generated as <span class="font-mono">{PREFIX}-{year}-{sequence}</span>, e.g.
+                    <span class="font-mono">INV-2026-0001</span>. Set a prefix per document type here, or leave a
+                    field blank to use its default shown as a placeholder.
+                </p>
+
+                <form class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3" @submit.prevent="submitNumbering">
+                    <div v-for="type in documentTypes" :key="type.key">
+                        <InputLabel :for="`prefix_${type.key}`" :value="type.label" />
+                        <TextInput
+                            :id="`prefix_${type.key}`"
+                            v-model="numberingForm[type.key]"
+                            type="text"
+                            class="mt-1 block w-full"
+                            :placeholder="type.default"
+                            :disabled="!canManage()"
+                        />
+                        <InputError :message="numberingForm.errors[type.key]" class="mt-2" />
+                    </div>
+
+                    <div v-if="canManage()" class="sm:col-span-3">
+                        <PrimaryButton :loading="numberingForm.processing">Save Numbering Settings</PrimaryButton>
                     </div>
                 </form>
             </Card>

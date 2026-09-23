@@ -3,6 +3,7 @@
 namespace Tests\Feature\Inventory;
 
 use App\Actions\Accounting\PostJournal;
+use App\Actions\Inventory\RecordInventorySaleMovement;
 use App\Actions\Purchases\PostBill;
 use App\Actions\Sales\PostInvoice;
 use App\Models\Accounting\Account;
@@ -45,7 +46,7 @@ class InvoiceBillProductIntegrationTest extends TestCase
             'line_total' => 360,
         ]);
 
-        (new PostInvoice(new PostJournal))->handle($invoice->fresh());
+        (new PostInvoice(new PostJournal, new RecordInventorySaleMovement(new PostJournal)))->handle($invoice->fresh());
 
         $this->assertSame('-3.0000', $product->fresh()->currentStock());
         $this->assertDatabaseHas('stock_movements', [
@@ -83,7 +84,7 @@ class InvoiceBillProductIntegrationTest extends TestCase
             'line_total' => 100,
         ]);
 
-        (new PostInvoice(new PostJournal))->handle($invoice->fresh());
+        (new PostInvoice(new PostJournal, new RecordInventorySaleMovement(new PostJournal)))->handle($invoice->fresh());
 
         $this->assertDatabaseCount('stock_movements', 0);
     }

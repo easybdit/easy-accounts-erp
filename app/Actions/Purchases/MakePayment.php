@@ -2,6 +2,7 @@
 
 namespace App\Actions\Purchases;
 
+use App\Actions\Accounting\GenerateDocumentNumber;
 use App\Actions\Accounting\PostJournal;
 use App\Models\Purchases\Bill;
 use App\Models\Purchases\VendorPayment;
@@ -30,7 +31,7 @@ use RuntimeException;
  */
 class MakePayment
 {
-    public function __construct(private PostJournal $postJournal) {}
+    public function __construct(private PostJournal $postJournal, private GenerateDocumentNumber $generateDocumentNumber) {}
 
     /**
      * @param  array{vendor_id:int, payment_account_id:int, payment_date:string, reference:?string, method:?string, amount:numeric-string|float, withholding_tax_rate_id?:?int, notes:?string, created_by:?int, allocations: array<int, array{bill_id:int, amount:numeric-string|float}>}  $data
@@ -79,7 +80,7 @@ class MakePayment
 
         return DB::transaction(function () use ($data, $allocations, $bills, $amount, $withholdingTaxRate, $withholdingTaxAmount) {
             $payment = VendorPayment::create([
-                'payment_number' => $this->nextPaymentNumber($data['payment_date']),
+                'payment_number' => $this->generateDocumentNumber->handle('vendor_payment', VendorPayment::class, 'payment_number', $data['payment_date']),
                 'vendor_id' => $data['vendor_id'],
                 'payment_account_id' => $data['payment_account_id'],
                 'payment_date' => $data['payment_date'],
@@ -144,13 +145,5 @@ class MakePayment
 
             return $payment->load('allocations.bill', 'journal');
         });
-    }
-
-    private function nextPaymentNumber(string $paymentDate): string
-    {
-        $year = date('Y', strtotime($paymentDate));
-        $count = VendorPayment::where('payment_number', 'like', "VPAY-{$year}-%")->count() + 1;
-
-        return sprintf('VPAY-%s-%04d', $year, $count);
     }
 }

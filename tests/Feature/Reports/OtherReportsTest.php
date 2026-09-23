@@ -4,6 +4,7 @@ namespace Tests\Feature\Reports;
 
 use App\Actions\Accounting\PostJournal;
 use App\Actions\Expenses\RecordExpense;
+use App\Actions\Inventory\RecordInventorySaleMovement;
 use App\Actions\Purchases\PostBill;
 use App\Actions\Sales\PostInvoice;
 use App\Models\Accounting\Account;
@@ -87,7 +88,7 @@ class OtherReportsTest extends TestCase
             'total' => 0,
         ]);
         $invoice->items()->create(['account_id' => $income->id, 'description' => 'X', 'quantity' => 1, 'unit_price' => 300, 'discount' => 0, 'line_total' => 300]);
-        (new PostInvoice(new PostJournal))->handle($invoice->fresh());
+        (new PostInvoice(new PostJournal, new RecordInventorySaleMovement(new PostJournal)))->handle($invoice->fresh());
 
         $response = $this->actingAs($user)->get(route('reports.sales', ['from' => '2026-03-01', 'to' => '2026-03-31']));
         $props = $response->viewData('page')['props'];

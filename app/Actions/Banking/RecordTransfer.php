@@ -2,6 +2,7 @@
 
 namespace App\Actions\Banking;
 
+use App\Actions\Accounting\GenerateDocumentNumber;
 use App\Actions\Accounting\PostJournal;
 use App\Models\Banking\Transfer;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\DB;
  */
 class RecordTransfer
 {
-    public function __construct(private PostJournal $postJournal) {}
+    public function __construct(private PostJournal $postJournal, private GenerateDocumentNumber $generateDocumentNumber) {}
 
     /**
      * @param  array{from_account_id:int, to_account_id:int, transfer_date:string, amount:numeric-string|float, reference:?string, notes:?string, created_by:?int}  $data
@@ -23,7 +24,7 @@ class RecordTransfer
     {
         return DB::transaction(function () use ($data) {
             $transfer = Transfer::create([
-                'transfer_number' => $this->nextTransferNumber($data['transfer_date']),
+                'transfer_number' => $this->generateDocumentNumber->handle('transfer', Transfer::class, 'transfer_number', $data['transfer_date']),
                 'from_account_id' => $data['from_account_id'],
                 'to_account_id' => $data['to_account_id'],
                 'transfer_date' => $data['transfer_date'],
@@ -58,13 +59,5 @@ class RecordTransfer
 
             return $transfer->load('journal');
         });
-    }
-
-    private function nextTransferNumber(string $transferDate): string
-    {
-        $year = date('Y', strtotime($transferDate));
-        $count = Transfer::where('transfer_number', 'like', "TRF-{$year}-%")->count() + 1;
-
-        return sprintf('TRF-%s-%04d', $year, $count);
     }
 }

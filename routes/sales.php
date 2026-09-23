@@ -6,6 +6,7 @@ use App\Http\Controllers\Sales\InvoiceController;
 use App\Http\Controllers\Sales\PaymentController;
 use App\Http\Controllers\Sales\RecurringInvoiceController;
 use App\Http\Controllers\Sales\RevenueRecognitionScheduleController;
+use App\Http\Controllers\Sales\SalesReceiptController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(function () {
@@ -30,6 +31,24 @@ Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(
         Route::post('invoices/{invoice}/payment-link', [InvoiceController::class, 'generatePaymentLink'])->name('invoices.payment-link');
         Route::post('invoices/{invoice}/email', [InvoiceController::class, 'sendEmail'])->name('invoices.email');
         Route::post('invoices/{invoice}/send-reminder', [InvoiceController::class, 'sendReminder'])->name('invoices.send-reminder');
+    });
+
+    // Sales Receipts are an immediate cash sale (Section 12/28): no AR, no
+    // draft state — creating one IS posting it, same lifecycle as Payments,
+    // so there are no edit/update/destroy/post routes. Reuses invoices.*
+    // rather than a separate permission pair, same reasoning as Estimates
+    // and Credit Notes below (this app's two-tier model doesn't need more
+    // granularity per sales document type).
+    Route::middleware('permission:invoices.view')->group(function () {
+        Route::get('sales-receipts', [SalesReceiptController::class, 'index'])->name('sales-receipts.index');
+    });
+    Route::middleware('permission:invoices.manage')->group(function () {
+        Route::get('sales-receipts/create', [SalesReceiptController::class, 'create'])->name('sales-receipts.create');
+        Route::post('sales-receipts', [SalesReceiptController::class, 'store'])->name('sales-receipts.store');
+    });
+    Route::middleware('permission:invoices.view')->group(function () {
+        Route::get('sales-receipts/{sales_receipt}', [SalesReceiptController::class, 'show'])->name('sales-receipts.show');
+        Route::get('sales-receipts/{sales_receipt}/pdf', [SalesReceiptController::class, 'pdf'])->name('sales-receipts.pdf');
     });
 
     // Estimates are non-financial (never post to the Journal) until

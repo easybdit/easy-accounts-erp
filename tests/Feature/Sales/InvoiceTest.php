@@ -3,6 +3,7 @@
 namespace Tests\Feature\Sales;
 
 use App\Actions\Accounting\PostJournal;
+use App\Actions\Inventory\RecordInventorySaleMovement;
 use App\Actions\Sales\PostInvoice;
 use App\Models\Accounting\Account;
 use App\Models\Contacts\Customer;
@@ -157,7 +158,7 @@ class InvoiceTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user)->post(route('sales.invoices.store'), $this->payload());
         $invoice = Invoice::first();
-        (new PostInvoice(new PostJournal))->handle($invoice);
+        (new PostInvoice(new PostJournal, new RecordInventorySaleMovement(new PostJournal)))->handle($invoice);
 
         $this->actingAs($user)->get(route('sales.invoices.edit', $invoice))->assertForbidden();
         $this->actingAs($user)->delete(route('sales.invoices.destroy', $invoice))->assertForbidden();
@@ -182,7 +183,7 @@ class InvoiceTest extends TestCase
 
         $this->expectException(RuntimeException::class);
 
-        (new PostInvoice(new PostJournal))->handle($invoice);
+        (new PostInvoice(new PostJournal, new RecordInventorySaleMovement(new PostJournal)))->handle($invoice);
     }
 
     public function test_a_pdf_can_be_downloaded(): void

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Banking;
 
+use App\Actions\Accounting\GenerateDocumentNumber;
 use App\Actions\Accounting\PostJournal;
 use App\Models\Accounting\Account;
 use App\Models\Banking\BankDeposit;
@@ -18,7 +19,7 @@ use RuntimeException;
  */
 class MakeBankDeposit
 {
-    public function __construct(private PostJournal $postJournal) {}
+    public function __construct(private PostJournal $postJournal, private GenerateDocumentNumber $generateDocumentNumber) {}
 
     /**
      * @param  array{bank_account_id:int, deposit_date:string, reference:?string, notes:?string, created_by:?int, payment_ids: array<int, int>}  $data
@@ -55,7 +56,7 @@ class MakeBankDeposit
 
         return DB::transaction(function () use ($data, $payments, $total, $undepositedFundsAccount) {
             $deposit = BankDeposit::create([
-                'deposit_number' => $this->nextDepositNumber($data['deposit_date']),
+                'deposit_number' => $this->generateDocumentNumber->handle('bank_deposit', BankDeposit::class, 'deposit_number', $data['deposit_date']),
                 'bank_account_id' => $data['bank_account_id'],
                 'deposit_date' => $data['deposit_date'],
                 'amount' => $total,
@@ -83,13 +84,5 @@ class MakeBankDeposit
 
             return $deposit->load('payments', 'journal');
         });
-    }
-
-    private function nextDepositNumber(string $depositDate): string
-    {
-        $year = date('Y', strtotime($depositDate));
-        $count = BankDeposit::where('deposit_number', 'like', "DEP-{$year}-%")->count() + 1;
-
-        return sprintf('DEP-%s-%04d', $year, $count);
     }
 }

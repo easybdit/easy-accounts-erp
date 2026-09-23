@@ -2,6 +2,7 @@
 
 namespace App\Actions\Sales;
 
+use App\Actions\Accounting\GenerateDocumentNumber;
 use App\Models\Sales\CreditNote;
 use App\Models\Tax\TaxRate;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,8 @@ use RuntimeException;
  */
 class SaveCreditNoteDraft
 {
+    public function __construct(private GenerateDocumentNumber $generateDocumentNumber) {}
+
     public function handle(array $data, ?CreditNote $creditNote = null): CreditNote
     {
         if ($creditNote && ! $creditNote->isDraft()) {
@@ -64,7 +67,7 @@ class SaveCreditNoteDraft
                     'total' => $total,
                 ])
                 : CreditNote::create([
-                    'credit_note_number' => $this->nextCreditNoteNumber($data['credit_note_date']),
+                    'credit_note_number' => $this->generateDocumentNumber->handle('credit_note', CreditNote::class, 'credit_note_number', $data['credit_note_date']),
                     'customer_id' => $data['customer_id'],
                     'receivable_account_id' => $data['receivable_account_id'],
                     'invoice_id' => $data['invoice_id'] ?? null,
@@ -95,13 +98,5 @@ class SaveCreditNoteDraft
 
             return $creditNote->load('items');
         });
-    }
-
-    private function nextCreditNoteNumber(string $date): string
-    {
-        $year = date('Y', strtotime($date));
-        $count = CreditNote::where('credit_note_number', 'like', "CN-{$year}-%")->count() + 1;
-
-        return sprintf('CN-%s-%04d', $year, $count);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Accounting;
 use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Accounting\UpdateAccountingSettingsRequest;
+use App\Http\Requests\Accounting\UpdateDocumentNumberingRequest;
 use App\Http\Requests\Accounting\UpdateLoginSecuritySettingsRequest;
 use App\Http\Requests\Accounting\UpdateLogoRequest;
 use App\Http\Requests\Accounting\UpdateMailSettingsRequest;
@@ -159,5 +160,17 @@ class AccountingSettingsController extends Controller
         AccountingSettings::current()->update(['ip_whitelist_enabled' => $enabled]);
 
         return back()->with('success', $enabled ? 'IP whitelist enabled.' : 'IP whitelist disabled — logins are no longer restricted by IP.');
+    }
+
+    public function updateDocumentNumbering(UpdateDocumentNumberingRequest $request): RedirectResponse
+    {
+        // A blank field means "use the default prefix" — dropped from the
+        // stored map entirely rather than saved as an empty override, so
+        // GenerateDocumentNumber's self::DEFAULTS fallback applies (Section 50).
+        $prefixes = array_filter($request->validated(), fn (?string $prefix) => filled($prefix));
+
+        AccountingSettings::current()->update(['document_number_prefixes' => $prefixes]);
+
+        return back()->with('success', 'Document numbering settings saved.');
     }
 }

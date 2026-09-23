@@ -2,6 +2,7 @@
 
 namespace App\Actions\Purchases;
 
+use App\Actions\Accounting\GenerateDocumentNumber;
 use App\Models\Purchases\VendorCredit;
 use App\Models\Tax\TaxRate;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,8 @@ use RuntimeException;
  */
 class SaveVendorCreditDraft
 {
+    public function __construct(private GenerateDocumentNumber $generateDocumentNumber) {}
+
     public function handle(array $data, ?VendorCredit $vendorCredit = null): VendorCredit
     {
         if ($vendorCredit && ! $vendorCredit->isDraft()) {
@@ -64,7 +67,7 @@ class SaveVendorCreditDraft
                     'total' => $total,
                 ])
                 : VendorCredit::create([
-                    'vendor_credit_number' => $this->nextVendorCreditNumber($data['vendor_credit_date']),
+                    'vendor_credit_number' => $this->generateDocumentNumber->handle('vendor_credit', VendorCredit::class, 'vendor_credit_number', $data['vendor_credit_date']),
                     'vendor_id' => $data['vendor_id'],
                     'payable_account_id' => $data['payable_account_id'],
                     'bill_id' => $data['bill_id'] ?? null,
@@ -95,13 +98,5 @@ class SaveVendorCreditDraft
 
             return $vendorCredit->load('items');
         });
-    }
-
-    private function nextVendorCreditNumber(string $date): string
-    {
-        $year = date('Y', strtotime($date));
-        $count = VendorCredit::where('vendor_credit_number', 'like', "VC-{$year}-%")->count() + 1;
-
-        return sprintf('VC-%s-%04d', $year, $count);
     }
 }

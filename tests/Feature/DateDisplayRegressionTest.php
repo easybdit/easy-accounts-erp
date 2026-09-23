@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\Accounting\PostJournal;
+use App\Actions\Inventory\RecordInventorySaleMovement;
 use App\Actions\Purchases\PostBill;
 use App\Actions\Sales\PostInvoice;
 use App\Models\Accounting\Account;
@@ -60,7 +61,7 @@ class DateDisplayRegressionTest extends TestCase
             'line_total' => 1000,
         ]);
 
-        return (new PostInvoice(new PostJournal))->handle($invoice->fresh());
+        return (new PostInvoice(new PostJournal, new RecordInventorySaleMovement(new PostJournal)))->handle($invoice->fresh());
     }
 
     private function postedBill(): Bill

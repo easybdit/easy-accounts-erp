@@ -2,6 +2,7 @@
 
 namespace App\Actions\Expenses;
 
+use App\Actions\Accounting\GenerateDocumentNumber;
 use App\Actions\Accounting\PostJournal;
 use App\Models\Expenses\Expense;
 use App\Models\Tax\TaxRate;
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\DB;
  */
 class RecordExpense
 {
-    public function __construct(private PostJournal $postJournal) {}
+    public function __construct(private PostJournal $postJournal, private GenerateDocumentNumber $generateDocumentNumber) {}
 
     /**
      * @param  array{expense_category_id:int, account_id:int, payment_account_id:int, vendor_id:?int, payee:string, expense_date:string, amount:numeric-string|float, tax_rate_id:?int, reference:?string, notes:?string, created_by:?int}  $data
@@ -31,7 +32,7 @@ class RecordExpense
             $totalPaid = bcadd($amount, $taxAmount, 4);
 
             $expense = Expense::create([
-                'expense_number' => $this->nextExpenseNumber($data['expense_date']),
+                'expense_number' => $this->generateDocumentNumber->handle('expense', Expense::class, 'expense_number', $data['expense_date']),
                 'expense_category_id' => $data['expense_category_id'],
                 'account_id' => $data['account_id'],
                 'payment_account_id' => $data['payment_account_id'],
@@ -83,13 +84,5 @@ class RecordExpense
 
             return $expense->load('journal');
         });
-    }
-
-    private function nextExpenseNumber(string $expenseDate): string
-    {
-        $year = date('Y', strtotime($expenseDate));
-        $count = Expense::where('expense_number', 'like', "EXP-{$year}-%")->count() + 1;
-
-        return sprintf('EXP-%s-%04d', $year, $count);
     }
 }

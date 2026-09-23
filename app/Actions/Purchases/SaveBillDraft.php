@@ -2,6 +2,7 @@
 
 namespace App\Actions\Purchases;
 
+use App\Actions\Accounting\GenerateDocumentNumber;
 use App\Models\Purchases\Bill;
 use App\Models\Tax\TaxRate;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,8 @@ use RuntimeException;
  */
 class SaveBillDraft
 {
+    public function __construct(private GenerateDocumentNumber $generateDocumentNumber) {}
+
     public function handle(array $data, ?Bill $bill = null): Bill
     {
         if ($bill && ! $bill->isDraft()) {
@@ -86,7 +89,7 @@ class SaveBillDraft
                     'total' => $total,
                 ])
                 : Bill::create([
-                    'bill_number' => $this->nextBillNumber($data['bill_date']),
+                    'bill_number' => $this->generateDocumentNumber->handle('bill', Bill::class, 'bill_number', $data['bill_date']),
                     'vendor_id' => $data['vendor_id'],
                     'recurring_bill_id' => $data['recurring_bill_id'] ?? null,
                     'purchase_order_id' => $data['purchase_order_id'] ?? null,
@@ -123,13 +126,5 @@ class SaveBillDraft
 
             return $bill->load('items');
         });
-    }
-
-    private function nextBillNumber(string $billDate): string
-    {
-        $year = date('Y', strtotime($billDate));
-        $count = Bill::where('bill_number', 'like', "BILL-{$year}-%")->count() + 1;
-
-        return sprintf('BILL-%s-%04d', $year, $count);
     }
 }

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Sales;
 
 use App\Actions\Accounting\PostJournal;
+use App\Actions\Inventory\RecordInventorySaleMovement;
 use App\Actions\Sales\PostInvoice;
 use App\Actions\Sales\ReceivePayment;
 use App\Models\Accounting\Account;
@@ -39,7 +40,7 @@ class PaymentTest extends TestCase
             'line_total' => $overrides['total'] ?? 1000,
         ]);
 
-        return (new PostInvoice(new PostJournal))->handle($invoice->fresh());
+        return (new PostInvoice(new PostJournal, new RecordInventorySaleMovement(new PostJournal)))->handle($invoice->fresh());
     }
 
     public function test_guest_cannot_view_payments(): void

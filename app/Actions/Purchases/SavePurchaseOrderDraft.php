@@ -2,6 +2,7 @@
 
 namespace App\Actions\Purchases;
 
+use App\Actions\Accounting\GenerateDocumentNumber;
 use App\Models\Purchases\PurchaseOrder;
 use App\Models\Tax\TaxRate;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,8 @@ use RuntimeException;
  */
 class SavePurchaseOrderDraft
 {
+    public function __construct(private GenerateDocumentNumber $generateDocumentNumber) {}
+
     public function handle(array $data, ?PurchaseOrder $purchaseOrder = null): PurchaseOrder
     {
         if ($purchaseOrder && ! $purchaseOrder->isEditable()) {
@@ -64,7 +67,7 @@ class SavePurchaseOrderDraft
                     'total' => $total,
                 ])
                 : PurchaseOrder::create([
-                    'po_number' => $this->nextPoNumber($data['order_date']),
+                    'po_number' => $this->generateDocumentNumber->handle('purchase_order', PurchaseOrder::class, 'po_number', $data['order_date']),
                     'vendor_id' => $data['vendor_id'],
                     'payable_account_id' => $data['payable_account_id'],
                     'order_date' => $data['order_date'],
@@ -95,13 +98,5 @@ class SavePurchaseOrderDraft
 
             return $purchaseOrder->load('items');
         });
-    }
-
-    private function nextPoNumber(string $orderDate): string
-    {
-        $year = date('Y', strtotime($orderDate));
-        $count = PurchaseOrder::where('po_number', 'like', "PO-{$year}-%")->count() + 1;
-
-        return sprintf('PO-%s-%04d', $year, $count);
     }
 }

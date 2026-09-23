@@ -3,6 +3,7 @@
 namespace Tests\Feature\Payments;
 
 use App\Actions\Accounting\PostJournal;
+use App\Actions\Inventory\RecordInventorySaleMovement;
 use App\Actions\Sales\PostInvoice;
 use App\Models\Accounting\Account;
 use App\Models\Contacts\Customer;
@@ -40,7 +41,7 @@ class OnlinePaymentTest extends TestCase
             'line_total' => $total,
         ]);
 
-        return (new PostInvoice(new PostJournal))->handle($invoice->fresh());
+        return (new PostInvoice(new PostJournal, new RecordInventorySaleMovement(new PostJournal)))->handle($invoice->fresh());
     }
 
     public function test_staff_can_generate_a_payment_link_for_a_posted_invoice(): void

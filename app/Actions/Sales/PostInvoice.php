@@ -3,7 +3,7 @@
 namespace App\Actions\Sales;
 
 use App\Actions\Accounting\PostJournal;
-use App\Models\Inventory\StockMovement;
+use App\Actions\Inventory\RecordInventorySaleMovement;
 use App\Models\Sales\Invoice;
 use App\Models\Sales\InvoiceItem;
 use App\Models\Sales\RevenueRecognitionSchedule;
@@ -37,7 +37,7 @@ use RuntimeException;
  */
 class PostInvoice
 {
-    public function __construct(private PostJournal $postJournal) {}
+    public function __construct(private PostJournal $postJournal, private RecordInventorySaleMovement $recordInventorySaleMovement) {}
 
     public function handle(Invoice $invoice): Invoice
     {
@@ -144,7 +144,13 @@ class PostInvoice
 
             foreach ($invoice->items as $item) {
                 if ($item->product && $item->product->isInventoryTracked()) {
-                    $this->recordSaleStockMovement($invoice, $item);
+                    $this->recordInventorySaleMovement->handle(
+                        $item->product,
+                        $invoice->invoice_date->toDateString(),
+                        (string) $item->quantity,
+                        $invoice->invoice_number,
+                        $invoice->created_by
+                    );
                 }
 
                 if ($item->is_deferred) {
@@ -169,35 +175,5 @@ class PostInvoice
             'status' => 'active',
             'created_by' => $invoice->created_by,
         ]);
-    }
-
-    private function recordSaleStockMovement(Invoice $invoice, InvoiceItem $item): void
-    {
-        $product = $item->product;
-
-        $movement = $product->stockMovements()->create([
-            'date' => $invoice->invoice_date->toDateString(),
-            'quantity' => bcmul((string) $item->quantity, '-1', 4),
-            'reason' => 'sale',
-            'reference' => $invoice->invoice_number,
-            'created_by' => $invoice->created_by,
-        ]);
-
-        $cost = bcmul((string) $item->quantity, (string) $product->purchase_price, 4);
-
-        if (bccomp($cost, '0', 4) > 0) {
-            $this->postJournal->handle([
-                'date' => $invoice->invoice_date->toDateString(),
-                'reference' => $invoice->invoice_number,
-                'description' => "COGS for Invoice {$invoice->invoice_number} — {$product->sku}",
-                'created_by' => $invoice->created_by,
-                'source_type' => StockMovement::class,
-                'source_id' => $movement->id,
-                'lines' => [
-                    ['account_id' => $product->cogs_account_id, 'debit' => $cost, 'credit' => 0, 'description' => "COGS — {$product->name}"],
-                    ['account_id' => $product->inventory_account_id, 'debit' => 0, 'credit' => $cost, 'description' => "COGS — {$product->name}"],
-                ],
-            ]);
-        }
     }
 }

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Accounting;
 
 use App\Actions\Accounting\PostJournal;
+use App\Actions\Inventory\RecordInventorySaleMovement;
 use App\Actions\Sales\PostInvoice;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Journal;
@@ -275,7 +276,7 @@ class JournalTest extends TestCase
             'discount' => 0,
             'line_total' => 100,
         ]);
-        (new PostInvoice(new PostJournal))->handle($invoice->fresh());
+        (new PostInvoice(new PostJournal, new RecordInventorySaleMovement(new PostJournal)))->handle($invoice->fresh());
         $journal = $invoice->fresh()->journal;
 
         $this->actingAs($user)->post(route('accounting.journals.void', $journal))

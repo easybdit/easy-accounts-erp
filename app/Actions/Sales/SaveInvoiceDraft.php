@@ -2,6 +2,7 @@
 
 namespace App\Actions\Sales;
 
+use App\Actions\Accounting\GenerateDocumentNumber;
 use App\Models\Sales\Invoice;
 use App\Models\Tax\TaxRate;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,8 @@ use RuntimeException;
  */
 class SaveInvoiceDraft
 {
+    public function __construct(private GenerateDocumentNumber $generateDocumentNumber) {}
+
     public function handle(array $data, ?Invoice $invoice = null): Invoice
     {
         if ($invoice && ! $invoice->isDraft()) {
@@ -94,7 +97,7 @@ class SaveInvoiceDraft
                     'total' => $total,
                 ])
                 : Invoice::create([
-                    'invoice_number' => $this->nextInvoiceNumber($data['invoice_date']),
+                    'invoice_number' => $this->generateDocumentNumber->handle('invoice', Invoice::class, 'invoice_number', $data['invoice_date']),
                     'customer_id' => $data['customer_id'],
                     'recurring_invoice_id' => $data['recurring_invoice_id'] ?? null,
                     'receivable_account_id' => $data['receivable_account_id'],
@@ -133,19 +136,5 @@ class SaveInvoiceDraft
 
             return $invoice->load('items');
         });
-    }
-
-    /**
-     * Simple default numbering (Section 50): INV-{year}-{sequence}.
-     * The unique constraint on invoice_number is the hard guarantee against
-     * duplicates; a concurrency-safe sequence is a refinement for later,
-     * once the exact numbering policy is confirmed.
-     */
-    private function nextInvoiceNumber(string $invoiceDate): string
-    {
-        $year = date('Y', strtotime($invoiceDate));
-        $count = Invoice::where('invoice_number', 'like', "INV-{$year}-%")->count() + 1;
-
-        return sprintf('INV-%s-%04d', $year, $count);
     }
 }

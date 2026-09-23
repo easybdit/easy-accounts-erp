@@ -2,6 +2,7 @@
 
 namespace App\Actions\Sales;
 
+use App\Actions\Accounting\GenerateDocumentNumber;
 use App\Models\Sales\Estimate;
 use App\Models\Tax\TaxRate;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,8 @@ use RuntimeException;
  */
 class SaveEstimateDraft
 {
+    public function __construct(private GenerateDocumentNumber $generateDocumentNumber) {}
+
     public function handle(array $data, ?Estimate $estimate = null): Estimate
     {
         if ($estimate && ! $estimate->isEditable()) {
@@ -65,7 +68,7 @@ class SaveEstimateDraft
                     'total' => $total,
                 ])
                 : Estimate::create([
-                    'estimate_number' => $this->nextEstimateNumber($data['estimate_date']),
+                    'estimate_number' => $this->generateDocumentNumber->handle('estimate', Estimate::class, 'estimate_number', $data['estimate_date']),
                     'customer_id' => $data['customer_id'],
                     'receivable_account_id' => $data['receivable_account_id'],
                     'estimate_date' => $data['estimate_date'],
@@ -96,13 +99,5 @@ class SaveEstimateDraft
 
             return $estimate->load('items');
         });
-    }
-
-    private function nextEstimateNumber(string $estimateDate): string
-    {
-        $year = date('Y', strtotime($estimateDate));
-        $count = Estimate::where('estimate_number', 'like', "EST-{$year}-%")->count() + 1;
-
-        return sprintf('EST-%s-%04d', $year, $count);
     }
 }

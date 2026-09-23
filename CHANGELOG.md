@@ -10,6 +10,8 @@ All notable changes to EasyAccountsERP are recorded here, newest first. This pro
 
 ### Added
 
+- Sales Receipts (Sales → Sales Receipts): an immediate cash sale — customer, deposit account (Cash/Bank/Undeposited Funds), line items with dual tax and inventory/COGS integration — posted atomically at creation with no draft state and no Accounts Receivable step, the same lifecycle Payments already had. Includes a PDF receipt.
+- Configurable document numbering (Company Settings → Document Numbering): the prefix for each document type's `PREFIX-{year}-{seq}` number (Invoice, Estimate, Credit Note, Payment, Sales Receipt, Bill, Purchase Order, Vendor Credit, Vendor Payment, Expense, Bank Deposit, Transfer) can now be overridden per business; unset falls back to the existing defaults, so upgrading changes nothing until an admin edits a prefix.
 - A second, independent tax rate per invoice/bill line (e.g. Bangladesh SD + VAT), calculated on the same net amount rather than compounded on top of the first.
 - Purchase Order partial receiving/billing — a PO can now be converted to a bill more than once, each time for however much of each line has arrived, tracked per line via `billed_quantity`.
 - Weekly/quarterly/yearly frequency options for Recurring Invoices, Expenses, and Bills (previously monthly only).

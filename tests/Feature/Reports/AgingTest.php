@@ -3,6 +3,7 @@
 namespace Tests\Feature\Reports;
 
 use App\Actions\Accounting\PostJournal;
+use App\Actions\Inventory\RecordInventorySaleMovement;
 use App\Actions\Purchases\MakePayment;
 use App\Actions\Purchases\PostBill;
 use App\Actions\Sales\PostInvoice;
@@ -52,7 +53,7 @@ class AgingTest extends TestCase
             'discount' => 0,
             'line_total' => 500,
         ]);
-        (new PostInvoice(new PostJournal))->handle($invoice->fresh());
+        (new PostInvoice(new PostJournal, new RecordInventorySaleMovement(new PostJournal)))->handle($invoice->fresh());
 
         // 45 days after due_date (2026-01-15) falls in the 31-60 bucket.
         $response = $this->actingAs($user)->get(route('reports.ar-aging', ['as_of' => '2026-03-01']));

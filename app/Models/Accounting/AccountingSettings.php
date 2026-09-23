@@ -40,6 +40,7 @@ class AccountingSettings extends Model
         'login_lockout_minutes',
         'login_captcha_enabled',
         'ip_whitelist_enabled',
+        'document_number_prefixes',
     ];
 
     protected $casts = [
@@ -53,6 +54,7 @@ class AccountingSettings extends Model
         'sslcommerz_sandbox' => 'boolean',
         'login_captcha_enabled' => 'boolean',
         'ip_whitelist_enabled' => 'boolean',
+        'document_number_prefixes' => 'array',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -64,6 +66,7 @@ class AccountingSettings extends Model
                 'mail_from_address', 'mail_from_name',
                 'sslcommerz_enabled', 'sslcommerz_store_id', 'sslcommerz_sandbox', 'sslcommerz_currency',
                 'login_max_attempts', 'login_lockout_minutes', 'login_captcha_enabled', 'ip_whitelist_enabled',
+                'document_number_prefixes',
                 // mail_password / sslcommerz_store_password intentionally excluded.
             ])
             ->logOnlyDirty()
