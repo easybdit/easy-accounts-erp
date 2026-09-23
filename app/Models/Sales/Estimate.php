@@ -34,6 +34,7 @@ class Estimate extends Model
         'tax_total',
         'total',
         'notes',
+        'last_emailed_at',
         'converted_invoice_id',
         'created_by',
     ];
@@ -45,6 +46,7 @@ class Estimate extends Model
         'discount_total' => 'decimal:4',
         'tax_total' => 'decimal:4',
         'total' => 'decimal:4',
+        'last_emailed_at' => 'datetime',
     ];
 
     public function getActivitylogOptions(): LogOptions

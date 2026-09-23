@@ -46,9 +46,11 @@ Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(
         Route::put('estimates/{estimate}', [EstimateController::class, 'update'])->name('estimates.update');
         Route::delete('estimates/{estimate}', [EstimateController::class, 'destroy'])->name('estimates.destroy');
         Route::post('estimates/{estimate}/convert', [EstimateController::class, 'convert'])->name('estimates.convert');
+        Route::post('estimates/{estimate}/email', [EstimateController::class, 'sendEmail'])->name('estimates.email');
     });
     Route::middleware('permission:invoices.view')->group(function () {
         Route::get('estimates/{estimate}', [EstimateController::class, 'show'])->name('estimates.show');
+        Route::get('estimates/{estimate}/pdf', [EstimateController::class, 'pdf'])->name('estimates.pdf');
     });
 
     // Credit Notes are the exact reverse of an Invoice posting (Section 90

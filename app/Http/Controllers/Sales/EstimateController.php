@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Sales;
 
 use App\Actions\Sales\ConvertEstimateToInvoice;
 use App\Actions\Sales\SaveEstimateDraft;
+use App\Actions\Sales\SendEstimateEmail;
 use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Sales\StoreEstimateRequest;
@@ -11,8 +12,10 @@ use App\Models\Accounting\Account;
 use App\Models\Contacts\Customer;
 use App\Models\Sales\Estimate;
 use App\Models\Tax\TaxRate;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 use RuntimeException;
@@ -88,7 +91,7 @@ class EstimateController extends Controller
     public function show(Estimate $estimate): Response
     {
         $estimate->load([
-            'customer:id,name',
+            'customer:id,name,email',
             'receivableAccount:id,code,name',
             'items.account:id,code,name',
             'items.taxRate:id,name,rate',
@@ -98,6 +101,33 @@ class EstimateController extends Controller
         return Inertia::render('Sales/Estimates/Show', [
             'estimate' => $this->withPlainDates($estimate, ['estimate_date', 'expiry_date']),
         ]);
+    }
+
+    public function pdf(Estimate $estimate): HttpResponse
+    {
+        $estimate->load(['customer', 'items.account', 'items.taxRate']);
+
+        $pdf = Pdf::loadView('pdfs.estimate', [
+            'estimate' => $estimate,
+            'appName' => config('app.name'),
+        ]);
+
+        return $pdf->download("{$estimate->estimate_number}.pdf");
+    }
+
+    public function sendEmail(Estimate $estimate, Request $request, SendEstimateEmail $action): RedirectResponse
+    {
+        $validated = $request->validate([
+            'recipient_email' => ['nullable', 'email'],
+        ]);
+
+        try {
+            $action->handle($estimate, $validated['recipient_email'] ?? null);
+        } catch (RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Estimate emailed.');
     }
 
     public function destroy(Estimate $estimate): RedirectResponse

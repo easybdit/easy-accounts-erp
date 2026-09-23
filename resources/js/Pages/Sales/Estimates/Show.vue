@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -9,6 +9,9 @@ import DangerButton from '@/Components/DangerButton.vue';
 import Modal from '@/Components/Modal.vue';
 import Card from '@/Components/Card.vue';
 import Badge from '@/Components/Badge.vue';
+import InputLabel from '@/Components/InputLabel.vue';
+import TextInput from '@/Components/TextInput.vue';
+import InputError from '@/Components/InputError.vue';
 
 const props = defineProps({
     estimate: Object,
@@ -16,6 +19,7 @@ const props = defineProps({
 
 const confirmingConvert = ref(false);
 const confirmingDelete = ref(false);
+const confirmingEmail = ref(false);
 
 const statusVariant = {
     draft: 'neutral',
@@ -25,6 +29,10 @@ const statusVariant = {
     converted: 'success',
 };
 
+const emailForm = useForm({
+    recipient_email: props.estimate.customer.email ?? '',
+});
+
 function convert() {
     router.post(route('sales.estimates.convert', props.estimate.id), {}, {
         onFinish: () => (confirmingConvert.value = false),
@@ -33,6 +41,12 @@ function convert() {
 
 function destroy() {
     router.delete(route('sales.estimates.destroy', props.estimate.id));
+}
+
+function sendEmail() {
+    emailForm.post(route('sales.estimates.email', props.estimate.id), {
+        onFinish: () => (confirmingEmail.value = false),
+    });
 }
 </script>
 
@@ -49,7 +63,11 @@ function destroy() {
         <template #header>
             <PageHeader :title="estimate.estimate_number">
                 <template #actions>
+                    <a :href="route('sales.estimates.pdf', estimate.id)">
+                        <SecondaryButton type="button">Download PDF</SecondaryButton>
+                    </a>
                     <template v-if="estimate.status !== 'converted'">
+                        <SecondaryButton type="button" @click="confirmingEmail = true">Email Estimate</SecondaryButton>
                         <Link :href="route('sales.estimates.edit', estimate.id)">
                             <SecondaryButton type="button">Edit</SecondaryButton>
                         </Link>
@@ -88,6 +106,10 @@ function destroy() {
                 <div>
                     <dt class="text-xs font-medium uppercase text-gray-400">Status</dt>
                     <dd><Badge :variant="statusVariant[estimate.status]" class="capitalize">{{ estimate.status }}</Badge></dd>
+                </div>
+                <div v-if="estimate.last_emailed_at">
+                    <dt class="text-xs font-medium uppercase text-gray-400">Last Emailed</dt>
+                    <dd class="text-sm text-gray-800">{{ new Date(estimate.last_emailed_at).toLocaleString() }}</dd>
                 </div>
                 <div v-if="estimate.notes" class="sm:col-span-4">
                     <dt class="text-xs font-medium uppercase text-gray-400">Notes</dt>
@@ -153,6 +175,28 @@ function destroy() {
                 <div class="mt-6 flex justify-end gap-3">
                     <SecondaryButton @click="confirmingDelete = false">Cancel</SecondaryButton>
                     <DangerButton @click="destroy">Delete</DangerButton>
+                </div>
+            </div>
+        </Modal>
+
+        <Modal :show="confirmingEmail" @close="confirmingEmail = false">
+            <div class="p-6">
+                <h2 class="text-lg font-medium text-gray-900">Email this estimate?</h2>
+                <p class="mt-1 text-sm text-gray-500">Sends a PDF copy of this estimate to the address below.</p>
+                <div class="mt-4">
+                    <InputLabel for="recipient_email" value="Recipient Email" />
+                    <TextInput
+                        id="recipient_email"
+                        v-model="emailForm.recipient_email"
+                        type="email"
+                        class="mt-1 block w-full"
+                        required
+                    />
+                    <InputError :message="emailForm.errors.recipient_email" class="mt-2" />
+                </div>
+                <div class="mt-6 flex justify-end gap-3">
+                    <SecondaryButton @click="confirmingEmail = false">Cancel</SecondaryButton>
+                    <PrimaryButton :disabled="!emailForm.recipient_email" @click="sendEmail">Send</PrimaryButton>
                 </div>
             </div>
         </Modal>
