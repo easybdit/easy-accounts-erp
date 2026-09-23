@@ -14,6 +14,7 @@ class PurchaseOrderItem extends Model
         'tax_rate_id',
         'description',
         'quantity',
+        'billed_quantity',
         'unit_price',
         'discount',
         'line_total',
@@ -22,6 +23,7 @@ class PurchaseOrderItem extends Model
 
     protected $casts = [
         'quantity' => 'decimal:4',
+        'billed_quantity' => 'decimal:4',
         'unit_price' => 'decimal:4',
         'discount' => 'decimal:4',
         'line_total' => 'decimal:4',
@@ -41,5 +43,15 @@ class PurchaseOrderItem extends Model
     public function taxRate(): BelongsTo
     {
         return $this->belongsTo(TaxRate::class);
+    }
+
+    /**
+     * How much of this line has not yet been converted to a Bill —
+     * quantity minus billed_quantity, never negative by construction
+     * (ConvertPurchaseOrderToBill rejects converting more than this).
+     */
+    public function remainingQuantity(): string
+    {
+        return bcsub((string) $this->quantity, (string) $this->billed_quantity, 4);
     }
 }

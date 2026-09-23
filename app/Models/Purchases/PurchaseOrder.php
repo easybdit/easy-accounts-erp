@@ -16,6 +16,15 @@ use Spatie\Activitylog\Support\LogOptions;
  * document that never touches the Journal. Only becomes a real
  * transaction once ConvertPurchaseOrderToBill turns it into a normal
  * draft Bill via SaveBillDraft (Section 90 Phase 5 open item).
+ *
+ * A PO can be converted more than once, each time for a chosen quantity
+ * per line (e.g. 6 of 10 ordered routers arrived this week) — see
+ * PurchaseOrderItem::billed_quantity and ConvertPurchaseOrderToBill.
+ * status only ever flips to 'converted' once every line is fully billed;
+ * while a partial conversion has happened but some quantity remains, it
+ * stays 'draft' but is no longer editable (isEditable() also checks
+ * whether any bill already exists) — editing line quantities out from
+ * under a bill that already references them would desync the two.
  */
 class PurchaseOrder extends Model
 {
@@ -71,6 +80,17 @@ class PurchaseOrder extends Model
         return $this->belongsTo(Bill::class, 'converted_bill_id');
     }
 
+    /**
+     * Every Bill ever generated from this PO — plural, since a partial
+     * conversion means more than one may exist over time. convertedBill()
+     * above stays a pointer at just the most recent one, kept for
+     * backward-compatible display purposes.
+     */
+    public function bills(): HasMany
+    {
+        return $this->hasMany(Bill::class);
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -81,8 +101,15 @@ class PurchaseOrder extends Model
         return $this->status === 'converted';
     }
 
+    public function isFullyBilled(): bool
+    {
+        $this->loadMissing('items');
+
+        return $this->items->every(fn (PurchaseOrderItem $item) => bccomp($item->remainingQuantity(), '0', 4) <= 0);
+    }
+
     public function isEditable(): bool
     {
-        return ! $this->isConverted();
+        return $this->status === 'draft' && ! $this->bills()->exists();
     }
 }

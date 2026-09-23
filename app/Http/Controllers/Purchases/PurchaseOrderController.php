@@ -10,6 +10,7 @@ use App\Http\Requests\Purchases\StorePurchaseOrderRequest;
 use App\Models\Accounting\Account;
 use App\Models\Contacts\Vendor;
 use App\Models\Purchases\PurchaseOrder;
+use App\Models\Purchases\PurchaseOrderItem;
 use App\Models\Tax\TaxRate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -92,11 +93,19 @@ class PurchaseOrderController extends Controller
             'payableAccount:id,code,name',
             'items.account:id,code,name',
             'items.taxRate:id,name,rate',
-            'convertedBill:id,bill_number,status',
+            'bills:id,purchase_order_id,bill_number,status,total',
         ]);
 
+        $poData = $this->withPlainDates($purchaseOrder, ['order_date', 'expected_date']);
+        $poData['items'] = $purchaseOrder->items->map(fn (PurchaseOrderItem $item) => [
+            ...$item->toArray(),
+            'remaining_quantity' => $item->remainingQuantity(),
+        ])->all();
+        $poData['is_fully_billed'] = $purchaseOrder->isFullyBilled();
+        $poData['is_editable'] = $purchaseOrder->isEditable();
+
         return Inertia::render('Purchases/PurchaseOrders/Show', [
-            'purchaseOrder' => $this->withPlainDates($purchaseOrder, ['order_date', 'expected_date']),
+            'purchaseOrder' => $poData,
         ]);
     }
 
@@ -109,10 +118,19 @@ class PurchaseOrderController extends Controller
         return redirect()->route('purchases.purchase-orders.index')->with('success', 'Purchase order deleted.');
     }
 
-    public function convert(PurchaseOrder $purchaseOrder, ConvertPurchaseOrderToBill $action): RedirectResponse
+    public function convert(PurchaseOrder $purchaseOrder, Request $request, ConvertPurchaseOrderToBill $action): RedirectResponse
     {
+        // 'quantities' is optional — omitting it (the original one-click
+        // "Convert to Bill" button) converts every line's full remaining
+        // quantity, same as before partial conversion existed.
+        $validated = $request->validate([
+            'quantities' => ['nullable', 'array'],
+            'quantities.*' => ['numeric', 'min:0'],
+        ]);
+        $quantities = $validated['quantities'] ?? null;
+
         try {
-            $bill = $action->handle($purchaseOrder, request()->user()->id);
+            $bill = $action->handle($purchaseOrder, $quantities, $request->user()->id);
         } catch (RuntimeException $e) {
             return back()->with('error', $e->getMessage());
         }

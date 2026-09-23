@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { reactive, ref } from 'vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -9,6 +9,7 @@ import DangerButton from '@/Components/DangerButton.vue';
 import Modal from '@/Components/Modal.vue';
 import Card from '@/Components/Card.vue';
 import Badge from '@/Components/Badge.vue';
+import InputError from '@/Components/InputError.vue';
 
 const props = defineProps({
     purchaseOrder: Object,
@@ -24,8 +25,19 @@ const statusVariant = {
     converted: 'success',
 };
 
+const billableItems = props.purchaseOrder.items.filter((item) => parseFloat(item.remaining_quantity) > 0);
+
+// Defaults every line to its full remaining quantity, so submitting
+// without changing anything reproduces the original one-click "convert
+// everything" behavior exactly.
+const quantities = reactive(
+    Object.fromEntries(billableItems.map((item) => [item.id, item.remaining_quantity]))
+);
+
+const convertForm = useForm({});
+
 function convert() {
-    router.post(route('purchases.purchase-orders.convert', props.purchaseOrder.id), {}, {
+    convertForm.transform(() => ({ quantities })).post(route('purchases.purchase-orders.convert', props.purchaseOrder.id), {
         onFinish: () => (confirmingConvert.value = false),
     });
 }
@@ -48,22 +60,26 @@ function destroy() {
         <template #header>
             <PageHeader :title="purchaseOrder.po_number">
                 <template #actions>
-                    <template v-if="purchaseOrder.status !== 'converted'">
+                    <template v-if="purchaseOrder.is_editable">
                         <Link :href="route('purchases.purchase-orders.edit', purchaseOrder.id)">
                             <SecondaryButton type="button">Edit</SecondaryButton>
                         </Link>
                         <DangerButton type="button" @click="confirmingDelete = true">Delete</DangerButton>
-                        <PrimaryButton type="button" @click="confirmingConvert = true">Convert to Bill</PrimaryButton>
                     </template>
+                    <PrimaryButton v-if="!purchaseOrder.is_fully_billed" type="button" @click="confirmingConvert = true">
+                        Convert to Bill
+                    </PrimaryButton>
                 </template>
             </PageHeader>
         </template>
 
-        <div v-if="purchaseOrder.converted_bill" class="mb-4 rounded-md bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
-            This purchase order was converted to bill
-            <Link :href="route('purchases.bills.show', purchaseOrder.converted_bill.id)" class="font-medium underline">
-                {{ purchaseOrder.converted_bill.bill_number }}
-            </Link>.
+        <div v-if="purchaseOrder.bills?.length" class="mb-4 rounded-md bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
+            This purchase order has been {{ purchaseOrder.is_fully_billed ? 'fully' : 'partially' }} converted to
+            <template v-for="(bill, index) in purchaseOrder.bills" :key="bill.id">
+                <Link :href="route('purchases.bills.show', bill.id)" class="font-medium underline">{{ bill.bill_number }}</Link
+                >{{ index < purchaseOrder.bills.length - 1 ? ', ' : '' }}
+            </template>
+            .
         </div>
 
         <Card padded>
@@ -100,6 +116,8 @@ function destroy() {
                         <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Account</th>
                         <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
                         <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Qty</th>
+                        <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Billed</th>
+                        <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Remaining</th>
                         <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Unit Price</th>
                         <th class="px-2 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Discount</th>
                         <th class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tax</th>
@@ -111,6 +129,10 @@ function destroy() {
                         <td class="px-2 py-2 text-sm text-gray-700">{{ item.account.code }} — {{ item.account.name }}</td>
                         <td class="px-2 py-2 text-sm text-gray-500">{{ item.description }}</td>
                         <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.quantity }}</td>
+                        <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.billed_quantity }}</td>
+                        <td class="px-2 py-2 text-right text-sm" :class="parseFloat(item.remaining_quantity) > 0 ? 'font-medium text-amber-600' : 'text-gray-400'">
+                            {{ item.remaining_quantity }}
+                        </td>
                         <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.unit_price }}</td>
                         <td class="px-2 py-2 text-right text-sm text-gray-700">{{ item.discount }}</td>
                         <td class="px-2 py-2 text-sm text-gray-500">
@@ -133,11 +155,40 @@ function destroy() {
 
         <Modal :show="confirmingConvert" @close="confirmingConvert = false">
             <div class="p-6">
-                <h2 class="text-lg font-medium text-gray-900">Convert this purchase order to a bill?</h2>
+                <h2 class="text-lg font-medium text-gray-900">Convert to a bill</h2>
                 <p class="mt-1 text-sm text-gray-500">
-                    This creates a new draft bill with today's date from this purchase order's items. The purchase order
-                    itself will be locked once converted.
+                    Creates a new draft bill dated today. Adjust the quantities below to bill only part of what's
+                    still remaining — e.g. if only some of the order has arrived — or leave them as-is to bill
+                    everything remaining in one go.
                 </p>
+
+                <table class="mt-4 min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
+                            <th class="px-2 py-1 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Remaining</th>
+                            <th class="px-2 py-1 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Bill Now</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr v-for="item in billableItems" :key="item.id">
+                            <td class="px-2 py-1 text-sm text-gray-700">{{ item.description }}</td>
+                            <td class="px-2 py-1 text-right text-sm text-gray-500">{{ item.remaining_quantity }}</td>
+                            <td class="px-2 py-1 text-right">
+                                <input
+                                    v-model="quantities[item.id]"
+                                    type="number"
+                                    step="0.0001"
+                                    min="0"
+                                    :max="item.remaining_quantity"
+                                    class="w-28 rounded-md border-gray-300 text-right text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <InputError :message="convertForm.errors.quantities" class="mt-2" />
+
                 <div class="mt-6 flex justify-end gap-3">
                     <SecondaryButton @click="confirmingConvert = false">Cancel</SecondaryButton>
                     <PrimaryButton @click="convert">Convert</PrimaryButton>

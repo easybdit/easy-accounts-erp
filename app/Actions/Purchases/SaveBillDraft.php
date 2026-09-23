@@ -79,6 +79,7 @@ class SaveBillDraft
                     'bill_number' => $this->nextBillNumber($data['bill_date']),
                     'vendor_id' => $data['vendor_id'],
                     'recurring_bill_id' => $data['recurring_bill_id'] ?? null,
+                    'purchase_order_id' => $data['purchase_order_id'] ?? null,
                     'payable_account_id' => $data['payable_account_id'],
                     'bill_date' => $data['bill_date'],
                     'due_date' => $data['due_date'] ?? null,
