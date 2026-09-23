@@ -33,6 +33,7 @@ class RecurringBillController extends Controller
                 'items_count' => $template->items_count,
                 'is_active' => $template->is_active,
                 'next_generation_date' => $template->next_generation_date?->toDateString(),
+                'frequency' => $template->frequency,
             ]);
 
         return Inertia::render('Purchases/RecurringBills/Index', [

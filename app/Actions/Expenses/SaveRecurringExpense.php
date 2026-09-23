@@ -26,6 +26,7 @@ class SaveRecurringExpense
             'notes' => $data['notes'] ?? null,
             'is_active' => $data['is_active'] ?? true,
             'next_generation_date' => $data['next_generation_date'] ?? null,
+            'frequency' => $data['frequency'] ?? 'monthly',
         ];
 
         if ($template) {

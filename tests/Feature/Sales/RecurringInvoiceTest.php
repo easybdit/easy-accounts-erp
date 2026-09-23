@@ -8,6 +8,7 @@ use App\Models\Sales\Invoice;
 use App\Models\Sales\RecurringInvoice;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class RecurringInvoiceTest extends TestCase
@@ -191,5 +192,45 @@ class RecurringInvoiceTest extends TestCase
         $this->artisan('invoices:generate-recurring')->assertSuccessful();
 
         $this->assertDatabaseCount('invoices', 0);
+    }
+
+    public function test_a_template_defaults_to_monthly_when_no_frequency_is_given(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post(route('sales.recurring-invoices.store'), $this->payload());
+
+        $this->assertSame('monthly', RecurringInvoice::first()->frequency);
+    }
+
+    #[DataProvider('frequencyProvider')]
+    public function test_the_scheduled_command_advances_the_next_generation_date_by_the_templates_frequency(string $frequency): void
+    {
+        $user = User::factory()->create();
+        $dueDate = now()->toDateString();
+        $this->actingAs($user)->post(route('sales.recurring-invoices.store'), $this->payload([
+            'next_generation_date' => $dueDate,
+            'frequency' => $frequency,
+        ]));
+        $template = RecurringInvoice::first();
+
+        $this->artisan('invoices:generate-recurring')->assertSuccessful();
+
+        $expected = match ($frequency) {
+            'weekly' => now()->addWeek()->toDateString(),
+            'monthly' => now()->addMonthNoOverflow()->toDateString(),
+            'quarterly' => now()->addMonthsNoOverflow(3)->toDateString(),
+            'yearly' => now()->addYearNoOverflow()->toDateString(),
+        };
+        $this->assertSame($expected, $template->fresh()->next_generation_date->toDateString());
+    }
+
+    public static function frequencyProvider(): array
+    {
+        return [
+            'weekly' => ['weekly'],
+            'monthly' => ['monthly'],
+            'quarterly' => ['quarterly'],
+            'yearly' => ['yearly'],
+        ];
     }
 }

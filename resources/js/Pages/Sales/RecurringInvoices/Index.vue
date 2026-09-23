@@ -48,7 +48,8 @@ function generate(template) {
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ template.customer.name }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-500">{{ template.items_count }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-                            {{ template.next_generation_date ?? 'Manual only' }}
+                            <template v-if="template.next_generation_date">{{ template.next_generation_date }} <span class="capitalize">({{ template.frequency }})</span></template>
+                            <template v-else>Manual only</template>
                         </td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm">
                             <Badge :variant="template.is_active ? 'success' : 'neutral'">

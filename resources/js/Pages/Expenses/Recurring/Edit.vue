@@ -31,6 +31,7 @@ const form = useForm({
     notes: props.template.notes ?? '',
     is_active: props.template.is_active,
     next_generation_date: props.template.next_generation_date ?? '',
+    frequency: props.template.frequency ?? 'monthly',
 });
 
 watch(
@@ -166,14 +167,30 @@ function submit() {
                 Active
             </label>
 
-            <div class="mt-4 max-w-md">
-                <InputLabel for="next_generation_date" value="Next Auto-Generation Date (optional)" />
-                <TextInput id="next_generation_date" v-model="form.next_generation_date" type="date" class="mt-1 block w-full" />
-                <p class="mt-1 text-xs text-gray-400">
-                    If set, an expense is recorded automatically on this date and then every month after. Leave
-                    blank to keep this template manual-only ("Generate Now").
-                </p>
-                <InputError :message="form.errors.next_generation_date" class="mt-2" />
+            <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:max-w-2xl">
+                <div>
+                    <InputLabel for="next_generation_date" value="Next Auto-Generation Date (optional)" />
+                    <TextInput id="next_generation_date" v-model="form.next_generation_date" type="date" class="mt-1 block w-full" />
+                    <p class="mt-1 text-xs text-gray-400">
+                        If set, an expense is recorded automatically on this date, repeating at the frequency
+                        below. Leave blank to keep this template manual-only ("Generate Now").
+                    </p>
+                    <InputError :message="form.errors.next_generation_date" class="mt-2" />
+                </div>
+                <div>
+                    <InputLabel for="frequency" value="Frequency" />
+                    <select
+                        id="frequency"
+                        v-model="form.frequency"
+                        class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    >
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                    <InputError :message="form.errors.frequency" class="mt-2" />
+                </div>
             </div>
 
             <div class="mt-4">

@@ -46,7 +46,7 @@ class GenerateScheduledRecurringExpenses extends Command
 
             // Anchored to the previous due date (not "today"), so a delayed
             // run doesn't drift the billing day forward.
-            $template->update(['next_generation_date' => $template->next_generation_date->addMonthNoOverflow()]);
+            $template->update(['next_generation_date' => $template->nextGenerationDateAfterAdvance()]);
 
             $this->info("Recorded {$expense->expense_number} from \"{$template->name}\".");
             $recorded++;

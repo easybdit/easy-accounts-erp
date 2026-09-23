@@ -193,4 +193,27 @@ class RecurringBillTest extends TestCase
 
         $this->assertDatabaseCount('bills', 0);
     }
+
+    public function test_a_template_defaults_to_monthly_when_no_frequency_is_given(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post(route('purchases.recurring-bills.store'), $this->payload());
+
+        $this->assertSame('monthly', RecurringBill::first()->frequency);
+    }
+
+    public function test_a_yearly_template_advances_by_one_year_not_one_month(): void
+    {
+        $user = User::factory()->create();
+        $dueDate = now()->toDateString();
+        $this->actingAs($user)->post(route('purchases.recurring-bills.store'), $this->payload([
+            'next_generation_date' => $dueDate,
+            'frequency' => 'yearly',
+        ]));
+        $template = RecurringBill::first();
+
+        $this->artisan('bills:generate-recurring')->assertSuccessful();
+
+        $this->assertSame(now()->addYearNoOverflow()->toDateString(), $template->fresh()->next_generation_date->toDateString());
+    }
 }

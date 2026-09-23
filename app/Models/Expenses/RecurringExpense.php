@@ -3,6 +3,7 @@
 namespace App\Models\Expenses;
 
 use App\Models\Accounting\Account;
+use App\Models\Concerns\HasRecurrenceFrequency;
 use App\Models\Contacts\Vendor;
 use App\Models\Tax\TaxRate;
 use App\Models\User;
@@ -22,7 +23,7 @@ use Spatie\Activitylog\Support\LogOptions;
  */
 class RecurringExpense extends Model
 {
-    use LogsActivity;
+    use HasRecurrenceFrequency, LogsActivity;
 
     protected $fillable = [
         'name',
@@ -37,6 +38,7 @@ class RecurringExpense extends Model
         'notes',
         'is_active',
         'next_generation_date',
+        'frequency',
         'created_by',
     ];
 

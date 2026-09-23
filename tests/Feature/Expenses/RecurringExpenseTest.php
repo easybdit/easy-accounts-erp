@@ -162,4 +162,27 @@ class RecurringExpenseTest extends TestCase
         // Not advanced — it stays due so it will succeed once unlocked.
         $this->assertSame($dueDate, $template->fresh()->next_generation_date->toDateString());
     }
+
+    public function test_a_template_defaults_to_monthly_when_no_frequency_is_given(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post(route('expenses.recurring.store'), $this->payload());
+
+        $this->assertSame('monthly', RecurringExpense::first()->frequency);
+    }
+
+    public function test_a_quarterly_template_advances_by_three_months_not_one(): void
+    {
+        $user = User::factory()->create();
+        $dueDate = now()->toDateString();
+        $this->actingAs($user)->post(route('expenses.recurring.store'), $this->payload([
+            'next_generation_date' => $dueDate,
+            'frequency' => 'quarterly',
+        ]));
+        $template = RecurringExpense::first();
+
+        $this->artisan('expenses:generate-recurring')->assertSuccessful();
+
+        $this->assertSame(now()->addMonthsNoOverflow(3)->toDateString(), $template->fresh()->next_generation_date->toDateString());
+    }
 }

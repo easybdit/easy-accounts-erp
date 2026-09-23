@@ -3,6 +3,7 @@
 namespace App\Models\Sales;
 
 use App\Models\Accounting\Account;
+use App\Models\Concerns\HasRecurrenceFrequency;
 use App\Models\Contacts\Customer;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -23,7 +24,7 @@ use Spatie\Activitylog\Support\LogOptions;
  */
 class RecurringInvoice extends Model
 {
-    use LogsActivity;
+    use HasRecurrenceFrequency, LogsActivity;
 
     protected $fillable = [
         'name',
@@ -32,6 +33,7 @@ class RecurringInvoice extends Model
         'notes',
         'is_active',
         'next_generation_date',
+        'frequency',
         'created_by',
     ];
 
