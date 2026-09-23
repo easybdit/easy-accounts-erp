@@ -2,6 +2,7 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
 import Card from '@/Components/Card.vue';
 import Badge from '@/Components/Badge.vue';
 import EmptyState from '@/Components/EmptyState.vue';
@@ -22,7 +23,13 @@ function can(permission) {
 
     <AppLayout :breadcrumbs="[{ label: 'Security' }, { label: 'Users' }]">
         <template #header>
-            <PageHeader title="Users" />
+            <PageHeader title="Users">
+                <template #actions>
+                    <Link v-if="can('users.manage')" :href="route('security.users.create')">
+                        <PrimaryButton>New User</PrimaryButton>
+                    </Link>
+                </template>
+            </PageHeader>
         </template>
 
         <Card>

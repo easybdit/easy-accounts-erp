@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Security;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Security\StoreUserRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
@@ -17,6 +19,37 @@ class UserController extends Controller
         return Inertia::render('Security/Users/Index', [
             'users' => User::query()->with('roles:id,name')->orderBy('name')->get(),
         ]);
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('Security/Users/Create', [
+            'roles' => Role::orderBy('name')->pluck('name'),
+        ]);
+    }
+
+    public function store(StoreUserRequest $request): RedirectResponse
+    {
+        $user = User::create([
+            'name' => $request->validated('name'),
+            'email' => $request->validated('email'),
+            'password' => Hash::make($request->validated('password')),
+        ]);
+
+        $roles = collect($request->validated('roles', []))->sort()->values()->all();
+        $user->syncRoles($roles);
+
+        // Mirrors update()'s explicit activity logging below — User::create()
+        // is picked up by LogsActivity, but the roles pivot sync isn't, so
+        // it's logged the same way a subsequent role change would be.
+        activity()
+            ->causedBy($request->user())
+            ->performedOn($user)
+            ->event('created')
+            ->withChanges(['attributes' => ['name' => $user->name, 'email' => $user->email, 'roles' => $roles]])
+            ->log("User \"{$user->name}\" created");
+
+        return redirect()->route('security.users.index')->with('success', 'User created.');
     }
 
     public function edit(User $user): Response
