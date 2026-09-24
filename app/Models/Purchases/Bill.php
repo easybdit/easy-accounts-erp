@@ -30,6 +30,7 @@ class Bill extends Model
         'recurring_bill_id',
         'purchase_order_id',
         'payable_account_id',
+        'cost_center_id',
         'bill_date',
         'due_date',
         'tax_inclusive',

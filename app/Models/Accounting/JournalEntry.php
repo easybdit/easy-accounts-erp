@@ -14,6 +14,7 @@ class JournalEntry extends Model
         'account_id',
         'customer_id',
         'vendor_id',
+        'cost_center_id',
         'date',
         'debit',
         'credit',

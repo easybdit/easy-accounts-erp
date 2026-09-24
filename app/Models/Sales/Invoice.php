@@ -29,6 +29,7 @@ class Invoice extends Model
         'customer_id',
         'recurring_invoice_id',
         'receivable_account_id',
+        'cost_center_id',
         'invoice_date',
         'due_date',
         'tax_inclusive',

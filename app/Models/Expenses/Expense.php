@@ -27,6 +27,7 @@ class Expense extends Model
         'expense_number',
         'expense_category_id',
         'account_id',
+        'cost_center_id',
         'payment_account_id',
         'vendor_id',
         'payee',
