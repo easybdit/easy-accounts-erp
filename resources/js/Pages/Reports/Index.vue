@@ -12,6 +12,7 @@ const colors = {
     amber: 'bg-amber-50 text-amber-600',
     emerald: 'bg-emerald-50 text-emerald-600',
     violet: 'bg-violet-50 text-violet-600',
+    rose: 'bg-rose-50 text-rose-600',
 };
 
 const groups = [
@@ -52,6 +53,16 @@ const groups = [
             { name: 'Purchase Report', description: 'Summary of all purchases for a period', routeName: 'reports.purchases', icon: icons.bag },
             { name: 'Expense Report', description: 'Expenses broken down by category', routeName: 'reports.expenses', icon: icons.card },
             { name: 'Payments Report', description: 'All payments received and made', routeName: 'reports.payments', icon: icons.bank },
+        ],
+    },
+    {
+        label: 'HR & Payroll',
+        description: 'Payroll runs and employee attendance.',
+        icon: icons.users,
+        color: 'rose',
+        reports: [
+            { name: 'Payroll Register', description: 'Every salary slip for a month, and its posting status', routeName: 'reports.payroll-register', icon: icons.card },
+            { name: 'Attendance Summary', description: 'Present/absent/late/leave days per employee for a month', routeName: 'reports.attendance-summary', icon: icons.users },
         ],
     },
     {

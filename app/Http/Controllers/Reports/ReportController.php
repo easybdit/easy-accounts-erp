@@ -10,6 +10,7 @@ use App\Models\Accounting\JournalEntry;
 use App\Models\Contacts\Customer;
 use App\Models\Contacts\Vendor;
 use App\Models\Expenses\Expense;
+use App\Models\HR\PayrollPosting;
 use App\Models\Inventory\Product;
 use App\Models\Purchases\Bill;
 use App\Models\Purchases\VendorPayment;
@@ -17,6 +18,8 @@ use App\Models\Sales\Invoice;
 use App\Models\Sales\Payment;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Easybdit\LaravelEasyAttendance\Models\AttendanceSummary;
+use Easybdit\LaravelEasyAttendance\Models\SalarySlip;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Collection;
@@ -567,6 +570,98 @@ class ReportController extends Controller
                 'from' => $from,
                 'to' => $to,
             ],
+        ]);
+    }
+
+    /**
+     * Every salary slip generated for a month, gross/deduction/net, and
+     * whether it's been posted to accounts yet.
+     */
+    public function payrollRegister(Request $request): Response|StreamedResponse
+    {
+        $year = (int) ($request->input('year') ?: now()->year);
+        $month = (int) ($request->input('month') ?: now()->month);
+
+        $postedSlipIds = PayrollPosting::where('salary_slip_type', SalarySlip::class)->pluck('salary_slip_id');
+
+        $rows = SalarySlip::query()
+            ->with('employee:id,employee_code,name')
+            ->forMonth($year, $month)
+            ->get()
+            ->map(fn (SalarySlip $slip) => [
+                'employee_code' => $slip->employee->employee_code,
+                'employee_name' => $slip->employee->name,
+                'gross' => (string) $slip->gross_salary,
+                'deduction' => (string) $slip->deduction_amount,
+                'net' => (string) $slip->net_salary,
+                'is_posted' => $postedSlipIds->contains($slip->id),
+            ])
+            ->sortBy('employee_name')
+            ->values();
+
+        $totals = [
+            'gross' => $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['gross'], 4), '0.0000'),
+            'deduction' => $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['deduction'], 4), '0.0000'),
+            'net' => $rows->reduce(fn (string $c, array $r) => bcadd($c, $r['net'], 4), '0.0000'),
+        ];
+
+        if ($this->wantsCsv()) {
+            return $this->csvResponse('payroll-register.csv', ['Employee Code', 'Employee', 'Gross', 'Deduction', 'Net', 'Posted'], [
+                ...$rows->map(fn (array $r) => [$r['employee_code'], $r['employee_name'], $r['gross'], $r['deduction'], $r['net'], $r['is_posted'] ? 'Yes' : 'No']),
+                ['', 'Total', $totals['gross'], $totals['deduction'], $totals['net'], ''],
+            ]);
+        }
+
+        return Inertia::render('Reports/PayrollRegister', [
+            'rows' => $rows,
+            'totals' => $totals,
+            'year' => $year,
+            'month' => $month,
+        ]);
+    }
+
+    /**
+     * Per-employee present/absent/late/leave/holiday day counts for a
+     * month, from the attendance package's pre-built daily summaries.
+     */
+    public function attendanceSummary(Request $request): Response|StreamedResponse
+    {
+        $year = (int) ($request->input('year') ?: now()->year);
+        $month = (int) ($request->input('month') ?: now()->month);
+
+        $rows = AttendanceSummary::query()
+            ->with('employee:id,employee_code,name')
+            ->forMonth($year, $month)
+            ->get()
+            ->groupBy('employee_id')
+            ->map(function ($summaries) {
+                $employee = $summaries->first()->employee;
+
+                return [
+                    'employee_code' => $employee->employee_code,
+                    'employee_name' => $employee->name,
+                    'present' => $summaries->whereIn('status', ['present', 'late'])->count(),
+                    'absent' => $summaries->where('status', 'absent')->count(),
+                    'late' => $summaries->where('status', 'late')->count(),
+                    'leave' => $summaries->where('status', 'leave')->count(),
+                    'holiday' => $summaries->where('status', 'holiday')->count(),
+                ];
+            })
+            ->sortBy('employee_name')
+            ->values();
+
+        if ($this->wantsCsv()) {
+            return $this->csvResponse(
+                'attendance-summary.csv',
+                ['Employee Code', 'Employee', 'Present', 'Absent', 'Late', 'Leave', 'Holiday'],
+                $rows->map(fn (array $r) => [$r['employee_code'], $r['employee_name'], $r['present'], $r['absent'], $r['late'], $r['leave'], $r['holiday']])
+            );
+        }
+
+        return Inertia::render('Reports/AttendanceSummaryReport', [
+            'rows' => $rows,
+            'year' => $year,
+            'month' => $month,
         ]);
     }
 

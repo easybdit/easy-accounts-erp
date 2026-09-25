@@ -23,4 +23,6 @@ Route::middleware(['auth', 'verified', 'permission:reports.view'])->prefix('repo
     Route::get('payments', [ReportController::class, 'payments'])->name('payments');
     Route::get('inventory', [ReportController::class, 'inventory'])->name('inventory');
     Route::get('budget-vs-actual', [ReportController::class, 'budgetVsActual'])->name('budget-vs-actual');
+    Route::get('payroll-register', [ReportController::class, 'payrollRegister'])->name('payroll-register');
+    Route::get('attendance-summary', [ReportController::class, 'attendanceSummary'])->name('attendance-summary');
 });
