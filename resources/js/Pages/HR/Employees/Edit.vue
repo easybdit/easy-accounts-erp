@@ -28,6 +28,7 @@ const form = useForm({
     department_id: props.employee.department_id ?? '',
     designation_id: props.employee.designation_id ?? '',
     device_user_id: props.employee.device_user_id ?? '',
+    grade: props.employee.grade ?? '',
     basic_salary: props.employee.basic_salary,
     allowances: Object.entries(props.employee.allowances ?? {}).map(([key, amount]) => ({ key, amount })),
     joined_at: props.employee.joined_at ?? '',
@@ -152,10 +153,26 @@ function removeShift(assignment) {
                     </div>
                 </div>
 
-                <div>
-                    <InputLabel for="device_user_id" value="Device PIN / User ID (optional)" />
-                    <TextInput id="device_user_id" v-model="form.device_user_id" type="text" placeholder="The employee's PIN on the biometric device" class="mt-1 block w-full" />
-                    <InputError :message="form.errors.device_user_id" class="mt-2" />
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <InputLabel for="device_user_id" value="Device PIN / User ID (optional)" />
+                        <TextInput id="device_user_id" v-model="form.device_user_id" type="text" placeholder="The employee's PIN on the biometric device" class="mt-1 block w-full" />
+                        <InputError :message="form.errors.device_user_id" class="mt-2" />
+                    </div>
+                    <div>
+                        <InputLabel for="grade" value="Grade (for special working day pay)" />
+                        <select
+                            id="grade"
+                            v-model="form.grade"
+                            class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        >
+                            <option value="">None</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                        </select>
+                        <InputError :message="form.errors.grade" class="mt-2" />
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">

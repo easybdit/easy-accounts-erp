@@ -128,6 +128,7 @@ const allNavGroups = [
             { label: 'Designations', routeName: 'hr.designations.index', permission: 'employees.view' },
             { label: 'Shifts', routeName: 'hr.shifts.index', permission: 'employees.view' },
             { label: 'Holidays', routeName: 'hr.holidays.index', permission: 'employees.view' },
+            { label: 'Special Working Days', routeName: 'hr.special-working-days.index', permission: 'employees.view' },
             { label: 'Attendance', routeName: 'hr.attendance.index', permission: 'employees.view' },
             { label: 'Attendance Devices', routeName: 'hr.attendance-devices.index', permission: 'employees.view' },
             { label: 'Leave Requests', routeName: 'hr.leaves.index', permission: 'leaves.manage' },

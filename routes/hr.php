@@ -16,6 +16,7 @@ use App\Http\Controllers\HR\OvertimeController;
 use App\Http\Controllers\HR\PayrollComponentController;
 use App\Http\Controllers\HR\PayrollController;
 use App\Http\Controllers\HR\ShiftController;
+use App\Http\Controllers\HR\SpecialWorkingDayController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
@@ -26,6 +27,7 @@ Route::middleware(['auth', 'verified'])->prefix('hr')->name('hr.')->group(functi
         Route::get('designations', [DesignationController::class, 'index'])->name('designations.index');
         Route::get('shifts', [ShiftController::class, 'index'])->name('shifts.index');
         Route::get('holidays', [HolidayController::class, 'index'])->name('holidays.index');
+        Route::get('special-working-days', [SpecialWorkingDayController::class, 'index'])->name('special-working-days.index');
         Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
         Route::get('attendance-devices', [AttendanceDeviceController::class, 'index'])->name('attendance-devices.index');
     });
@@ -74,6 +76,12 @@ Route::middleware(['auth', 'verified'])->prefix('hr')->name('hr.')->group(functi
         Route::get('holidays/{holiday}/edit', [HolidayController::class, 'edit'])->name('holidays.edit');
         Route::put('holidays/{holiday}', [HolidayController::class, 'update'])->name('holidays.update');
         Route::delete('holidays/{holiday}', [HolidayController::class, 'destroy'])->name('holidays.destroy');
+
+        Route::get('special-working-days/create', [SpecialWorkingDayController::class, 'create'])->name('special-working-days.create');
+        Route::post('special-working-days', [SpecialWorkingDayController::class, 'store'])->name('special-working-days.store');
+        Route::get('special-working-days/{special_working_day}/edit', [SpecialWorkingDayController::class, 'edit'])->name('special-working-days.edit');
+        Route::put('special-working-days/{special_working_day}', [SpecialWorkingDayController::class, 'update'])->name('special-working-days.update');
+        Route::delete('special-working-days/{special_working_day}', [SpecialWorkingDayController::class, 'destroy'])->name('special-working-days.destroy');
 
         Route::get('settings', [HrSettingsController::class, 'edit'])->name('settings.edit');
         Route::put('settings', [HrSettingsController::class, 'update'])->name('settings.update');

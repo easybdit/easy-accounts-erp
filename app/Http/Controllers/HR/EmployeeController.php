@@ -39,7 +39,16 @@ class EmployeeController extends Controller
 
     public function store(StoreEmployeeRequest $request): RedirectResponse
     {
-        $employee = Employee::create($request->validated());
+        $validated = $request->validated();
+        $grade = data_get($validated, 'grade');
+        unset($validated['grade']);
+
+        $employee = Employee::create($validated);
+        // 'grade' is a column this app added on top of the package's own
+        // employees table — it isn't in the package's $fillable, so a
+        // normal mass-assign would silently drop it. forceFill() is safe
+        // here: $validated already passed StoreEmployeeRequest's rules.
+        $employee->forceFill(['grade' => $grade])->save();
 
         return redirect()->route('hr.employees.edit', $employee)->with('success', 'Employee created.');
     }
@@ -62,7 +71,12 @@ class EmployeeController extends Controller
 
     public function update(StoreEmployeeRequest $request, Employee $employee): RedirectResponse
     {
-        $employee->update($request->validated());
+        $validated = $request->validated();
+        $grade = data_get($validated, 'grade');
+        unset($validated['grade']);
+
+        $employee->update($validated);
+        $employee->forceFill(['grade' => $grade])->save();
 
         return redirect()->route('hr.employees.edit', $employee)->with('success', 'Employee updated.');
     }
