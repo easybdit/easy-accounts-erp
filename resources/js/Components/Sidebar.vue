@@ -119,6 +119,15 @@ const allNavGroups = [
         ],
     },
     {
+        label: 'HR',
+        icon: icons.users,
+        permission: 'payroll.view',
+        links: [
+            { label: 'Payroll', routeName: 'hr.payroll.index' },
+            { label: 'Payroll Components', routeName: 'hr.payroll-components.index' },
+        ],
+    },
+    {
         label: 'Reports',
         icon: icons.chartPie,
         permission: 'reports.view',

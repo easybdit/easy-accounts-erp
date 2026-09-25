@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ada16b01df46d1cbfcadb8ae3145eee2",
+    "content-hash": "98aee86b0be3ebfdf4ef1badd3c2b9d0",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -674,6 +674,86 @@
                 }
             ],
             "time": "2025-10-31T18:51:33+00:00"
+        },
+        {
+            "name": "easybdit/laraveleasyattendance",
+            "version": "v2.3.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/easybdit/laraveleasyattendance.git",
+                "reference": "2923ce186c581dfa6ded338c072313b6f7536654"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/easybdit/laraveleasyattendance/zipball/2923ce186c581dfa6ded338c072313b6f7536654",
+                "reference": "2923ce186c581dfa6ded338c072313b6f7536654",
+                "shasum": ""
+            },
+            "require": {
+                "ext-sockets": "*",
+                "illuminate/database": "^11.0|^12.0|^13.0",
+                "illuminate/support": "^11.0|^12.0|^13.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "filament/filament": "^5.8",
+                "larastan/larastan": "^3.11",
+                "laravel/pint": "^1.20",
+                "orchestra/testbench": "^9.0|^10.0|^11.0",
+                "phpunit/phpunit": "^10.0|^11.0|^12.0"
+            },
+            "suggest": {
+                "filament/filament": "Required to use the optional Filament admin panel resources (Easybdit\\LaravelEasyAttendance\\Filament\\EasyAttendancePlugin) — see the README's Filament Admin Panel section."
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Easybdit\\LaravelEasyAttendance\\LaravelEasyAttendanceServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Easybdit\\LaravelEasyAttendance\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Md Murad Hosen",
+                    "email": "muradbd.info@gmail.com"
+                }
+            ],
+            "description": "Drop-in attendance, HR, and payroll core for any Laravel app: check-in/out, corrections, ZKTeco device sync (pull + ADMS push), shifts, leave, holidays, overtime, salary generation, and reports.",
+            "keywords": [
+                "Leave",
+                "attendance",
+                "biometric",
+                "check-in",
+                "filament",
+                "hr",
+                "laravel",
+                "overtime",
+                "payroll",
+                "salary",
+                "timesheet",
+                "zkteco"
+            ],
+            "support": {
+                "issues": "https://github.com/easybdit/laraveleasyattendance/issues",
+                "source": "https://github.com/easybdit/laraveleasyattendance/tree/v2.3.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/muradbdinfo",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-09-09T08:47:07+00:00"
         },
         {
             "name": "egulias/email-validator",

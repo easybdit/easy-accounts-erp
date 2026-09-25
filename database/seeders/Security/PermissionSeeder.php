@@ -21,6 +21,7 @@ class PermissionSeeder extends Seeder
         $modules = [
             'accounts', 'journal', 'customers', 'vendors', 'invoices', 'bills',
             'payments', 'expenses', 'banking', 'inventory', 'tax', 'users', 'roles', 'settings',
+            'leaves', 'overtime', 'payroll',
         ];
 
         foreach ($modules as $module) {
@@ -31,5 +32,12 @@ class PermissionSeeder extends Seeder
         Permission::findOrCreate('dashboard.view');
         Permission::findOrCreate('reports.view');
         Permission::findOrCreate('audit.view');
+
+        // Self-scoped: view/apply for only the current user's own linked
+        // employee record, not the module-wide "leaves.view"/"payroll.view"
+        // (which mean "can see everyone's"). First "own only" tier in the
+        // app — used to gate the employee self-service controllers.
+        Permission::findOrCreate('leaves.own');
+        Permission::findOrCreate('payroll.own');
     }
 }

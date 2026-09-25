@@ -35,6 +35,7 @@ class RoleSeeder extends Seeder
             'banking.view', 'banking.manage',
             'tax.view', 'tax.manage',
             'settings.view', 'settings.manage',
+            'payroll.view', 'payroll.manage',
         ]);
 
         Role::findOrCreate('Sales')->syncPermissions([
@@ -59,5 +60,12 @@ class RoleSeeder extends Seeder
         Role::findOrCreate('Viewer')->syncPermissions(
             Permission::where('name', 'like', '%.view')->pluck('name')
         );
+
+        // Self-service only: an employee logs in through the normal login
+        // and sees just their own leave/payroll data, never module-wide
+        // "leaves.view"/"payroll.view".
+        Role::findOrCreate('Employee')->syncPermissions([
+            'dashboard.view', 'leaves.own', 'payroll.own',
+        ]);
     }
 }
