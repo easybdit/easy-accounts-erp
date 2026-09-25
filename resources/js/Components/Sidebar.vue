@@ -123,8 +123,20 @@ const allNavGroups = [
         icon: icons.users,
         permission: 'payroll.view',
         links: [
+            { label: 'Leave Requests', routeName: 'hr.leaves.index', permission: 'leaves.manage' },
+            { label: 'Leave Types', routeName: 'hr.leave-types.index', permission: 'leaves.manage' },
+            { label: 'Overtime', routeName: 'hr.overtime.index', permission: 'overtime.manage' },
             { label: 'Payroll', routeName: 'hr.payroll.index' },
             { label: 'Payroll Components', routeName: 'hr.payroll-components.index' },
+        ],
+    },
+    {
+        label: 'My Workspace',
+        icon: icons.users,
+        permission: 'leaves.own',
+        links: [
+            { label: 'My Leave', routeName: 'hr.my-leaves.index' },
+            { label: 'My Payslips', routeName: 'hr.my-payslips.index', permission: 'payroll.own' },
         ],
     },
     {
