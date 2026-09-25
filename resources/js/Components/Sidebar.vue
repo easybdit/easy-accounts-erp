@@ -135,6 +135,7 @@ const allNavGroups = [
             { label: 'Overtime', routeName: 'hr.overtime.index', permission: 'overtime.manage' },
             { label: 'Payroll', routeName: 'hr.payroll.index', permission: 'payroll.view' },
             { label: 'Payroll Components', routeName: 'hr.payroll-components.index', permission: 'payroll.view' },
+            { label: 'Settings', routeName: 'hr.settings.edit', permission: 'employees.manage' },
         ],
     },
     {

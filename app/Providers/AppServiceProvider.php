@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Accounting\AccountingSettings;
+use App\Models\HR\HrSettings;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Vite;
@@ -27,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
         Vite::prefetch(concurrency: 3);
 
         $this->applySettingsOverrides();
+        $this->applyHrSettingsOverrides();
     }
 
     /**
@@ -89,5 +91,37 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Config::set('services.sslcommerz.enabled', $settings->sslcommerzIsConfigured());
+    }
+
+    /**
+     * Same reasoning and same guard shape as applySettingsOverrides() above,
+     * kept as its own method rather than folded in since it guards its own
+     * table (hr_settings, not accounting_settings) — a table that may not
+     * exist yet even when accounting_settings already does, depending on
+     * migration order. Only overrides attendance.salary.late_deduction_ratio
+     * when an administrator has actually set one; otherwise the package's
+     * own .env-driven default (config/attendance.php) still applies.
+     */
+    private function applyHrSettingsOverrides(): void
+    {
+        if ($this->app->runningInConsole() && ! $this->app->runningUnitTests()) {
+            try {
+                if (! Schema::hasTable('hr_settings')) {
+                    return;
+                }
+            } catch (Throwable) {
+                return;
+            }
+        }
+
+        try {
+            $settings = HrSettings::current();
+        } catch (Throwable) {
+            return;
+        }
+
+        if ($settings->late_deduction_ratio !== null) {
+            Config::set('attendance.salary.late_deduction_ratio', $settings->late_deduction_ratio);
+        }
     }
 }

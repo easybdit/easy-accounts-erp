@@ -6,6 +6,7 @@ use App\Http\Controllers\HR\DepartmentController;
 use App\Http\Controllers\HR\DesignationController;
 use App\Http\Controllers\HR\EmployeeController;
 use App\Http\Controllers\HR\HolidayController;
+use App\Http\Controllers\HR\HrSettingsController;
 use App\Http\Controllers\HR\LeaveController;
 use App\Http\Controllers\HR\LeaveTypeController;
 use App\Http\Controllers\HR\MyAttendanceController;
@@ -73,6 +74,9 @@ Route::middleware(['auth', 'verified'])->prefix('hr')->name('hr.')->group(functi
         Route::get('holidays/{holiday}/edit', [HolidayController::class, 'edit'])->name('holidays.edit');
         Route::put('holidays/{holiday}', [HolidayController::class, 'update'])->name('holidays.update');
         Route::delete('holidays/{holiday}', [HolidayController::class, 'destroy'])->name('holidays.destroy');
+
+        Route::get('settings', [HrSettingsController::class, 'edit'])->name('settings.edit');
+        Route::put('settings', [HrSettingsController::class, 'update'])->name('settings.update');
     });
 
     Route::middleware('permission:payroll.view')->group(function () {
