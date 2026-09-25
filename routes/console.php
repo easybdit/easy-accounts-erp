@@ -44,3 +44,9 @@ Schedule::command('invoices:send-overdue-reminders')->dailyAt('08:00');
 // Low Stock Alert: daily digest to inventory managers, silent when nothing
 // is low (see SendLowStockAlert).
 Schedule::command('inventory:send-low-stock-alerts')->dailyAt('08:15');
+
+// Attendance device sync: pull any IP-configured (pull-mode) biometric
+// device's backlog every 5 minutes, so it never grows large enough to make
+// the "Sync Now" button time out. Push/ADMS devices sync themselves and
+// are skipped by the command itself.
+Schedule::command('attendance:sync-devices')->everyFiveMinutes();

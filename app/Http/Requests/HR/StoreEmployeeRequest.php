@@ -26,6 +26,7 @@ class StoreEmployeeRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:50'],
             'department_id' => ['nullable', 'integer', Rule::exists((new Department)->getTable(), 'id')],
             'designation_id' => ['nullable', 'integer', Rule::exists((new Designation)->getTable(), 'id')],
+            'device_user_id' => ['nullable', 'string', 'max:255', Rule::unique((new Employee)->getTable(), 'device_user_id')->ignore($employee)],
             'basic_salary' => ['required', 'numeric', 'min:0'],
             'allowances' => ['nullable', 'array'],
             'allowances.*' => ['numeric', 'min:0'],

@@ -27,6 +27,7 @@ const form = useForm({
     phone: props.employee.phone,
     department_id: props.employee.department_id ?? '',
     designation_id: props.employee.designation_id ?? '',
+    device_user_id: props.employee.device_user_id ?? '',
     basic_salary: props.employee.basic_salary,
     allowances: Object.entries(props.employee.allowances ?? {}).map(([key, amount]) => ({ key, amount })),
     joined_at: props.employee.joined_at ?? '',
@@ -149,6 +150,12 @@ function removeShift(assignment) {
                         </select>
                         <InputError :message="form.errors.designation_id" class="mt-2" />
                     </div>
+                </div>
+
+                <div>
+                    <InputLabel for="device_user_id" value="Device PIN / User ID (optional)" />
+                    <TextInput id="device_user_id" v-model="form.device_user_id" type="text" placeholder="The employee's PIN on the biometric device" class="mt-1 block w-full" />
+                    <InputError :message="form.errors.device_user_id" class="mt-2" />
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">

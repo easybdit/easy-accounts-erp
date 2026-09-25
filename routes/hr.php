@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\HR\AttendanceController;
+use App\Http\Controllers\HR\AttendanceDeviceController;
 use App\Http\Controllers\HR\DepartmentController;
 use App\Http\Controllers\HR\DesignationController;
 use App\Http\Controllers\HR\EmployeeController;
@@ -25,9 +26,18 @@ Route::middleware(['auth', 'verified'])->prefix('hr')->name('hr.')->group(functi
         Route::get('shifts', [ShiftController::class, 'index'])->name('shifts.index');
         Route::get('holidays', [HolidayController::class, 'index'])->name('holidays.index');
         Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+        Route::get('attendance-devices', [AttendanceDeviceController::class, 'index'])->name('attendance-devices.index');
     });
     Route::middleware('permission:employees.manage')->group(function () {
         Route::post('attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+
+        Route::get('attendance-devices/create', [AttendanceDeviceController::class, 'create'])->name('attendance-devices.create');
+        Route::post('attendance-devices', [AttendanceDeviceController::class, 'store'])->name('attendance-devices.store');
+        Route::get('attendance-devices/{attendance_device}/edit', [AttendanceDeviceController::class, 'edit'])->name('attendance-devices.edit');
+        Route::put('attendance-devices/{attendance_device}', [AttendanceDeviceController::class, 'update'])->name('attendance-devices.update');
+        Route::delete('attendance-devices/{attendance_device}', [AttendanceDeviceController::class, 'destroy'])->name('attendance-devices.destroy');
+        Route::post('attendance-devices/{attendance_device}/test', [AttendanceDeviceController::class, 'test'])->name('attendance-devices.test');
+        Route::post('attendance-devices/{attendance_device}/pull', [AttendanceDeviceController::class, 'pull'])->name('attendance-devices.pull');
     });
     Route::middleware('permission:employees.manage')->group(function () {
         Route::get('employees/create', [EmployeeController::class, 'create'])->name('employees.create');
