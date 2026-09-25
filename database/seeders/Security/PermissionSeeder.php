@@ -39,5 +39,6 @@ class PermissionSeeder extends Seeder
         // app — used to gate the employee self-service controllers.
         Permission::findOrCreate('leaves.own');
         Permission::findOrCreate('payroll.own');
+        Permission::findOrCreate('attendance.own');
     }
 }

@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\HR\AttendanceController;
 use App\Http\Controllers\HR\DepartmentController;
 use App\Http\Controllers\HR\DesignationController;
 use App\Http\Controllers\HR\EmployeeController;
 use App\Http\Controllers\HR\HolidayController;
 use App\Http\Controllers\HR\LeaveController;
 use App\Http\Controllers\HR\LeaveTypeController;
+use App\Http\Controllers\HR\MyAttendanceController;
 use App\Http\Controllers\HR\MyLeaveController;
 use App\Http\Controllers\HR\MyPayslipController;
 use App\Http\Controllers\HR\OvertimeController;
@@ -22,6 +24,10 @@ Route::middleware(['auth', 'verified'])->prefix('hr')->name('hr.')->group(functi
         Route::get('designations', [DesignationController::class, 'index'])->name('designations.index');
         Route::get('shifts', [ShiftController::class, 'index'])->name('shifts.index');
         Route::get('holidays', [HolidayController::class, 'index'])->name('holidays.index');
+        Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    });
+    Route::middleware('permission:employees.manage')->group(function () {
+        Route::post('attendance', [AttendanceController::class, 'store'])->name('attendance.store');
     });
     Route::middleware('permission:employees.manage')->group(function () {
         Route::get('employees/create', [EmployeeController::class, 'create'])->name('employees.create');
@@ -104,5 +110,12 @@ Route::middleware(['auth', 'verified'])->prefix('hr')->name('hr.')->group(functi
     Route::middleware('permission:payroll.own')->group(function () {
         Route::get('my-payslips', [MyPayslipController::class, 'index'])->name('my-payslips.index');
         Route::get('my-payslips/{salary_slip}/pdf', [MyPayslipController::class, 'pdf'])->name('my-payslips.pdf');
+    });
+
+    // Attendance self-service (check in/out).
+    Route::middleware('permission:attendance.own')->group(function () {
+        Route::get('my-attendance', [MyAttendanceController::class, 'index'])->name('my-attendance.index');
+        Route::post('my-attendance/check-in', [MyAttendanceController::class, 'checkIn'])->name('my-attendance.check-in');
+        Route::post('my-attendance/check-out', [MyAttendanceController::class, 'checkOut'])->name('my-attendance.check-out');
     });
 });

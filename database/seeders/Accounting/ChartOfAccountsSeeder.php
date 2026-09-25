@@ -87,6 +87,7 @@ class ChartOfAccountsSeeder extends Seeder
                         2001 => 'Accounts Payable (সাপ্লায়ার/ডাটা সেন্টারের পাওনা)',
                         2002 => 'Tax/VAT Payable (সরকারি ভ্যাট)',
                         2003 => 'Deferred Revenue (কাস্টমারের অগ্রিম দেওয়া হোস্টিং ফি)',
+                        2004 => 'Salary Payable (স্টাফদের বকেয়া বেতন)',
                     ],
                 ],
             ],

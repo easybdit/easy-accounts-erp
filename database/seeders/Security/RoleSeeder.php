@@ -65,7 +65,7 @@ class RoleSeeder extends Seeder
         // and sees just their own leave/payroll data, never module-wide
         // "leaves.view"/"payroll.view".
         Role::findOrCreate('Employee')->syncPermissions([
-            'dashboard.view', 'leaves.own', 'payroll.own',
+            'dashboard.view', 'leaves.own', 'payroll.own', 'attendance.own',
         ]);
     }
 }
