@@ -17,6 +17,10 @@ function badgeVariant(status) {
     return 'warning';
 }
 
+function readyForHr(leave) {
+    return ['approved', 'skipped'].includes(leave.dept_head_status);
+}
+
 function approve(leave) {
     router.post(route('hr.leaves.approve', leave.id));
 }
@@ -49,6 +53,7 @@ function reject(leave) {
                             <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Type</th>
                             <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Dates</th>
                             <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Reason</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Dept. Head</th>
                             <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
                             <th class="px-4 py-3" />
                         </tr>
@@ -63,11 +68,18 @@ function reject(leave) {
                             <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ leave.start_date }} – {{ leave.end_date }}</td>
                             <td class="px-4 py-3 text-sm text-gray-500">{{ leave.reason ?? '—' }}</td>
                             <td class="whitespace-nowrap px-4 py-3 text-sm">
+                                <Badge v-if="leave.dept_head_status !== 'skipped'" :variant="badgeVariant(leave.dept_head_status)">
+                                    {{ leave.dept_head_status }}
+                                </Badge>
+                                <span v-else class="text-gray-400">—</span>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm">
                                 <Badge :variant="badgeVariant(leave.status)">{{ leave.status }}</Badge>
                             </td>
                             <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
                                 <template v-if="leave.status === 'pending'">
-                                    <SecondaryButton class="mr-2" @click="approve(leave)">Approve</SecondaryButton>
+                                    <SecondaryButton v-if="readyForHr(leave)" class="mr-2" @click="approve(leave)">Approve</SecondaryButton>
+                                    <span v-else class="mr-2 text-xs text-gray-400">Awaiting dept. head</span>
                                     <SecondaryButton @click="reject(leave)">Reject</SecondaryButton>
                                 </template>
                             </td>

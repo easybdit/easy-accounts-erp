@@ -3,6 +3,7 @@
 namespace App\Http\Requests\HR;
 
 use Easybdit\LaravelEasyAttendance\Models\Department;
+use Easybdit\LaravelEasyAttendance\Models\Employee;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -20,6 +21,7 @@ class StoreDepartmentRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique((new Department)->getTable(), 'name')->ignore($department)],
             'description' => ['nullable', 'string', 'max:1000'],
+            'head_employee_id' => ['nullable', 'integer', Rule::exists((new Employee)->getTable(), 'id')],
         ];
     }
 }

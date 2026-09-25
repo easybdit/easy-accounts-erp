@@ -5,6 +5,7 @@ namespace App\Http\Controllers\HR;
 use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\HR\StoreLeaveRequestRequest;
+use App\Models\HR\HrSettings;
 use Easybdit\LaravelEasyAttendance\Models\Leave;
 use Easybdit\LaravelEasyAttendance\Models\LeaveType;
 use Illuminate\Http\RedirectResponse;
@@ -50,7 +51,20 @@ class MyLeaveController extends Controller
             return back()->with('error', 'Your account is not linked to an employee record. Ask an administrator to link it before applying for leave.');
         }
 
-        $employee->requestLeave($request->validated());
+        $leave = $employee->requestLeave($request->validated());
+
+        // dept_head_status isn't in the package's own Leave::$fillable, so
+        // requestLeave()'s mass-assignment left it at the column default
+        // ('skipped') — only promote it to 'pending' when multi-step
+        // approval is actually on and this employee's department has a
+        // head to send it to.
+        $employee->loadMissing('department');
+        $needsDeptHeadApproval = HrSettings::current()->multi_step_leave_approval_enabled
+            && $employee->department?->head_employee_id !== null;
+
+        if ($needsDeptHeadApproval) {
+            $leave->forceFill(['dept_head_status' => 'pending'])->save();
+        }
 
         return redirect()->route('hr.my-leaves.index')->with('success', 'Leave request submitted.');
     }

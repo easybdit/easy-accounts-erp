@@ -27,6 +27,10 @@ class LeaveController extends Controller
 
     public function approve(Request $request, Leave $leave): RedirectResponse
     {
+        if (! in_array($leave->dept_head_status, ['approved', 'skipped'], true)) {
+            return back()->with('error', 'This request is still waiting on the department head\'s approval.');
+        }
+
         $leave->approve($request->user()->id, $request->input('note'));
 
         return back()->with('success', 'Leave request approved.');

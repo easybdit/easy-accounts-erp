@@ -32,6 +32,7 @@ defineProps({
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
                             <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Head</th>
                             <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Employees</th>
                             <th class="px-4 py-3" />
                         </tr>
@@ -40,6 +41,7 @@ defineProps({
                         <tr v-for="department in departments" :key="department.id" class="hover:bg-gray-50">
                             <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{{ department.name }}</td>
                             <td class="px-4 py-3 text-sm text-gray-500">{{ department.description ?? '—' }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ department.head_name ?? '—' }}</td>
                             <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">{{ department.employees_count }}</td>
                             <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
                                 <Link :href="route('hr.departments.edit', department.id)" class="mr-3 text-indigo-600 hover:text-indigo-900">

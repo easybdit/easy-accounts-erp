@@ -8,9 +8,14 @@ import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 
+defineProps({
+    employees: Array,
+});
+
 const form = useForm({
     name: '',
     description: '',
+    head_employee_id: '',
 });
 
 function submit() {
@@ -49,6 +54,22 @@ function submit() {
                         class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     />
                     <InputError :message="form.errors.description" class="mt-2" />
+                </div>
+
+                <div>
+                    <InputLabel for="head_employee_id" value="Department Head (optional)" />
+                    <select
+                        id="head_employee_id"
+                        v-model="form.head_employee_id"
+                        class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    >
+                        <option value="">None</option>
+                        <option v-for="employee in employees" :key="employee.id" :value="employee.id">
+                            {{ employee.name }} ({{ employee.employee_code }})
+                        </option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">Approves this department's leave requests before HR, when multi-step approval is enabled in HR Settings.</p>
+                    <InputError :message="form.errors.head_employee_id" class="mt-2" />
                 </div>
             </div>
 
