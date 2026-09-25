@@ -17,6 +17,7 @@ use App\Http\Controllers\HR\PayrollComponentController;
 use App\Http\Controllers\HR\PayrollController;
 use App\Http\Controllers\HR\ShiftController;
 use App\Http\Controllers\HR\SpecialWorkingDayController;
+use App\Http\Controllers\HR\TeamAttendanceController;
 use App\Http\Controllers\HR\TeamLeaveController;
 use Illuminate\Support\Facades\Route;
 
@@ -124,6 +125,8 @@ Route::middleware(['auth', 'verified'])->prefix('hr')->name('hr.')->group(functi
         Route::get('team-leaves', [TeamLeaveController::class, 'index'])->name('team-leaves.index');
         Route::post('team-leaves/{leave}/approve', [TeamLeaveController::class, 'approve'])->name('team-leaves.approve');
         Route::post('team-leaves/{leave}/reject', [TeamLeaveController::class, 'reject'])->name('team-leaves.reject');
+
+        Route::get('team-attendance', [TeamAttendanceController::class, 'index'])->name('team-attendance.index');
     });
 
     // Overtime — admin approval only, no self-service view in this phase.

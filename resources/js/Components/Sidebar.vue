@@ -147,6 +147,7 @@ const allNavGroups = [
             { label: 'My Attendance', routeName: 'hr.my-attendance.index', permission: 'attendance.own' },
             { label: 'My Leave', routeName: 'hr.my-leaves.index' },
             { label: 'Team Leave Approvals', routeName: 'hr.team-leaves.index' },
+            { label: 'My Team Attendance', routeName: 'hr.team-attendance.index' },
             { label: 'My Payslips', routeName: 'hr.my-payslips.index', permission: 'payroll.own' },
         ],
     },
