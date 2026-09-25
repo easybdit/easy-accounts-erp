@@ -29,6 +29,7 @@ class EmployeeController extends Controller
                 ->orderBy('name')
                 ->get()
                 ->map(fn (Employee $employee) => $this->withPlainDates($employee, ['joined_at'])),
+            'shifts' => Shift::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -129,6 +130,42 @@ class EmployeeController extends Controller
         $employee->shiftAssignments()->where('id', $assignment)->delete();
 
         return back()->with('success', 'Shift assignment removed.');
+    }
+
+    public function bulkAssignShift(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'employee_ids' => ['required', 'array', 'min:1'],
+            'employee_ids.*' => ['integer', Rule::exists((new Employee)->getTable(), 'id')],
+            'shift_id' => ['required', 'integer', Rule::exists((new Shift)->getTable(), 'id')],
+            'start_date' => ['required', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+        ]);
+
+        foreach ($validated['employee_ids'] as $employeeId) {
+            // Not firstOrCreate(['start_date' => ...]) — an exact string
+            // match against a date-cast column is MySQL-only (SQLite
+            // stores the cast value verbatim, e.g. with a time component),
+            // same reasoning as Holiday::onDate()'s whereDate() in the
+            // package itself. whereDate() is safe on any driver.
+            $exists = EmployeeShift::where('employee_id', $employeeId)
+                ->where('shift_id', $validated['shift_id'])
+                ->whereDate('start_date', $validated['start_date'])
+                ->exists();
+
+            if (! $exists) {
+                EmployeeShift::create([
+                    'employee_id' => $employeeId,
+                    'shift_id' => $validated['shift_id'],
+                    'start_date' => $validated['start_date'],
+                    'end_date' => $validated['end_date'] ?? null,
+                ]);
+            }
+        }
+
+        $count = count($validated['employee_ids']);
+
+        return back()->with('success', "Shift assigned to {$count} employee(s).");
     }
 
     private function formOptions(): array

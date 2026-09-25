@@ -60,6 +60,7 @@ Route::middleware(['auth', 'verified'])->prefix('hr')->name('hr.')->group(functi
         Route::delete('employees/{employee}/link-user', [EmployeeController::class, 'unlinkUser'])->name('employees.unlink-user');
         Route::post('employees/{employee}/shifts', [EmployeeController::class, 'assignShift'])->name('employees.shifts.store');
         Route::delete('employees/{employee}/shifts/{assignment}', [EmployeeController::class, 'removeShiftAssignment'])->name('employees.shifts.destroy');
+        Route::post('employees/bulk-assign-shift', [EmployeeController::class, 'bulkAssignShift'])->name('employees.bulk-assign-shift');
 
         Route::get('departments/create', [DepartmentController::class, 'create'])->name('departments.create');
         Route::post('departments', [DepartmentController::class, 'store'])->name('departments.store');
