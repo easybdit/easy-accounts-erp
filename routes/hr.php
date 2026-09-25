@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\HR\AttendanceController;
+use App\Http\Controllers\HR\AttendanceCorrectionController;
 use App\Http\Controllers\HR\AttendanceDeviceController;
 use App\Http\Controllers\HR\DepartmentController;
 use App\Http\Controllers\HR\DesignationController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\HR\HrSettingsController;
 use App\Http\Controllers\HR\LeaveController;
 use App\Http\Controllers\HR\LeaveTypeController;
 use App\Http\Controllers\HR\MyAttendanceController;
+use App\Http\Controllers\HR\MyAttendanceCorrectionController;
 use App\Http\Controllers\HR\MyLeaveController;
 use App\Http\Controllers\HR\MyPayslipController;
 use App\Http\Controllers\HR\OvertimeController;
@@ -32,9 +34,13 @@ Route::middleware(['auth', 'verified'])->prefix('hr')->name('hr.')->group(functi
         Route::get('special-working-days', [SpecialWorkingDayController::class, 'index'])->name('special-working-days.index');
         Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
         Route::get('attendance-devices', [AttendanceDeviceController::class, 'index'])->name('attendance-devices.index');
+        Route::get('attendance-corrections', [AttendanceCorrectionController::class, 'index'])->name('attendance-corrections.index');
     });
     Route::middleware('permission:employees.manage')->group(function () {
         Route::post('attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+
+        Route::post('attendance-corrections/{attendance_correction}/approve', [AttendanceCorrectionController::class, 'approve'])->name('attendance-corrections.approve');
+        Route::post('attendance-corrections/{attendance_correction}/reject', [AttendanceCorrectionController::class, 'reject'])->name('attendance-corrections.reject');
 
         Route::get('attendance-devices/create', [AttendanceDeviceController::class, 'create'])->name('attendance-devices.create');
         Route::post('attendance-devices', [AttendanceDeviceController::class, 'store'])->name('attendance-devices.store');
@@ -142,10 +148,14 @@ Route::middleware(['auth', 'verified'])->prefix('hr')->name('hr.')->group(functi
         Route::get('my-payslips/{salary_slip}/pdf', [MyPayslipController::class, 'pdf'])->name('my-payslips.pdf');
     });
 
-    // Attendance self-service (check in/out).
+    // Attendance self-service (check in/out, correction requests).
     Route::middleware('permission:attendance.own')->group(function () {
         Route::get('my-attendance', [MyAttendanceController::class, 'index'])->name('my-attendance.index');
         Route::post('my-attendance/check-in', [MyAttendanceController::class, 'checkIn'])->name('my-attendance.check-in');
         Route::post('my-attendance/check-out', [MyAttendanceController::class, 'checkOut'])->name('my-attendance.check-out');
+
+        Route::get('my-attendance-corrections', [MyAttendanceCorrectionController::class, 'index'])->name('my-attendance-corrections.index');
+        Route::get('my-attendance-corrections/create', [MyAttendanceCorrectionController::class, 'create'])->name('my-attendance-corrections.create');
+        Route::post('my-attendance-corrections', [MyAttendanceCorrectionController::class, 'store'])->name('my-attendance-corrections.store');
     });
 });

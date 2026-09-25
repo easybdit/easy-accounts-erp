@@ -131,6 +131,7 @@ const allNavGroups = [
             { label: 'Special Working Days', routeName: 'hr.special-working-days.index', permission: 'employees.view' },
             { label: 'Attendance', routeName: 'hr.attendance.index', permission: 'employees.view' },
             { label: 'Attendance Devices', routeName: 'hr.attendance-devices.index', permission: 'employees.view' },
+            { label: 'Attendance Corrections', routeName: 'hr.attendance-corrections.index', permission: 'employees.view' },
             { label: 'Leave Requests', routeName: 'hr.leaves.index', permission: 'leaves.manage' },
             { label: 'Leave Types', routeName: 'hr.leave-types.index', permission: 'leaves.manage' },
             { label: 'Overtime', routeName: 'hr.overtime.index', permission: 'overtime.manage' },
@@ -145,6 +146,7 @@ const allNavGroups = [
         permission: 'leaves.own',
         links: [
             { label: 'My Attendance', routeName: 'hr.my-attendance.index', permission: 'attendance.own' },
+            { label: 'My Attendance Corrections', routeName: 'hr.my-attendance-corrections.index', permission: 'attendance.own' },
             { label: 'My Leave', routeName: 'hr.my-leaves.index' },
             { label: 'Team Leave Approvals', routeName: 'hr.team-leaves.index' },
             { label: 'My Team Attendance', routeName: 'hr.team-attendance.index' },
