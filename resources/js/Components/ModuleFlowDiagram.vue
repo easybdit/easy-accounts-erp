@@ -11,7 +11,7 @@ function can(permission) {
 
 // Every lane ends by posting into the Journal — this list mirrors the
 // modules that actually call an accounting-posting action (see
-// app/Actions/{Banking,Expenses,Inventory,Payments,Purchases,Sales}).
+// app/Actions/{Banking,Expenses,Inventory,Payments,Purchases,Sales,Payroll}).
 const lanes = [
     {
         label: 'Sales',
@@ -55,6 +55,14 @@ const lanes = [
             { label: 'Depreciation & Disposal', routeName: 'accounting.fixed-assets.index', permission: 'accounts.view', icon: icons.calculator },
         ],
     },
+    {
+        label: 'HR',
+        nodes: [
+            { label: 'Employees', routeName: 'hr.employees.index', permission: 'employees.view', icon: icons.users },
+            { label: 'Attendance', routeName: 'hr.attendance.index', permission: 'employees.view', icon: icons.users },
+            { label: 'Payroll', routeName: 'hr.payroll.index', permission: 'payroll.view', icon: icons.card },
+        ],
+    },
 ];
 
 const hub = [
@@ -78,6 +86,11 @@ const sideRelations = [
         from: { label: 'Tax Rates', routeName: 'tax.rates.index', permission: 'tax.view', icon: icons.document },
         to: { label: 'Sales & Purchases', permission: null, icon: icons.cart },
         caption: 'Applied automatically on invoice and bill line items',
+    },
+    {
+        from: { label: 'Leave & Overtime', routeName: 'hr.leaves.index', permission: 'leaves.manage', icon: icons.users },
+        to: { label: 'Payroll', routeName: 'hr.payroll.index', permission: 'payroll.view', icon: icons.card },
+        caption: 'Approved leave/overtime feeds the attendance-based salary deductions and additions',
     },
 ];
 

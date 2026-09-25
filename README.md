@@ -6,7 +6,11 @@ The full governing specification — architecture rules, scope decisions, and a 
 
 ## Status
 
-The core double-entry engine and every major QuickBooks-equivalent module are implemented and tested: Chart of Accounts, Journal/Ledger/Trial Balance, Customers & Vendors (with Customer & Vendor Statements), Sales (Invoices, Sales Receipts, Estimates, Credit Notes, Recurring Invoicing, Deferred Revenue Recognition, online payment links via SSLCommerz), Purchases (Bills, Purchase Orders, Vendor Credits, Recurring Bills), Expenses (with recurring auto-generation), Banking (Transfers, Reconciliation, Undeposited Funds/Bank Deposits), Inventory, Tax/VAT, Fixed Assets (depreciation + disposal gain/loss), Budgets (Budget vs Actual), Period Lock, configurable per-document-type numbering, Reports (every report exportable to CSV), and Security & Audit (roles, permissions, activity log). The UI is responsive throughout — data tables scroll within their own container instead of breaking the page layout on small screens. See [`CHANGELOG.md`](CHANGELOG.md) for what shipped and when, and `EasyAccountsERP.md` Section 90 for the fuller design rationale behind each decision.
+The core double-entry engine and every major QuickBooks-equivalent module are implemented and tested: Chart of Accounts, Journal/Ledger/Trial Balance, Customers & Vendors (with Customer & Vendor Statements), Sales (Invoices, Sales Receipts, Estimates, Credit Notes, Recurring Invoicing, Deferred Revenue Recognition, online payment links via SSLCommerz), Purchases (Bills, Purchase Orders, Vendor Credits, Recurring Bills), Expenses (with recurring auto-generation), Banking (Transfers, Reconciliation, Undeposited Funds/Bank Deposits), Inventory, Tax/VAT, Fixed Assets (depreciation + disposal gain/loss), Budgets (Budget vs Actual), Period Lock, configurable per-document-type numbering, Reports (every report exportable to CSV), and Security & Audit (roles, permissions, activity log).
+
+An HR & Payroll module sits alongside the core, built on top of the [`easybdit/laraveleasyattendance`](https://packagist.org/packages/easybdit/laraveleasyattendance) package rather than reimplementing attendance from scratch: Employees, Departments, Designations, Shifts, Holidays, Special Working Days (grade-based pay), biometric device sync (ZKTeco, pull mode by IP, scheduled every 5 minutes), manual/self-service attendance capture with correction requests, Leave (with an optional Department Head approval stage before HR, configurable in HR Settings), Overtime, bulk shift assignment, and Payroll — a configurable component→Chart-of-Accounts mapping (`payroll_components`) turns each generated salary slip into a balanced journal through the same `PostJournal` choke point every other module posts through, with a PDF payslip and full self-service (My Attendance, My Leave, My Payslips, Team Leave Approvals/Attendance for department heads).
+
+The UI is responsive throughout — data tables scroll within their own container instead of breaking the page layout on small screens. See [`CHANGELOG.md`](CHANGELOG.md) for what shipped and when, and `EasyAccountsERP.md` Section 90 for the fuller design rationale behind each decision.
 
 ## Stack
 
@@ -14,6 +18,7 @@ The core double-entry engine and every major QuickBooks-equivalent module are im
 * Inertia.js 2 + Vue 3 + Tailwind CSS
 * MariaDB/MySQL (SQLite for the test suite)
 * `spatie/laravel-permission`, `spatie/laravel-activitylog`, `barryvdh/laravel-dompdf` (PDF exports)
+* `easybdit/laraveleasyattendance` (HR/attendance/leave/payroll data — see the HR & Payroll paragraph above)
 
 ## Local Setup
 
@@ -41,7 +46,7 @@ php artisan serve
 
 ## Scheduled Jobs
 
-Several features run on Laravel's scheduler (see `routes/console.php` for the full list and cadence): monthly depreciation, deferred revenue recognition, recurring invoice/expense/bill auto-generation, overdue invoice reminders, low-stock alerts, and audit log retention. In production, point cron at Laravel's scheduler once:
+Several features run on Laravel's scheduler (see `routes/console.php` for the full list and cadence): monthly depreciation, deferred revenue recognition, recurring invoice/expense/bill auto-generation, overdue invoice reminders, low-stock alerts, audit log retention, and attendance device sync (every 5 minutes, pull-mode biometric devices only). In production, point cron at Laravel's scheduler once:
 
 ```
 * * * * * cd /path-to-app && php artisan schedule:run >> /dev/null 2>&1

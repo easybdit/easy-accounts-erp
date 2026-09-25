@@ -2,6 +2,23 @@
 
 All notable changes to EasyAccountsERP are recorded here, newest first. This project doesn't cut version numbers yet, so entries are grouped by the date they landed on `main`. See [`EasyAccountsERP.md`](EasyAccountsERP.md) for the design rationale behind any entry.
 
+## 2026-09-25
+
+### Added
+
+A full HR & Payroll module, built on the [`easybdit/laraveleasyattendance`](https://packagist.org/packages/easybdit/laraveleasyattendance) package rather than reimplementing attendance from scratch — native Inertia/Vue UI throughout instead of the package's own optional Filament panel, so the app keeps one consistent look.
+
+- **Employee data**: Employees, Departments, Designations, Shifts, Holidays — full CRUD, plus linking a login (`users.employee_id`) for self-service and bulk shift assignment (select multiple employees, assign one shift at once).
+- **Payroll**: a configurable `payroll_components` mapping turns each generated salary slip (basic pay, allowances, attendance-based deductions, overtime, special pay) into a balanced journal through the existing `PostJournal` action — the same single posting choke point every other module already goes through. PDF payslip download.
+- **Leave**: apply/approve/reject with per-type balance tracking, plus an optional Department Head approval stage before HR's own (configurable in HR Settings; off by default, no effect on existing behavior until a department gets a Head and the setting is turned on).
+- **Overtime**: auto-detected from attendance, admin approve/reject.
+- **Attendance capture**: admin manual punch entry, employee self-service check-in/out, and biometric device sync (ZKTeco, pull mode by IP, "Test Connection"/"Sync Now", scheduled every 5 minutes) — plus correction requests for missing punches (self-service submit, admin approve/reject; approving creates the real punches).
+- **Special Working Days**: pay for a day an employee was asked to work despite it normally being off, defaulting to a rate based on the employee's Grade (A/B/C) when no amount is entered manually.
+- **HR Settings**: one admin screen for the late-arrival salary-deduction ratio, the late-warning threshold, special-working-day grade rates, and the multi-step leave approval toggle — mirrors how Company Settings already overrides `.env`-driven config from the database.
+- **Self-service**: My Attendance, My Leave, My Payslips, My Attendance Corrections for every employee with a linked login; Team Leave Approvals and My Team Attendance for anyone who heads a department.
+- **Reports**: Payroll Register and Attendance Summary added to the existing Reports module (CSV export, same `reports.view` permission as every other report).
+- A `Database\Seeders\Demo\HrDemoSeeder` standalone dataset (four employees, a shift, a full historical month of attendance, leave, and payroll mappings) for trying the whole flow end to end.
+
 ## 2026-09-24
 
 ### Changed
