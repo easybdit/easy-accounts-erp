@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\HR;
 
+use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\HR\StoreLeaveRequestRequest;
+use Easybdit\LaravelEasyAttendance\Models\Leave;
 use Easybdit\LaravelEasyAttendance\Models\LeaveType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +19,8 @@ use Inertia\Response;
  */
 class MyLeaveController extends Controller
 {
+    use FormatsPlainDates;
+
     public function index(Request $request): Response
     {
         $employee = $request->user()->employee;
@@ -25,6 +29,7 @@ class MyLeaveController extends Controller
             'employee' => $employee?->only(['id', 'employee_code', 'name']),
             'leaves' => $employee
                 ? $employee->leaves()->with('leaveType:id,name')->orderByDesc('start_date')->get()
+                    ->map(fn (Leave $leave) => $this->withPlainDates($leave, ['start_date', 'end_date']))
                 : [],
             'balances' => $employee ? $employee->leaveBalances() : [],
         ]);

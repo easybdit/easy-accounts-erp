@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\HR;
 
+use App\Http\Controllers\Concerns\FormatsPlainDates;
 use App\Http\Controllers\Controller;
 use Easybdit\LaravelEasyAttendance\Models\Leave;
 use Illuminate\Http\RedirectResponse;
@@ -11,13 +12,16 @@ use Inertia\Response;
 
 class LeaveController extends Controller
 {
+    use FormatsPlainDates;
+
     public function index(): Response
     {
         return Inertia::render('HR/Leaves/Index', [
             'leaves' => Leave::query()
                 ->with(['employee:id,employee_code,name', 'leaveType:id,name'])
                 ->orderByDesc('start_date')
-                ->get(),
+                ->get()
+                ->map(fn (Leave $leave) => $this->withPlainDates($leave, ['start_date', 'end_date'])),
         ]);
     }
 

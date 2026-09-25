@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\HR\DepartmentController;
+use App\Http\Controllers\HR\DesignationController;
+use App\Http\Controllers\HR\EmployeeController;
+use App\Http\Controllers\HR\HolidayController;
 use App\Http\Controllers\HR\LeaveController;
 use App\Http\Controllers\HR\LeaveTypeController;
 use App\Http\Controllers\HR\MyLeaveController;
@@ -7,9 +11,54 @@ use App\Http\Controllers\HR\MyPayslipController;
 use App\Http\Controllers\HR\OvertimeController;
 use App\Http\Controllers\HR\PayrollComponentController;
 use App\Http\Controllers\HR\PayrollController;
+use App\Http\Controllers\HR\ShiftController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    // Employee/Department/Designation/Shift/Holiday onboarding data.
+    Route::middleware('permission:employees.view')->group(function () {
+        Route::get('employees', [EmployeeController::class, 'index'])->name('employees.index');
+        Route::get('departments', [DepartmentController::class, 'index'])->name('departments.index');
+        Route::get('designations', [DesignationController::class, 'index'])->name('designations.index');
+        Route::get('shifts', [ShiftController::class, 'index'])->name('shifts.index');
+        Route::get('holidays', [HolidayController::class, 'index'])->name('holidays.index');
+    });
+    Route::middleware('permission:employees.manage')->group(function () {
+        Route::get('employees/create', [EmployeeController::class, 'create'])->name('employees.create');
+        Route::post('employees', [EmployeeController::class, 'store'])->name('employees.store');
+        Route::get('employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
+        Route::put('employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
+        Route::delete('employees/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
+        Route::post('employees/{employee}/link-user', [EmployeeController::class, 'linkUser'])->name('employees.link-user');
+        Route::delete('employees/{employee}/link-user', [EmployeeController::class, 'unlinkUser'])->name('employees.unlink-user');
+        Route::post('employees/{employee}/shifts', [EmployeeController::class, 'assignShift'])->name('employees.shifts.store');
+        Route::delete('employees/{employee}/shifts/{assignment}', [EmployeeController::class, 'removeShiftAssignment'])->name('employees.shifts.destroy');
+
+        Route::get('departments/create', [DepartmentController::class, 'create'])->name('departments.create');
+        Route::post('departments', [DepartmentController::class, 'store'])->name('departments.store');
+        Route::get('departments/{department}/edit', [DepartmentController::class, 'edit'])->name('departments.edit');
+        Route::put('departments/{department}', [DepartmentController::class, 'update'])->name('departments.update');
+        Route::delete('departments/{department}', [DepartmentController::class, 'destroy'])->name('departments.destroy');
+
+        Route::get('designations/create', [DesignationController::class, 'create'])->name('designations.create');
+        Route::post('designations', [DesignationController::class, 'store'])->name('designations.store');
+        Route::get('designations/{designation}/edit', [DesignationController::class, 'edit'])->name('designations.edit');
+        Route::put('designations/{designation}', [DesignationController::class, 'update'])->name('designations.update');
+        Route::delete('designations/{designation}', [DesignationController::class, 'destroy'])->name('designations.destroy');
+
+        Route::get('shifts/create', [ShiftController::class, 'create'])->name('shifts.create');
+        Route::post('shifts', [ShiftController::class, 'store'])->name('shifts.store');
+        Route::get('shifts/{shift}/edit', [ShiftController::class, 'edit'])->name('shifts.edit');
+        Route::put('shifts/{shift}', [ShiftController::class, 'update'])->name('shifts.update');
+        Route::delete('shifts/{shift}', [ShiftController::class, 'destroy'])->name('shifts.destroy');
+
+        Route::get('holidays/create', [HolidayController::class, 'create'])->name('holidays.create');
+        Route::post('holidays', [HolidayController::class, 'store'])->name('holidays.store');
+        Route::get('holidays/{holiday}/edit', [HolidayController::class, 'edit'])->name('holidays.edit');
+        Route::put('holidays/{holiday}', [HolidayController::class, 'update'])->name('holidays.update');
+        Route::delete('holidays/{holiday}', [HolidayController::class, 'destroy'])->name('holidays.destroy');
+    });
+
     Route::middleware('permission:payroll.view')->group(function () {
         Route::get('payroll', [PayrollController::class, 'index'])->name('payroll.index');
         Route::get('payroll-components', [PayrollComponentController::class, 'index'])->name('payroll-components.index');

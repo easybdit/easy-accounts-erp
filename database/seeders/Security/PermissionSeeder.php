@@ -21,7 +21,7 @@ class PermissionSeeder extends Seeder
         $modules = [
             'accounts', 'journal', 'customers', 'vendors', 'invoices', 'bills',
             'payments', 'expenses', 'banking', 'inventory', 'tax', 'users', 'roles', 'settings',
-            'leaves', 'overtime', 'payroll',
+            'leaves', 'overtime', 'payroll', 'employees',
         ];
 
         foreach ($modules as $module) {
